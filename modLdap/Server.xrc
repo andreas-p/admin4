@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource>
+  <object class="wxDialog" name="Server">
+    <title>LDAP Server</title>
+    <object class="wxBoxSizer">
+      <orient>wxVERTICAL</orient>
+      <object class="sizeritem">
+        <object class="wxNotebook" name="Notebook">
+          <object class="notebookpage">
+            <label>Connect</label>
+            <object class="wxPanel">
+              <object class="wxBoxSizer">
+                <orient>wxVERTICAL</orient>
+                <object class="sizeritem">
+                  <object class="wxFlexGridSizer">
+                    <cols>2</cols>
+                    <object class="sizeritem">
+                      <object class="wxStaticText">
+                        <label>Host name</label>
+                        <pos>5,7d</pos>
+                      </object>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxTextCtrl" name="HostName">
+                        <pos>80,5d</pos>
+                      </object>
+                      <flag>wxEXPAND</flag>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxStaticText">
+                        <label>Host address</label>
+                        <pos>5,22d</pos>
+                      </object>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxTextCtrl" name="HostAddress">
+                        <pos>80,20d</pos>
+                      </object>
+                      <flag>wxEXPAND</flag>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxStaticText">
+                        <label>Security</label>
+                        <pos>5,37d</pos>
+                      </object>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="whComboBox" name="Security">
+                        <pos>80,35d</pos>
+                      </object>
+                      <flag>wxEXPAND</flag>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxStaticText">
+                        <label>Port</label>
+                        <pos>5,52d</pos>
+                      </object>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxTextCtrl" name="Port-uint">
+                        <pos>80,50d</pos>
+                        <size>35,-1d</size>
+                      </object>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxStaticText">
+                        <label>Remember</label>
+                        <pos>5,67d</pos>
+                      </object>
+                    </object>
+                    <vgap>10</vgap>
+                    <hgap>9</hgap>
+                    <growablecols>1</growablecols>
+                    <object class="sizeritem">
+                      <object class="wxCheckBox" name="Remember">
+                        <label></label>
+                        <checked>1</checked>
+                        <pos>80,67d</pos>
+                        <size>-1,12d</size>
+                      </object>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxStaticText">
+                        <label>User</label>
+                        <pos>5,82d</pos>
+                      </object>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxTextCtrl" name="User">
+                        <pos>80,80d</pos>
+                      </object>
+                      <flag>wxEXPAND</flag>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxStaticText">
+                        <label>Password</label>
+                        <pos>5,97d</pos>
+                      </object>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxTextCtrl" name="Password">
+                        <pos>80,95d</pos>
+                      </object>
+                      <flag>wxEXPAND</flag>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxStaticText">
+                        <label>Ldap Base</label>
+                        <pos>5,112d</pos>
+                        <object class="wxTextCtrl" name="LdapBase">
+                          <pos>80,110d</pos>
+                          <size>80,-1d</size>
+                        </object>
+                      </object>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxTextCtrl" name="LdapBase"/>
+                      <flag>wxEXPAND</flag>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxStaticText">
+                        <label>Auto connect</label>
+                        <pos>5,127d</pos>
+                      </object>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxCheckBox" name="Autoconnect">
+                        <label></label>
+                        <checked>1</checked>
+                        <pos>80,127d</pos>
+                      </object>
+                    </object>
+                  </object>
+                  <flag>wxEXPAND</flag>
+                </object>
+              </object>
+              <size>150,165d</size>
+            </object>
+          </object>
+          <object class="notebookpage">
+            <label>Options</label>
+            <object class="wxPanel">
+              <object class="wxBoxSizer">
+                <orient>wxVERTICAL</orient>
+                <object class="sizeritem">
+                  <object class="wxFlexGridSizer">
+                    <cols>2</cols>
+                    <object class="sizeritem">
+                      <object class="wxStaticText">
+                        <label>Query Timeout</label>
+                        <pos>5,7d</pos>
+                      </object>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxTextCtrl" name="QueryTimeout-uint">
+                        <value>5</value>
+                        <pos>80,5d</pos>
+                        <size>30,-1d</size>
+                      </object>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxStaticText">
+                        <label>System Classes</label>
+                        <pos>5,22d</pos>
+                      </object>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxTextCtrl" name="SystemClasses">
+                        <value>subschema$
+subentry$
+olc.*</value>
+                        <pos>80,20d</pos>
+                        <size>80,32d</size>
+                        <style>wxTE_MULTILINE</style>
+                      </object>
+                      <flag>wxEXPAND</flag>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxStaticText">
+                        <label>System Attributes</label>
+                        <pos>5,62d</pos>
+                      </object>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxTextCtrl" name="SystemAttributes">
+                        <value>structuralObjectClass
+hasSubordinates
+creatorsName
+modifiersName
+createTimestamp
+modifyTimestamp</value>
+                        <pos>80,60d</pos>
+                        <size>80,52d</size>
+                        <style>wxTE_MULTILINE</style>
+                      </object>
+                      <flag>wxEXPAND</flag>
+                    </object>
+                    <vgap>10</vgap>
+                    <hgap>10</hgap>
+                    <growablecols>1</growablecols>
+                  </object>
+                  <flag>wxALL|wxEXPAND</flag>
+                  <border>10</border>
+                </object>
+              </object>
+            </object>
+          </object>
+          <pos>5,0d</pos>
+        </object>
+      </object>
+      <object class="sizeritem">
+        <object class="wxBoxSizer">
+          <orient>wxHORIZONTAL</orient>
+          <object class="spacer">
+            <option>1</option>
+            <flag>wxEXPAND</flag>
+          </object>
+          <object class="sizeritem">
+            <object class="wxButton" name="Cancel">
+              <label>Cancel</label>
+              <pos>40,160d</pos>
+              <size>45,-1d</size>
+            </object>
+            <flag>wxRIGHT</flag>
+            <border>10</border>
+          </object>
+          <object class="sizeritem">
+            <object class="wxButton" name="OK">
+              <label>OK</label>
+              <pos>95,160d</pos>
+              <size>45,-1d</size>
+            </object>
+          </object>
+        </object>
+        <option>1</option>
+        <flag>wxBOTTOM|wxRIGHT|wxEXPAND</flag>
+        <border>10</border>
+      </object>
+    </object>
+    <size>190,180d</size>
+  </object>
+</resource>

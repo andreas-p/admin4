@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource>
+  <object class="wxPanel" name="Contact">
+    <object class="wxBoxSizer">
+      <orient>wxVERTICAL</orient>
+      <object class="sizeritem">
+        <object class="wxFlexGridSizer">
+          <cols>2</cols>
+          <object class="sizeritem">
+            <object class="wxStaticText">
+              <label>Phone</label>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxTextCtrl" name="multi:telephoneNumber">
+              <size>100,20d</size>
+              <style>wxTE_MULTILINE</style>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText">
+              <label>Mobile phone</label>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxTextCtrl" name="multi:phone">
+              <size>100,20d</size>
+              <style>wxTE_MULTILINE</style>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText" name="">
+              <label>Home phone</label>
+              <style></style>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxTextCtrl" name="multi:homePhone">
+              <size>100,20d</size>
+              <style>wxTE_MULTILINE</style>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText">
+              <label>Fax</label>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxTextCtrl" name="ldap:facsimileTelephoneNumber">
+              <size>100,-1d</size>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText">
+              <label>Pager</label>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxTextCtrl" name="multi:pager">
+              <size>100,-1d</size>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText" name="">
+              <label>Street</label>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxTextCtrl" name="ldap:postalAddress">
+              <size>150,30d</size>
+              <style>wxTE_MULTILINE</style>
+            </object>
+            <option>1</option>
+          </object>
+          <vgap>10</vgap>
+          <hgap>10</hgap>
+          <object class="sizeritem">
+            <object class="wxStaticText">
+              <label>Zip, City</label>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxBoxSizer">
+              <orient>wxHORIZONTAL</orient>
+              <object class="sizeritem">
+                <object class="wxTextCtrl" name="ldap:postalCode">
+                  <size>40,-1d</size>
+                </object>
+                <flag>wxRIGHT</flag>
+                <border>5d</border>
+              </object>
+              <object class="sizeritem">
+                <object class="wxTextCtrl" name="ldap:l">
+                  <size>105,-1d</size>
+                </object>
+              </object>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText">
+              <label>State</label>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxTextCtrl" name="ldap:st">
+              <size>150,-1d</size>
+            </object>
+          </object>
+          <growablecols>1</growablecols>
+          <object class="sizeritem">
+            <object class="wxStaticText">
+              <label>Mail</label>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxTextCtrl" name="ldap:multi:mail">
+              <size>150,30d</size>
+              <style>wxTE_MULTILINE</style>
+            </object>
+          </object>
+        </object>
+        <option>1</option>
+        <flag>wxALL|wxEXPAND</flag>
+        <border>5</border>
+      </object>
+    </object>
+  </object>
+</resource>

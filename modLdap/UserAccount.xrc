@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource>
+  <object class="wxPanel" name="UserAccount">
+    <object class="wxBoxSizer">
+      <orient>wxVERTICAL</orient>
+      <object class="sizeritem">
+        <object class="wxFlexGridSizer">
+          <cols>2</cols>
+          <object class="sizeritem">
+            <object class="wxStaticText" name="UidLabel">
+              <label>User ID</label>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxTextCtrl" name="must:rdn:cn:label=UidLabel:Uid">
+              <size>80,-1d</size>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText" name="SnLabel">
+              <label>Name</label>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxTextCtrl" name="must:label=SnLabel:sn"/>
+            <flag>wxALIGN_CENTRE_VERTICAL</flag>
+          </object>
+          <vgap>10</vgap>
+          <hgap>10</hgap>
+          <object class="sizeritem">
+            <object class="wxStaticText">
+              <label>Title</label>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxTextCtrl" name="ldap:Title"/>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText">
+              <label>Given name</label>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxBoxSizer">
+              <orient>wxHORIZONTAL</orient>
+              <object class="sizeritem">
+                <object class="wxTextCtrl" name="ldap:GivenName">
+                  <size>80,-1d</size>
+                </object>
+              </object>
+              <object class="sizeritem">
+                <object class="wxStaticText">
+                  <label>Initial</label>
+                </object>
+                <flag>wxLEFT|wxALIGN_CENTRE_VERTICAL</flag>
+                <border>20</border>
+              </object>
+              <object class="sizeritem">
+                <object class="wxTextCtrl" name="ldap:Initials">
+                  <size>50,-1d</size>
+                </object>
+                <flag>wxLEFT</flag>
+                <border>10</border>
+              </object>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText">
+              <label>Display name</label>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxTextCtrl" name="ldap:DisplayName"/>
+            <flag>wxEXPAND</flag>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText">
+              <label>Description</label>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxTextCtrl" name="ldap:Description"/>
+            <flag>wxEXPAND</flag>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText">
+              <label>Preferred Language</label>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxTextCtrl" name="ldap:PreferredLanguage">
+              <size>80,-1d</size>
+            </object>
+          </object>
+        </object>
+        <flag>wxALL</flag>
+        <border>5</border>
+      </object>
+    </object>
+  </object>
+</resource>

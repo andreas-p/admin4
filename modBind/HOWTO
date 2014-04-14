@@ -1,0 +1,14 @@
+
+named.conf:
+
+acl "admin4" {
+        key "rndc-key";
+};
+
+# BIND 9.7+
+statistics-channels { 
+  inet *  port 8053 
+  allow { 127.0.0.1; 192.168.0.0/24; };
+  };
+
+  

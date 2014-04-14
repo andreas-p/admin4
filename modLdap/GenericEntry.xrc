@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource>
+  <object class="wxPanel" name="GenericEntry">
+    <object class="wxBoxSizer">
+      <orient>wxVERTICAL</orient>
+      <object class="sizeritem">
+        <object class="wxFlexGridSizer">
+          <cols>2</cols>
+          <object class="sizeritem">
+            <object class="wxStaticText">
+              <label>RDN</label>
+            </object>
+            <flag>wxSTRETCH_NOT|wxALIGN_CENTRE_VERTICAL|wxADJUST_MINSIZE|wxFIXED_MINSIZE</flag>
+          </object>
+          <object class="sizeritem">
+            <object class="wxTextCtrl" name="RDN"/>
+            <flag>wxBOTTOM|wxEXPAND|wxALIGN_CENTRE_VERTICAL</flag>
+            <border>5</border>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText">
+              <label>objectClasses</label>
+            </object>
+            <flag>wxRIGHT|wxSTRETCH_NOT|wxALIGN_CENTRE_VERTICAL|wxADJUST_MINSIZE|wxFIXED_MINSIZE</flag>
+            <border>5</border>
+          </object>
+          <object class="sizeritem">
+            <object class="wxBoxSizer">
+              <orient>wxHORIZONTAL</orient>
+              <object class="sizeritem">
+                <object class="wxComboBox" name="ObjectClass">
+                  <content>
+                    <item>&lt;All&gt;</item>
+                  </content>
+                  <selection>0</selection>
+                  <size>50,-1d</size>
+                  <style>wxCB_READONLY|wxCB_DROPDOWN</style>
+                </object>
+                <option>1</option>
+                <flag>wxALIGN_CENTRE_VERTICAL</flag>
+              </object>
+              <object class="sizeritem">
+                <object class="wxButton" name="DelObjectClass">
+                  <label>Del</label>
+                  <size>30,-1d</size>
+                </object>
+                <flag>wxLEFT|wxRIGHT|wxALIGN_CENTRE_VERTICAL</flag>
+                <border>5</border>
+              </object>
+              <object class="sizeritem">
+                <object class="wxButton" name="AddObjectClass">
+                  <label>Add</label>
+                  <size>30,-1d</size>
+                </object>
+                <flag>wxLEFT|wxALIGN_CENTRE_VERTICAL</flag>
+                <border>5</border>
+              </object>
+            </object>
+            <option>1</option>
+            <flag>wxEXPAND</flag>
+          </object>
+          <rows>2</rows>
+          <growablecols>1</growablecols>
+        </object>
+        <option>0</option>
+        <flag>wxTOP|wxLEFT|wxRIGHT|wxEXPAND</flag>
+        <border>5</border>
+      </object>
+      <object class="sizeritem">
+        <object class="unknown" name="ValueGrid"/>
+        <option>1</option>
+        <flag>wxALL|wxEXPAND</flag>
+        <border>4</border>
+      </object>
+    </object>
+  </object>
+</resource>

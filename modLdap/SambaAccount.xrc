@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource>
+  <object class="wxPanel" name="SambaAccount">
+    <object class="wxBoxSizer">
+      <orient>wxVERTICAL</orient>
+      <object class="sizeritem">
+        <object class="wxCheckBox" name="objectClass:sambaSamAccount">
+          <label>Samba Account</label>
+        </object>
+        <flag>wxTOP|wxLEFT</flag>
+        <border>5</border>
+      </object>
+      <object class="sizeritem">
+        <object class="wxFlexGridSizer">
+          <cols>2</cols>
+          <object class="sizeritem">
+            <object class="wxStaticText" name="sidLabel">
+              <label>Samba SID</label>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText" name="ldap:sambaSid">
+              <label></label>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText" name="domainLabel">
+              <label>Samba Domain</label>
+            </object>
+            <flag>wxALIGN_CENTRE_VERTICAL</flag>
+          </object>
+          <object class="sizeritem">
+            <object class="wxComboBox" name="must:label=domainLabel:sambaDomainName">
+              <content/>
+              <style>wxCB_READONLY|wxCB_DROPDOWN</style>
+            </object>
+            <flag>wxALIGN_CENTRE_VERTICAL</flag>
+          </object>
+          <vgap>10</vgap>
+          <hgap>10</hgap>
+          <object class="sizeritem">
+            <object class="wxStaticText" name="ridLabel">
+              <label>Samba RID</label>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxBoxSizer">
+              <orient>wxHORIZONTAL</orient>
+              <object class="sizeritem">
+                <object class="wxTextCtrl" name="must:label=ridLabel:sambaRid-uint">
+                  <size>40,-1d</size>
+                </object>
+              </object>
+              <object class="spacer">
+                <option>1</option>
+                <flag>wxEXPAND</flag>
+              </object>
+              <object class="sizeritem">
+                <object class="wxButton" name="RidGen">
+                  <label>Generate</label>
+                </object>
+                <flag>wxALIGN_RIGHT</flag>
+              </object>
+            </object>
+            <option>1</option>
+            <flag>wxEXPAND</flag>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText" name="primGroupLabel">
+              <label>Primary Group</label>
+            </object>
+            <flag>wxALIGN_CENTRE_VERTICAL</flag>
+          </object>
+          <object class="sizeritem">
+            <object class="whComboBox" name="ldap:sambaPrimaryGroupSID"/>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText" name="enabledLabel">
+              <label>Enabled</label>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxCheckBox" name="AccountEnabled">
+              <label></label>
+              <checked>1</checked>
+              <size>-1,12d</size>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText" name="noPwdExp">
+              <label>Password never expires</label>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxCheckBox" name="PasswordNeverExpires">
+              <label></label>
+              <size>-1,12d</size>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText" name="canchange">
+              <label>Can't Change Password</label>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxBoxSizer">
+              <orient>wxHORIZONTAL</orient>
+              <object class="sizeritem">
+                <object class="wxCheckBox" name="CantChangePassword">
+                  <label></label>
+                  <size>-1,12d</size>
+                </object>
+              </object>
+              <object class="sizeritem">
+                <object class="wxStaticText" name="mustchange">
+                  <label>Must Change Password</label>
+                </object>
+                <option>1</option>
+                <flag>wxLEFT|wxEXPAND|wxALIGN_RIGHT</flag>
+                <border>20</border>
+              </object>
+              <object class="sizeritem">
+                <object class="wxCheckBox" name="MustChangePassword">
+                  <label></label>
+                  <size>-1,12d</size>
+                </object>
+                <flag>wxALIGN_RIGHT|wxBOTTOM|wxLEFT</flag>
+                <border>4</border>
+              </object>
+            </object>
+            <option>1</option>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText" name="homePath">
+              <label>Home path</label>
+            </object>
+            <flag>wxALIGN_CENTRE_VERTICAL</flag>
+          </object>
+          <object class="sizeritem">
+            <object class="wxBoxSizer" name="ldap:DisplayName">
+              <orient>wxHORIZONTAL</orient>
+              <object class="sizeritem">
+                <object class="wxTextCtrl" name="ldap:sambaHomePath">
+                  <size>80,-1d</size>
+                </object>
+              </object>
+              <object class="sizeritem">
+                <object class="wxStaticText" name="stDrive">
+                  <label>Drive</label>
+                </object>
+                <flag>wxLEFT|wxALIGN_CENTRE_VERTICAL</flag>
+                <border>20</border>
+              </object>
+              <object class="sizeritem">
+                <object class="wxComboBox" name="ldap:sambaHomeDrive">
+                  <content>
+                    <item>D:</item>
+                    <item>E:</item>
+                    <item>F:</item>
+                    <item>G:</item>
+                    <item>H:</item>
+                    <item>I:</item>
+                  </content>
+                  <size>30,-1d</size>
+                </object>
+                <flag>wxLEFT</flag>
+                <border>10</border>
+              </object>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText" name="logonScript">
+              <label>Logon script</label>
+            </object>
+            <flag>wxALIGN_CENTRE_VERTICAL</flag>
+          </object>
+          <object class="sizeritem">
+            <object class="wxTextCtrl" name="ldap:sambaLogonScript"/>
+            <flag>wxEXPAND</flag>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText" name="kickoffLabel">
+              <label>Account expires</label>
+            </object>
+            <flag>wxALIGN_CENTRE_VERTICAL</flag>
+          </object>
+          <object class="sizeritem">
+            <object class="wxTextCtrl" name="label=kickoffLabel:sambaKickoffTime-int_ts">
+              <size>80,-1d</size>
+            </object>
+          </object>
+          <growablecols>1</growablecols>
+        </object>
+        <flag>wxTOP|wxLEFT|wxRIGHT|wxEXPAND</flag>
+        <border>20</border>
+      </object>
+    </object>
+  </object>
+</resource>

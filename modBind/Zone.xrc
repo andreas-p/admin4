@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource>
+  <object class="wxDialog" name="Zone">
+    <title>DNS Zone</title>
+    <object class="wxStaticText">
+      <label>User name</label>
+      <pos>5,7d</pos>
+    </object>
+    <object class="wxTextCtrl" name="UserName">
+      <pos>50,5d</pos>
+      <size>80,-1d</size>
+    </object>
+    <object class="wxStaticText">
+      <label>Full name</label>
+      <pos>5,22d</pos>
+    </object>
+    <object class="wxTextCtrl" name="FullName">
+      <pos>50,20d</pos>
+      <size>80,-1d</size>
+      <style></style>
+    </object>
+    <object class="wxStaticText">
+      <label>Role</label>
+      <pos>5,37d</pos>
+    </object>
+    <object class="whComboBox" name="Role">
+      <pos>50,35d</pos>
+      <size>80,-1d</size>
+      <content/>
+    </object>
+    <object class="wxStaticText" name="">
+      <label>Password</label>
+      <pos>5,52d</pos>
+    </object>
+    <object class="wxTextCtrl" name="Password">
+      <pos>50,50d</pos>
+      <size>80,-1d</size>
+    </object>
+    <object class="wxStaticText">
+      <label>Enabled</label>
+      <pos>5,67d</pos>
+    </object>
+    <object class="wxCheckBox" name="UserEnabled">
+      <label></label>
+      <checked>1</checked>
+      <pos>50,67d</pos>
+    </object>
+    <object class="wxButton" name="Cancel">
+      <label>Cancel</label>
+      <pos>40,100d</pos>
+      <size>45,-1d</size>
+    </object>
+    <object class="wxButton" name="OK">
+      <label>OK</label>
+      <pos>95,100d</pos>
+      <size>45,-1d</size>
+    </object>
+    <size>150,120d</size>
+  </object>
+</resource>

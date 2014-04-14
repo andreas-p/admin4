@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource>
+  <object class="wxPanel" name="SambaDomain">
+    <object class="wxBoxSizer">
+      <orient>wxVERTICAL</orient>
+      <object class="sizeritem">
+        <object class="wxFlexGridSizer">
+          <cols>2</cols>
+          <object class="sizeritem">
+            <object class="wxStaticText" name="nameLabel">
+              <label>Domain name</label>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText" name="ldap:sambaDomainName">
+              <label></label>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText" name="sidLabel">
+              <label>Samba SID</label>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText" name="ldap:sambaSid">
+              <label></label>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText" name="algRidLabel">
+              <label>Algorithmic RID base</label>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText" name="ldap:label=algRidLabel:sambaAlgorithmicRidBase">
+              <label></label>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText" name="nextURidLabel">
+              <label>next User RID</label>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxTextCtrl" name="ldap:label=nextURidLabel:sambaNextUserRid-uint">
+              <size>40,-1d</size>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText" name="nextGRidLabel">
+              <label>next Group RID</label>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxTextCtrl" name="ldap:label=nextGRidLabel:sambaNextGroupRid-uint">
+              <size>40,-1d</size>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText" name="refuseLabel">
+              <label>Refuse Machine Pwd Change</label>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxCheckBox" name="ldap:label=refuseLabel:null:sambaRefuseMachinePwdChange-bool 1 0">
+              <label></label>
+              <size>-1,12d</size>
+            </object>
+          </object>
+          <vgap>10</vgap>
+          <hgap>10</hgap>
+          <growablecols>1</growablecols>
+          <object class="sizeritem">
+            <object class="wxStaticText" name="minPwdLenLabel">
+              <label>Min Password Length</label>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxTextCtrl" name="ldap:label=minPwdLenLabel:sambaMinPwdLength-uint">
+              <size>30,-1d</size>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText" name="minAgeLabel">
+              <label>Min Password Age</label>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxTextCtrl" name="ldap:null:label=minAgeLabel:sambaMinPwdAge-int">
+              <size>40,-1d</size>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText" name="maxAgeLabel">
+              <label>Max Password Age</label>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxTextCtrl" name="ldap:null:label=maxAgeLabel:sambaMaxPwdAge-int">
+              <size>40,-1d</size>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText" name="histLenLabel">
+              <label>Password History Length</label>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxTextCtrl" name="ldap:null:label=histLenLabel:sambaPwdHistoryLength-uint">
+              <size>30,-1d</size>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText" name="forceLogoffLabel">
+              <label>Force Logoff</label>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxCheckBox" name="ldap:label=forceLogoffLabel:null:sambaForceLogoff-bool -1 0">
+              <label></label>
+              <size>-1,12d</size>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText" name="loThrLabel">
+              <label>Lockout Threshold</label>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxTextCtrl" name="ldap:null:label=loThrLabel:sambaLockoutThreshold-uint">
+              <size>40,-1d</size>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText" name="loWinLabel">
+              <label>Lockout Observation Window</label>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxTextCtrl" name="ldap:null:label=loWinLabel:sambaLockoutObservationWindow-uint">
+              <size>40,-1d</size>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText" name="loDurLabel">
+              <label>Lockout Duration</label>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxTextCtrl" name="ldap:null:label=loDurLabel:sambaLockoutDuration-uint">
+              <size>40,-1d</size>
+            </object>
+          </object>
+        </object>
+        <flag>wxTOP|wxLEFT|wxRIGHT|wxEXPAND</flag>
+        <border>20</border>
+      </object>
+    </object>
+  </object>
+</resource>

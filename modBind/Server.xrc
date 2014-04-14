@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource>
+  <object class="wxDialog" name="Server">
+    <title>BIND DNS Server</title>
+    <object class="wxBoxSizer">
+      <orient>wxVERTICAL</orient>
+      <object class="sizeritem">
+        <object class="wxFlexGridSizer">
+          <cols>2</cols>
+          <object class="sizeritem">
+            <object class="wxStaticText">
+              <label>Host name</label>
+              <pos>5,7d</pos>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxTextCtrl" name="HostName">
+              <pos>50,5d</pos>
+              <size>80,-1d</size>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText">
+              <label>Host address</label>
+              <pos>5,22d</pos>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxTextCtrl" name="HostAddress">
+              <pos>50,20d</pos>
+              <size>80,-1d</size>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText">
+              <label>Port</label>
+              <pos>5,52d</pos>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxTextCtrl" name="Port-uint">
+              <pos>50,50d</pos>
+              <value>53</value>
+              <size>35,-1d</size>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText">
+              <label>Statistics Port</label>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxTextCtrl" name="StatsPort-uint">
+              <value>8053</value>
+              <size>35,-1d</size>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText">
+              <label>Key name</label>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxTextCtrl" name="Keyname">
+              <size>80,-1d</size>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText">
+              <label>Key</label>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxTextCtrl" name="Password">
+              <size>100,-1d</size>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText">
+              <label>Timout</label>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxTextCtrl" name="Timeout-uint">
+              <value>1</value>
+              <size>35,-1d</size>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText">
+              <label>Auto connect</label>
+              <pos>5,112d</pos>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxCheckBox" name="Autoconnect">
+              <label></label>
+              <checked>1</checked>
+              <pos>50,112d</pos>
+            </object>
+          </object>
+          <vgap>10</vgap>
+          <hgap>10</hgap>
+        </object>
+        <flag>wxALL</flag>
+        <border>10</border>
+      </object>
+      <object class="sizeritem">
+        <object class="wxBoxSizer">
+          <orient>wxHORIZONTAL</orient>
+          <object class="spacer">
+            <option>1</option>
+            <flag>wxEXPAND</flag>
+          </object>
+          <object class="sizeritem">
+            <object class="wxButton" name="Cancel">
+              <label>Cancel</label>
+              <pos>40,130d</pos>
+              <size>45,-1d</size>
+            </object>
+            <flag>wxRIGHT</flag>
+            <border>10</border>
+          </object>
+          <object class="sizeritem">
+            <object class="wxButton" name="OK">
+              <label>OK</label>
+              <pos>95,130d</pos>
+              <size>45,-1d</size>
+            </object>
+          </object>
+        </object>
+        <option>1</option>
+        <flag>wxTOP|wxBOTTOM|wxRIGHT|wxEXPAND</flag>
+        <border>10</border>
+      </object>
+    </object>
+  </object>
+</resource>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource>
+  <object class="wxPanel" name="Preferences">
+    <object class="wxStaticText">
+      <label>Admin Namespace</label>
+      <pos>5,7d</pos>
+    </object>
+    <object class="wxTextCtrl" name="AdminNamespace">
+      <pos>80,4d</pos>
+      <size>50,-1d</size>
+    </object>
+  </object>
+</resource>
