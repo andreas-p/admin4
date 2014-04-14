@@ -27,10 +27,10 @@ try:
   from __version import *
 except:
   version="2.x"
-  tagDate=None
-  revDate=None
+  modDate=revDate=tagDate=None
   revLocalChange=True
   revDirty=True
+  revOriginChange=True
 
 
 description="4th generation\nAdministration Tool\n"

@@ -273,16 +273,20 @@ class DetailFrame(Frame):
         import version
         self.Admin="Admin4"
         self.Version=xlt("Version %s") % version.version
+        
         if not hasattr(sys, "frozen"):
             self.Revision = xlt("(%s)\nunknown changes") % version.revDate 
             rev=xlt("unknown")
         elif version.revLocalChange:
           if version.revDirty:
-            self.Revision = xlt("(%s)\nLocally changed/uncommitted") % version.revDate 
-            rev=xlt("local changed")
+            self.Revision = xlt("(+ %s)\nLocally changed/uncommitted") % version.modDate 
+            rev=xlt("locally changed %s") % version.modDate
           else:
-            self.Revision = xlt("(%s)\nLocally committed") % version.revDate 
-            rev=xlt("%s (local)") % version.revDate
+            self.Revision = xlt("(+ %s)\nLocally committed") % version.revDate 
+            rev="+ %s" % version.revDate
+        elif version.revOriginChange:
+          self.Revision = "(+ %s)" % version.revDate
+          rev="+ %s" % version.revDate 
         else:
           if version.tagDate:
             self.Revision = "(%s)" % version.tagDate

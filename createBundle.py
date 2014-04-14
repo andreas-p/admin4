@@ -114,17 +114,23 @@ if __name__ == '__main__':
       if git01:
         f.write("tagDate='%s'\n" % time.strftime("%Y-%m-%d %H:%M:%S", tag.commit.committed_date))
         f.write("revDate='%s'\n" % time.strftime("%Y-%m-%d %H:%M:%S", lastOriginCommit.committed_date))
+        f.write("modDate='%s'\n" % time.strftime("%Y-%m-%d %H:%M:%S", lastCommit.committed_date))
       else:
         f.write("tagDate='%s'\n" % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(tag.commit.committed_date)))
         f.write("revDate='%s'\n" % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(lastOriginCommit.committed_date)))
-      if dirty or str(lastCommit) != str(lastOriginCommit):
-        f.write("revLocalChange=True\n")
-      else:
-        f.write("revLocalChange=False\n")
+        f.write("modDate='%s'\n" % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(lastCommit.committed_date)))
       if dirty:
         f.write("revDirty=True\n")
       else:
         f.write("revDirty=False\n")
+      if dirty or str(lastCommit) != str(lastOriginCommit):
+        f.write("revLocalChange=True\n")
+      else:
+        f.write("revLocalChange=False\n")
+      if str(lastOriginCommit) != str(tag.commit):
+        f.write("revOriginChange=True\n")
+      else:
+        f.write("revOriginChange=False\n")
       f.close()
       
       return dirty
