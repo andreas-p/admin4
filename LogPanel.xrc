@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource>
+  <object class="wxPanel" name="LogPanel">
+    <object class="wxBoxSizer">
+      <orient>wxVERTICAL</orient>
+      <object class="sizeritem">
+        <object class="whListView" name="Listview"/>
+        <option>1</option>
+        <flag>wxEXPAND|wxGROW</flag>
+      </object>
+      <object class="sizeritem">
+        <object class="wxFlexGridSizer">
+          <object class="sizeritem">
+            <object class="wxStaticText">
+              <label>Refresh Rate</label>
+            </object>
+            <flag>wxALIGN_CENTRE_VERTICAL</flag>
+          </object>
+          <object class="sizeritem">
+            <object class="wxSlider" name="RefreshRate">
+              <value></value>
+              <min></min>
+              <max></max>
+            </object>
+            <flag>wxALIGN_CENTRE_VERTICAL</flag>
+            <minsize>50,-1d</minsize>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText" name="RefreshStatic">
+              <label>2 seconds</label>
+            </object>
+            <flag>wxALIGN_CENTRE_VERTICAL</flag>
+          </object>
+          <object class="spacer">
+            <flag>wxEXPAND|wxGROW</flag>
+          </object>
+          <object class="sizeritem">
+            <object class="wxButton" name="Clear">
+              <label>Clear</label>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxButton" name="Refresh">
+              <label>Refresh</label>
+            </object>
+            <flag>wxRIGHT|wxALIGN_CENTRE_VERTICAL</flag>
+          </object>
+          <cols>6</cols>
+          <hgap>10</hgap>
+          <growablecols>2</growablecols>
+        </object>
+        <flag>wxTOP|wxBOTTOM|wxALL|wxEXPAND|wxGROW</flag>
+        <border>10</border>
+      </object>
+    </object>
+  </object>
+</resource>

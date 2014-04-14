@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource>
+  <object class="wxDialog" name="About">
+    <title>About</title>
+    <centered>1</centered>
+    <style>wxCLOSE_BOX|wxCAPTION</style>
+    <object class="wxBoxSizer">
+      <orient>wxVERTICAL</orient>
+      <object class="sizeritem">
+        <object class="wxBoxSizer">
+          <orient>wxHORIZONTAL</orient>
+          <object class="sizeritem">
+            <object class="wxStaticBitmap">
+              <bitmap>Admin4.png</bitmap>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxNotebook">
+              <object class="notebookpage">
+                <label>Version</label>
+                <object class="wxPanel">
+                  <object class="wxBoxSizer">
+                    <orient>wxVERTICAL</orient>
+                    <object class="sizeritem">
+                      <object class="wxStaticText" name="Admin">
+                        <label>Admin4</label>
+                      </object>
+                      <flag>wxALIGN_CENTRE|wxTOP</flag>
+                      <border>20</border>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxStaticText" name="Version">
+                        <label>V1.x</label>
+                      </object>
+                      <flag>wxALIGN_CENTRE|wxTOP</flag>
+                      <border>10</border>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxStaticText" name="Revision">
+                        <label></label>
+                        <style>wxALIGN_CENTRE</style>
+                      </object>
+                      <flag>wxALIGN_CENTRE|wxTOP</flag>
+                      <border>2</border>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxStaticText" name="Description">
+                        <label></label>
+                        <style>wxALIGN_CENTRE</style>
+                      </object>
+                      <flag>wxALIGN_CENTRE|wxTOP</flag>
+                      <border>20</border>
+                    </object>
+                  </object>
+                </object>
+              </object>
+              <object class="notebookpage">
+                <label>Modules</label>
+                <object class="whListView" name="Modules"/>
+              </object>
+              <size>250,-1d</size>
+              <object class="notebookpage">
+                <label>Copyright</label>
+                <object class="wxTextCtrl" name="Copyright">
+                  <style>wxTE_MULTILINE|wxTE_READONLY</style>
+                </object>
+              </object>
+            </object>
+            <option>1</option>
+            <flag>wxGROW</flag>
+          </object>
+        </object>
+      </object>
+    </object>
+  </object>
+</resource>

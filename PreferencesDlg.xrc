@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource>
+  <object class="wxDialog" name="PreferencesDlg">
+    <title>Preferences</title>
+    <size>200,200d</size>
+    <style>wxCAPTION|wxCLOSE_BOX</style>
+    <object class="wxNotebook" name="Notebook">
+      <pos>5,5d</pos>
+      <size>190,175d</size>
+    </object>
+    <object class="wxButton" name="Cancel">
+      <label>Cancel</label>
+      <pos>50,180d</pos>
+      <size>45,-1d</size>
+    </object>
+    <object class="wxButton" name="OK">
+      <label>OK</label>
+      <pos>100,180d</pos>
+      <size>45,-1d</size>
+    </object>
+  </object>
+</resource>

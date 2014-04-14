@@ -1,0 +1,14 @@
+Icon:
+http://www.iconarchive.com/show/dragon-soft-icons-by-artua/Toolbox-icon.html
+
+MAC OSX
+sudo installer -pkg /Volumes/wxPython*/wxPython*.pkg -target /
+
+
+
+
+Eclipse/PyDev
+- tabsize 2
+- ignore name evt
+- ignore builtin names
+

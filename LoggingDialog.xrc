@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource>
+  <object class="wxDialog" name="LoggingDialog">
+    <title>Logging</title>
+    <size>300,170d</size>
+    <style>wxCAPTION|wxRESIZE_BORDER|wxCLOSE_BOX</style>
+    <object class="wxNotebook" name="Notebook">
+      <object class="notebookpage">
+        <label>Settings</label>
+        <object class="wxPanel" name="Settings">
+          <object class="wxBoxSizer">
+            <orient>wxVERTICAL</orient>
+            <object class="sizeritem">
+              <object class="wxStaticBoxSizer">
+                <orient>wxHORIZONTAL</orient>
+                <object class="sizeritem">
+                  <object class="wxFlexGridSizer">
+                    <cols>2</cols>
+                    <vgap>5</vgap>
+                    <hgap>5</hgap>
+                    <growablecols>1</growablecols>
+                    <object class="sizeritem">
+                      <object class="wxStaticText">
+                        <label>Logfile</label>
+                      </object>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxTextCtrl" name="LogfileLog">
+                        <value>admin4.log</value>
+                      </object>
+                      <option>1</option>
+                      <flag>wxGROW</flag>
+                      <minsize>80,-1d</minsize>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxStaticText">
+                        <label>Loglevel</label>
+                      </object>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxBoxSizer" name="LoglevelFile">
+                        <orient>wxHORIZONTAL</orient>
+                        <object class="sizeritem">
+                          <object class="wxSlider" name="LoglevelFile">
+                            <value></value>
+                            <min></min>
+                            <max>3</max>
+                          </object>
+                          <minsize>40,-1d</minsize>
+                        </object>
+                        <object class="sizeritem">
+                          <object class="wxStaticText" name="LoglevelFileStatic">
+                            <label>notyetspecified</label>
+                          </object>
+                          <flag>wxLEFT</flag>
+                          <border>10</border>
+                        </object>
+                      </object>
+                    </object>
+                  </object>
+                  <option>1</option>
+                  <flag>wxBOTTOM|wxRIGHT|wxGROW</flag>
+                  <border>10</border>
+                </object>
+                <label>Logging to logfile</label>
+                <object class="spacer">
+                  <size>0,0</size>
+                </object>
+              </object>
+              <flag>wxALL|wxGROW</flag>
+              <border>10</border>
+            </object>
+            <object class="sizeritem">
+              <object class="wxStaticBoxSizer">
+                <orient>wxHORIZONTAL</orient>
+                <label>Logging to querylog</label>
+                <object class="sizeritem">
+                  <object class="wxFlexGridSizer">
+                    <cols>2</cols>
+                    <vgap>5</vgap>
+                    <hgap>5</hgap>
+                    <growablecols>1</growablecols>
+                    <object class="sizeritem">
+                      <object class="wxStaticText">
+                        <label>Logfile</label>
+                      </object>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxTextCtrl" name="LogfileQuery">
+                        <value>query.log</value>
+                      </object>
+                      <option>1</option>
+                      <flag>wxGROW</flag>
+                      <minsize>80,-1d</minsize>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxStaticText">
+                        <label>Loglevel</label>
+                      </object>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxBoxSizer" name="LoglevelFile">
+                        <orient>wxHORIZONTAL</orient>
+                        <object class="sizeritem">
+                          <object class="wxSlider" name="LoglevelQuery">
+                            <value></value>
+                            <min></min>
+                            <max>2</max>
+                          </object>
+                          <minsize>40,-1d</minsize>
+                        </object>
+                        <object class="sizeritem">
+                          <object class="wxStaticText" name="LoglevelQueryStatic">
+                            <label>notyetspecified</label>
+                          </object>
+                          <flag>wxLEFT</flag>
+                          <border>10</border>
+                        </object>
+                      </object>
+                    </object>
+                  </object>
+                  <option>1</option>
+                  <flag>wxBOTTOM|wxRIGHT|wxGROW</flag>
+                  <border>10</border>
+                </object>
+                <object class="spacer">
+                  <size>0,0</size>
+                </object>
+              </object>
+              <flag>wxALL|wxGROW</flag>
+              <border>10</border>
+            </object>
+            <object class="sizeritem">
+              <object class="wxBoxSizer">
+                <orient>wxHORIZONTAL</orient>
+                <object class="spacer">
+                  <option>1</option>
+                </object>
+                <object class="sizeritem">
+                  <object class="wxButton" name="Apply">
+                    <size>40,-1d</size>
+                    <label>Apply</label>
+                  </object>
+                  <flag>wxALL|wxALIGN_RIGHT|wxALIGN_BOTTOM</flag>
+                  <border>10</border>
+                </object>
+              </object>
+              <flag>wxGROW|wxADJUST_MINSIZE</flag>
+            </object>
+          </object>
+        </object>
+      </object>
+    </object>
+  </object>
+</resource>
