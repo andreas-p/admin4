@@ -1,9 +1,14 @@
 Icon:
 http://www.iconarchive.com/show/dragon-soft-icons-by-artua/Toolbox-icon.html
 
-MAC OSX
+# Mac OSX 10.8, 10.9:
+# download wxPython, open *dmg
 sudo installer -pkg /Volumes/wxPython*/wxPython*.pkg -target /
 
+# for createBundle:
+xcode-select --install
+sudo easy_install pip
+sudo pip install gitpython
 
 
 

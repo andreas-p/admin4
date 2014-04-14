@@ -4,13 +4,11 @@
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
 
-revision="$Rev: none 646 2014-04-01 00:00:00Z none $"
 
 import version
 import wx
 import logger
 
-_=version
 app = wx.App()
 
 import adm
@@ -22,7 +20,7 @@ import frame
 from wh import StringType, SetLoaddir
 
 logger.loglevel=logger.LOGLEVEL.DEBUG
-IGNORE_DIRECTORIES=['xrced', 'dist', 'build', 'lib', 'include', 'mpl-data', 'tcl']
+IGNORE_MODULES=['xrced', 'dist', 'build', 'lib', 'include', 'mpl-data', 'tcl']
 
 def getRevision(revStr, modRevision, modDate):
   s=revStr.split()
@@ -36,8 +34,9 @@ def getRevision(revStr, modRevision, modDate):
     
 
 def loadModules(modlist=None):
-  adm.mainRevision, adm.mainDate=getRevision(revision, 0, 0)
-
+  adm.mainRevision=0
+  adm.mainDate=version.revDate
+  
   ignorePaths = [ os.path.abspath(fn) for fn in [sys.argv[0], __file__]]
   names=os.listdir(adm.loaddir)
 
@@ -48,28 +47,32 @@ def loadModules(modlist=None):
 
     if path in ignorePaths:
       continue
-    elif os.path.isdir(path):
+    loadModule(modid, path, modlist)
+
+
+def loadModule(modid, path, modlist=None):
+    if os.path.isdir(path):
       if modid.startswith('_'):
-        continue
-      if modid in IGNORE_DIRECTORIES:
-        continue
+        return
+      if modid in IGNORE_MODULES:
+        return
       if not os.path.exists(os.path.join(path, "__init__.py")) and not os.path.exists(os.path.join(path, "__init__.pyc")):
         logger.debug("No python module: %s", modid)
-        continue
+        return
       adm.availableModules.append(modid)
       if modlist and modid not in modlist:
         logger.debug("Module %s ignored", modid)
-        continue
+        return
 
       mod=__import__(modid)
       if not mod:
-        continue
+        return
       try:
         __import__("%s._requires" % modid)
         requires=getattr(mod, "_requires")
         if not requires.GetPrerequisites():
           logger.debug("Module %s Prerequisites not met", modid)
-          continue
+          return
       except:
         pass
       
@@ -202,7 +205,7 @@ def loadModules(modlist=None):
 
     elif path.endswith((".py", '.pyc')):
       if modid.startswith('__'):
-        continue
+        return
       mod=__import__(modid[:modid.rfind('.')])
       if hasattr(mod, "revision"):
         adm.mainRevision, adm.mainDate=getRevision(mod.revision, adm.mainRevision, adm.mainDate)

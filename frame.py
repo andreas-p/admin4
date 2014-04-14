@@ -273,7 +273,13 @@ class DetailFrame(Frame):
         import version
         self.Admin="Admin4"
         self.Version=xlt("Version %s") % version.version
-        self.Revision = xlt("Revision %s\n(%s)") % (adm.mainRevision, adm.mainDate)
+        if version.revDirty or version.revLocalChanges:
+          self.Revision = xlt("(%s)\nLocally changed") % version.revDate 
+          rev="%s++" % version.revDate
+        else:
+          if version.revDate:
+            self.Revision = "(%s)" % version.revDate
+          rev=version.revDate 
         self.Description = version.description
         copyrights=[version.copyright]
 
@@ -281,15 +287,15 @@ class DetailFrame(Frame):
         lv=self['Modules']
         lv.AddColumn(xlt("Module"), "PostgreSQL")
         lv.AddColumn(xlt("Ver."), "2.4.5")
-        lv.AddColumn(xlt("Rev."), "12999")
+        lv.AddColumn(xlt("Rev."), "2014-01-01++")
         lv.AddColumn(xlt("Description"), 30)
         
-        vals=["Core", version.version, str(adm.mainRevision), xlt("Admin4 core framework")]
+        vals=["Core", version.version, rev, xlt("Admin4 core framework")]
         lv.AppendItem(adm.images.GetId("Admin4Small"), vals)
 
         wxver=wx.version().split(' ')
         v=wxver[0].split('.')
-        vals=["wxWidgets", '.'.join(v[:2]), '.'.join(v[2:]), "wxWidgets %s" % ' '.join(wxver[1:])]
+        vals=["wxWidgets", '.'.join(v[:3]), '.'.join(v[3:]), "wxWidgets %s" % ' '.join(wxver[1:])]
         lv.AppendItem(adm.images.GetId("wxWidgets"), vals)
 
         for modid, mod in adm.modules.items():
@@ -297,7 +303,11 @@ class DetailFrame(Frame):
           mi=mod.moduleinfo
           vals.append(mi.get('modulename', modid))
           vals.append(mi.get('version'))
-          vals.append(mi.get('revision'))
+          rev=mi.get('revision')
+          if rev:
+            vals.append(rev)
+          else:
+            vals.append("")
           vals.append(mi.get('description'))
           serverclass=mi['serverclass'].__name__.split('.')[-1]
           icon=adm.images.GetId(os.path.join(modid, serverclass))

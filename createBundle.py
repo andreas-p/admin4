@@ -24,7 +24,6 @@ if __name__ == '__main__':
   import platform
   import shutil
   import version
-  _=version
   
   platform=platform.system()
   
