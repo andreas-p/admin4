@@ -81,18 +81,23 @@ if __name__ == '__main__':
     except:
       print "\nWARNING: No GIT installed\n\n"
       return False
+    git01=git.__version__.startswith("0.1")
     repo=git.Repo(os.path.dirname(os.path.abspath(sys.argv[0])))
 
     tags={}
     for t in repo.tags:
-      tags[t.commit.id] = t
+      tags[str(t.commit)] = t
 
-    lastOriginCommit=repo.commits('origin/master', max_count=1)[0]
-    lastCommit=repo.commits('master', max_count=1)[0]
+    if git01:
+      lastOriginCommit=repo.commits('origin/master', max_count=1)[0]
+      lastCommit=repo.commits('master', max_count=1)[0]
+    else:
+      lastOriginCommit=repo.commit('origin/master')
+      lastCommit=repo.commit('master')
     
     def findTag(c):
-      if c.id in tags:
-        return tags[c.id]
+      if str(c) in tags:
+        return tags[str(c)]
       if c.parents:
         for c in c.parents:
           tag=findTag(c)
@@ -104,9 +109,13 @@ if __name__ == '__main__':
       f=open("__version.py", "w")
       f.write("# Automatically created by createBundle from GIT\n\n")
       f.write("version='%s'\n" % tag.name)
-      f.write("tagDate='%s'\n" % time.strftime("%Y-%m-%d %H:%M:%S", tag.commit.committed_date))
-      f.write("revDate='%s'\n" % time.strftime("%Y-%m-%d %H:%M:%S", lastOriginCommit.committed_date))
-      if repo.is_dirty or lastCommit.id != lastOriginCommit.id:
+      if git01:
+        f.write("tagDate='%s'\n" % time.strftime("%Y-%m-%d %H:%M:%S", tag.commit.committed_date))
+        f.write("revDate='%s'\n" % time.strftime("%Y-%m-%d %H:%M:%S", lastOriginCommit.committed_date))
+      else:
+        f.write("tagDate='%s'\n" % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(tag.commit.committed_date)))
+        f.write("revDate='%s'\n" % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(lastOriginCommit.committed_date)))
+      if repo.is_dirty or str(lastCommit) != str(lastOriginCommit):
         f.write("revLocalChange=True\n")
       else:
         f.write("revLocalChange=False\n")

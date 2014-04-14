@@ -11,6 +11,10 @@ sudo easy_install pip
 sudo pip install gitpython
 
 
+https://pypi.python.org/pypi/smmap
+https://pypi.python.org/pypi/async
+https://pypi.python.org/pypi/gitdb
+https://github.com/gitpython-developers/GitPython/archive/0.3.zip
 
 Eclipse/PyDev
 - tabsize 2
