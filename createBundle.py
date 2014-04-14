@@ -75,6 +75,50 @@ if __name__ == '__main__':
       lst.append( (dir, filenames) )
     return lst
 
+  def writeVersion():  
+    import git, time
+    repo=git.Repo(os.path.dirname(os.path.abspath(sys.argv[0])))
+
+    tags={}
+    for t in repo.tags:
+      tags[t.commit.id] = t
+
+    lastOriginCommit=repo.commits('origin/master', max_count=1)[0]
+    lastCommit=repo.commits('master', max_count=1)[0]
+    
+    def findTag(c):
+      if c.id in tags:
+        return tags[c.id]
+      if c.parents:
+        for c in c.parents:
+          tag=findTag(c)
+          if tag:
+            return tag
+      return False
+    tag=findTag(lastOriginCommit)
+    if tag:
+      f=open("__version.py", "w")
+      f.write("# Automatically created by createBundle from GIT\n\n")
+      f.write("version='%s'\n" % tag.name)
+      f.write("tagDate='%s'\n" % time.strftime("%Y-%m-%d %H:%M:%S", tag.commit.committed_date))
+      f.write("revDate='%s'\n" % time.strftime("%Y-%m-%d %H:%M:%S", lastOriginCommit.committed_date))
+      if repo.is_dirty or lastCommit.id != lastOriginCommit.id:
+        f.write("revLocalChange=True\n")
+      else:
+        f.write("revLocalChange=False\n")
+      if repo.is_dirty:
+        f.write("revDirty=True\n")
+      else:
+        f.write("revDirty=False\n")
+      f.close()
+      
+      return repo.is_dirty
+        
+    
+
+  # Start of code
+  if writeVersion():
+    print "\nWARNING: Repository has uncommitted data\n\n"
   sys.skipSetupInit=True
   
 
@@ -117,7 +161,6 @@ if __name__ == '__main__':
   packages=sorted(set(packages))
 
   print "Required:", ", ".join(packages)
-  
   
   if installer == 'srcUpdate':
     distDir='dist'
