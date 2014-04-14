@@ -91,9 +91,11 @@ if __name__ == '__main__':
     if git01:
       lastOriginCommit=repo.commits('origin/master', max_count=1)[0]
       lastCommit=repo.commits('master', max_count=1)[0]
+      dirty=repo.is_dirty
     else:
       lastOriginCommit=repo.commit('origin/master')
       lastCommit=repo.commit('master')
+      dirty=repo.is_dirty()
     
     def findTag(c):
       if str(c) in tags:
@@ -115,17 +117,17 @@ if __name__ == '__main__':
       else:
         f.write("tagDate='%s'\n" % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(tag.commit.committed_date)))
         f.write("revDate='%s'\n" % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(lastOriginCommit.committed_date)))
-      if repo.is_dirty or str(lastCommit) != str(lastOriginCommit):
+      if dirty or str(lastCommit) != str(lastOriginCommit):
         f.write("revLocalChange=True\n")
       else:
         f.write("revLocalChange=False\n")
-      if repo.is_dirty:
+      if dirty:
         f.write("revDirty=True\n")
       else:
         f.write("revDirty=False\n")
       f.close()
       
-      return repo.is_dirty
+      return dirty
         
     
 
