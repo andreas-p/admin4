@@ -75,8 +75,12 @@ if __name__ == '__main__':
       lst.append( (dir, filenames) )
     return lst
 
-  def writeVersion():  
-    import git, time
+  def writeVersion():
+    try: 
+      import git, time
+    except:
+      print "\nWARNING: No GIT installed\n\n"
+      return False
     repo=git.Repo(os.path.dirname(os.path.abspath(sys.argv[0])))
 
     tags={}
