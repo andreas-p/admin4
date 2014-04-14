@@ -6,7 +6,7 @@
 
 
 import wx.aui
-import adm, os
+import adm, os, sys
 import logger
 from wh import xlt, StringType, GetBitmap, Menu, restoreSize
 from tree import NodeTreeCtrl, ServerTreeCtrl
@@ -273,13 +273,20 @@ class DetailFrame(Frame):
         import version
         self.Admin="Admin4"
         self.Version=xlt("Version %s") % version.version
-        if version.revDirty or version.revLocalChanges:
-          self.Revision = xlt("(%s)\nLocally changed") % version.revDate 
-          rev="%s++" % version.revDate
+        if not hasattr(sys, "frozen"):
+            self.Revision = xlt("(%s)\nunknown changes") % version.revDate 
+            rev=xlt("unknown")
+        elif version.revLocalChange:
+          if version.revDirty:
+            self.Revision = xlt("(%s)\nLocally changed/uncommitted") % version.revDate 
+            rev=xlt("local changed")
+          else:
+            self.Revision = xlt("(%s)\nLocally committed") % version.revDate 
+            rev=xlt("%s (local)") % version.revDate
         else:
-          if version.revDate:
-            self.Revision = "(%s)" % version.revDate
-          rev=version.revDate 
+          if version.tagDate:
+            self.Revision = "(%s)" % version.tagDate
+          rev=version.tagDate 
         self.Description = version.description
         copyrights=[version.copyright]
 

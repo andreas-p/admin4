@@ -5,7 +5,7 @@
 # see LICENSE.TXT for conditions of usage
 
 
-import sys, os, time
+import sys
 if not hasattr(sys, 'frozen'):
   import wxversion
   import platform
@@ -22,26 +22,17 @@ if not hasattr(sys, 'frozen'):
   else:
     wxversion.select("3.0")
 
-revDate=""
-revLocalDate=""
-revDirty=False
-revLocalChanges=False
 
-if hasattr(sys, 'frozen'):
-  pass
-else:
-  try:
-    import git
-    repo=git.Repo(os.path.dirname(os.path.abspath(sys.argv[0])))
-    revdirty=repo.is_dirty
-    lastCommit=repo.commits('master', max_count=1)[0]
-    lastOriginCommit=repo.commits('origin/master', max_count=1)[0]
-    revLocalChanges= (lastCommit != lastOriginCommit)
-    revDate=time.strftime("%Y-%m-%d", lastOriginCommit.committed_date)
-  except:
-    pass
+try:
+  from __version import *
+except:
+  version="2.x"
+  tagDate=None
+  revDate=None
+  revLocalChange=True
+  revDirty=True
 
-version="2.x"
+
 description="4th generation\nAdministration Tool\n"
 vendor="PSE"
 vendorDisplay="PSE Consulting"
