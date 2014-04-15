@@ -273,7 +273,7 @@ class DetailFrame(Frame):
         import version
         self.Admin="Admin4"
         self.Version=xlt("Version %s") % version.version
-        
+
         if not hasattr(sys, "frozen"):
             self.Revision = xlt("(%s)\nunknown changes") % version.revDate 
             rev=xlt("unknown")

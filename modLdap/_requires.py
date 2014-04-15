@@ -19,7 +19,8 @@
 # https://pypi.python.org/packages/2.7/p/python-ldap/python-ldap-2.4.12.win32-py2.7.msi
 # alternate:
 # http://www.lfd.uci.edu/~gohlke/pythonlibs/
-# others:
+#
+# other OS:
 # http://www.python-ldap.org/download.shtml
  
 import ldap

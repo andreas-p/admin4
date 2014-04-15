@@ -5,7 +5,6 @@
 # see LICENSE.TXT for conditions of usage
 
 
-import wx
 import wx.xrc as xrc
 import os, imp
 

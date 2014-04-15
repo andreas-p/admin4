@@ -81,7 +81,7 @@ def loadModule(modid, path, modlist=None):
       mod.moduleinfo['class'] = modid
       logger.debug("Loading Module %s '%s'", modid, modname)
 
-      modRevision=0
+      modRevision=mod.moduleinfo.get('revision', 0)
       modDate=None
 
       if hasattr(mod, "revision"):

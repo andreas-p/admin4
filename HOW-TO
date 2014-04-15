@@ -7,8 +7,7 @@ sudo installer -pkg /Volumes/wxPython*/wxPython*.pkg -target /
 
 # for createBundle:
 xcode-select --install
-sudo easy_install pip
-sudo pip install gitpython
+sudo easy_install GitPython
 
 
 https://pypi.python.org/pypi/smmap

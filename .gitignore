@@ -1,5 +1,7 @@
 __version.py
 .build/
+.DS_Store
+modXa
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

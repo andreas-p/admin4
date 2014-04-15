@@ -12,8 +12,6 @@ if not hasattr(sys, 'skipSetupInit'):
   import wx
   from wh import xlt
   
-  
-
       
   class Preferences(adm.NotebookPanel):
     name="BIND"
@@ -27,10 +25,10 @@ if not hasattr(sys, 'skipSetupInit'):
   moduleinfo={ 'name': xlt("BIND DNS Server"),
               'modulename': "BIND",
               'description': xlt("BIND9 DNS server"),
-              'version': "9.9.0",
+              'version': "9.9",
+              'revision': "1.0",
               'supports': "BIND V9.6 ... V9.9",
               'serverclass': Server.Server,
-#              'pages': [StatisticsPage, ConnectionPage, SqlPage],
 #              'preferences': Preferences,
               'copyright': "(c) 2014 PSE Consulting Andreas Pflug",
               'credits': "dnspython from http://www.dnspython.org",

@@ -76,26 +76,24 @@ if __name__ == '__main__':
     return lst
 
   def writeVersion():
+    # https://pythonhosted.org/GitPython/0.3.2/index.html
+    # https://pythonhosted.org/GitPython/0.1/index.html
     try: 
       import git, time
+      if git.__version__ < "0.3":
+        print "\nWARNING: GIT too old, must be >0.3\n\n"
+        return False
     except:
       print "\nWARNING: No GIT installed\n\n"
       return False
-    git01=git.__version__.startswith("0.1")
-    repo=git.Repo(os.path.dirname(os.path.abspath(sys.argv[0])))
 
+    repo=git.Repo(os.path.dirname(os.path.abspath(sys.argv[0])))
     tags={}
     for t in repo.tags:
       tags[str(t.commit)] = t
 
-    if git01:
-      lastOriginCommit=repo.commits('origin/master', max_count=1)[0]
-      lastCommit=repo.commits('master', max_count=1)[0]
-      dirty=repo.is_dirty
-    else:
-      lastOriginCommit=repo.commit('origin/master')
-      lastCommit=repo.commit('master')
-      dirty=repo.is_dirty()
+    lastOriginCommit=repo.commit('origin/master')
+    lastCommit=repo.commit('master')
     
     def findTag(c):
       if str(c) in tags:
@@ -105,25 +103,20 @@ if __name__ == '__main__':
           tag=findTag(c)
           if tag:
             return tag
-      return False
-    tag=findTag(lastOriginCommit)
+      return None
+    tag=findTag(lastCommit)
     if tag:
       f=open("__version.py", "w")
-      f.write("# Automatically created by createBundle from GIT\n\n")
+      f.write("# Automatically created from GIT by createBundle.\n# Do not edit manually!\n\n")
       f.write("version='%s'\n" % tag.name)
-      if git01:
-        f.write("tagDate='%s'\n" % time.strftime("%Y-%m-%d %H:%M:%S", tag.commit.committed_date))
-        f.write("revDate='%s'\n" % time.strftime("%Y-%m-%d %H:%M:%S", lastOriginCommit.committed_date))
-        f.write("modDate='%s'\n" % time.strftime("%Y-%m-%d %H:%M:%S", lastCommit.committed_date))
-      else:
-        f.write("tagDate='%s'\n" % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(tag.commit.committed_date)))
-        f.write("revDate='%s'\n" % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(lastOriginCommit.committed_date)))
-        f.write("modDate='%s'\n" % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(lastCommit.committed_date)))
-      if dirty:
+      f.write("tagDate='%s'\n" % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(tag.commit.committed_date)))
+      f.write("revDate='%s'\n" % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(lastOriginCommit.committed_date)))
+      f.write("modDate='%s'\n" % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(lastCommit.committed_date)))
+      if repo.is_dirty():
         f.write("revDirty=True\n")
       else:
         f.write("revDirty=False\n")
-      if dirty or str(lastCommit) != str(lastOriginCommit):
+      if repo.is_dirty() or str(lastCommit) != str(lastOriginCommit):
         f.write("revLocalChange=True\n")
       else:
         f.write("revLocalChange=False\n")
@@ -133,8 +126,10 @@ if __name__ == '__main__':
         f.write("revOriginChange=False\n")
       f.close()
       
-      return dirty
-        
+      return repo.is_dirty()
+    else:
+      print "No tags found"
+      return True    
     
 
   # Start of code
@@ -151,6 +146,8 @@ if __name__ == '__main__':
     
   for fn in os.listdir("."):
     if fn.startswith('.') or fn in ignoredirs:
+      continue
+    if os.path.islink(fn):
       continue
     if os.path.isdir(fn):
       if os.path.exists("%s/_requires.py" % fn):

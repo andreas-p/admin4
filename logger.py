@@ -5,7 +5,7 @@
 # see LICENSE.TXT for conditions of usage
 
 
-import sys, time, traceback
+import time, traceback
 
 loglines=[]
 querylines=[]

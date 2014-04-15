@@ -4,17 +4,18 @@
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
 
-import sys, os
+import os
 
 import wx
 import wh
 from wh import xlt, StringType
 import logger
 
-from controlcontainer import ControlContainer, MenuOwner
-from node import NodeId, Node, Collection, Group, ServerNode
-from page import PropertyPage, NotebookPage, NotebookControlsPage, NotebookPanel, getAllPreferencePanelClasses
-from controlcontainer import Dialog, CheckedDialog, PropertyDialog, ServerPropertyDialog
+
+from controlcontainer import ControlContainer, MenuOwner  # @UnusedImport
+from node import NodeId, Node, Collection, Group, ServerNode  # @UnusedImport
+from page import PropertyPage, NotebookPage, NotebookControlsPage, NotebookPanel, getAllPreferencePanelClasses  # @UnusedImport
+from controlcontainer import Dialog, CheckedDialog, PropertyDialog, ServerPropertyDialog  # @UnusedImport
 from frame import Frame
 
 

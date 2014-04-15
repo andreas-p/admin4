@@ -164,8 +164,9 @@ if not hasattr(sys, 'skipSetupInit'):
   import Server
   moduleinfo={ 'name': xlt("LDAP Server"),
               'modulename': "LDAP",
-              'description': "LDAP 3.0 server",
-              'version': "1.0",
+              'description': "LDAP server",
+              'version': "3",
+              'revision': "0.9",
   						'serverclass': Server.Server,
   						'pages': [],
   #						'preferences': Preferences,
