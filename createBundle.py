@@ -8,7 +8,7 @@
 resourcePatterns=['.png', '.ico', '.xrc']
 filePatterns=['.png', '.ico', '.xrc', '.py']
 ignoredirs=['xrced', 'build', 'dist']
-
+moreFiles=["LICENSE.TXT"]
 
 requiredMods=['wx.lib.ogl', 'xml']
 appEntry='admin4.py'
@@ -173,6 +173,8 @@ if __name__ == '__main__':
           admResources.append(fn)
   
   data_files.append( (".", admResources) )
+  data_files.extend(moreFiles)
+  
   data_files.reverse()
   requiredDirs = tuple(d.replace('.', '/') for d in requiredMods)
   packages.extend(requiredMods)

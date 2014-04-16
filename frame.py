@@ -293,7 +293,7 @@ class DetailFrame(Frame):
           rev=version.tagDate 
         self.Description = version.description
         copyrights=[version.copyright]
-
+        licenses=[xlt("%s\nFor details see LICENSE.TXT") % version.license]
 
         lv=self['Modules']
         lv.AddColumn(xlt("Module"), "PostgreSQL")
@@ -312,7 +312,8 @@ class DetailFrame(Frame):
         for modid, mod in adm.modules.items():
           vals=[]
           mi=mod.moduleinfo
-          vals.append(mi.get('modulename', modid))
+          modulename=mi.get('modulename', modid)
+          vals.append(modulename)
           vals.append(mi.get('version'))
           rev=mi.get('revision')
           if rev:
@@ -326,7 +327,13 @@ class DetailFrame(Frame):
           credits=mi.get('credits')
           if credits:
             copyrights.append(credits)
+          license=mi.get("license")
+          if license:
+            licenses.append("%s: %s" % (modulename, license))
         self.Copyright = "\n\n".join(copyrights).replace("(c)", unichr(169))
+        
+        licenses.append("Additional licenses from libraries used may apply.")
+        self.License="\n\n".join(licenses)
 
     about=About(self)
     about.ShowModal()

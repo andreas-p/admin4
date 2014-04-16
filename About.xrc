@@ -65,6 +65,12 @@
                   <style>wxTE_MULTILINE|wxTE_READONLY</style>
                 </object>
               </object>
+              <object class="notebookpage">
+                <label>License</label>
+                <object class="wxTextCtrl" name="License">
+                  <style>wxTE_MULTILINE|wxTE_READONLY</style>
+                </object>
+              </object>
             </object>
             <option>1</option>
             <flag>wxGROW</flag>

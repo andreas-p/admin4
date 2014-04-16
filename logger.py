@@ -61,20 +61,21 @@ class QueryLine(_Line):
     self.level=level
     indent=-1
     lines=[]
-    for line in cmd.splitlines():
-      line=line.rstrip()
-      sline=line.lstrip()
-      if not len(sline):
-        continue
-      if indent < 0:
-        indent = len(line)-len(sline)
-        lines.append(sline)
-      else:
-        ind=len(line)-len(sline) -indent
-        empty=""
-        for _i in range(ind):
-          empty += " "
-        lines.append(empty + sline)
+    if cmd:
+      for line in cmd.splitlines():
+        line=line.rstrip()
+        sline=line.lstrip()
+        if not len(sline):
+          continue
+        if indent < 0:
+          indent = len(line)-len(sline)
+          lines.append(sline)
+        else:
+          ind=len(line)-len(sline) -indent
+          empty=""
+          for _i in range(ind):
+            empty += " "
+          lines.append(empty + sline)
     self.cmd = "\n".join(lines)
     self.error=error
     self.result=result

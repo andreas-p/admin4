@@ -9,6 +9,7 @@ sudo installer -pkg /Volumes/wxPython*/wxPython*.pkg -target /
 xcode-select --install
 sudo easy_install GitPython
 
+https://pypi.python.org/pypi/GitPython
 
 https://pypi.python.org/pypi/smmap
 https://pypi.python.org/pypi/async
