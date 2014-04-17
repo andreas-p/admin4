@@ -129,10 +129,6 @@ if __name__ == '__main__':
       f.write("tagDate='%s'\n" % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(tag.commit.committed_date)))
       f.write("revDate='%s'\n" % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(lastOriginCommit.committed_date)))
       f.write("modDate='%s'\n" % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(lastCommit.committed_date)))
-      if repo.is_dirty():
-        f.write("revDirty=True\n")
-      else:
-        f.write("revDirty=False\n")
       if repo.is_dirty() or str(lastCommit) != str(lastOriginCommit):
         f.write("revLocalChange=True\n")
       else:
@@ -141,6 +137,11 @@ if __name__ == '__main__':
         f.write("revOriginChange=True\n")
       else:
         f.write("revOriginChange=False\n")
+      if repo.is_dirty():
+        versionTag="tmp"
+        f.write("revDirty=True\n")
+      else:
+        f.write("revDirty=False\n")
       f.close()
       
       return repo.is_dirty()
