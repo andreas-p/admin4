@@ -14,10 +14,12 @@ requiredMods=['wx.lib.ogl', 'xml']
 appEntry='admin4.py'
 packages=['wx']
 includes=[]
+addModules=[]
 excludes=['lib2to3', 'hotshot', 'distutils', 'ctypes', 'unittest']
 distDir="../admin4-release"
 buildDir=".build"
 appName="Admin4"
+versionTag=None
 
 if __name__ == '__main__':
   import sys, os
@@ -39,7 +41,20 @@ if __name__ == '__main__':
         print "Platform %s not supported" % platform
         sys.exit(1)
     sys.argv.insert(1, installer)
-      
+
+  if installer == "srcUpdate":
+    distDir='../admin4Update'
+
+  while '--addModule' in sys.argv:
+    i=sys.argv.index('--addModule')
+    del sys.argv[i]
+    addModules.append(sys.argv[i])
+    del sys.argv[i]
+  if '--distDir' in sys.argv:
+    i=sys.argv.index('--distDir')
+    del sys.argv[i]
+    distDir=sys.argv[i]
+    del sys.argv[i]
     
   def cleanWxDir(dir):
     remainder=0
@@ -57,7 +72,7 @@ if __name__ == '__main__':
         os.unlink(path)
     return remainder
         
-  def searchFiles(dir):
+  def searchFiles(dir, stripdirlen):
     lst=[]
     filenames=[]
     for fn in os.listdir(dir):
@@ -72,7 +87,7 @@ if __name__ == '__main__':
           filenames.append(path)
     
     if filenames:
-      lst.append( (dir, filenames) )
+      lst.append( (dir[stripdirlen:], filenames) )
     return lst
 
   def writeVersion():
@@ -106,16 +121,14 @@ if __name__ == '__main__':
       return None
     tag=findTag(lastCommit)
     if tag:
+      global versionTag
+      versionTag=tag.name
       f=open("__version.py", "w")
       f.write("# Automatically created from GIT by createBundle.\n# Do not edit manually!\n\n")
       f.write("version='%s'\n" % tag.name)
       f.write("tagDate='%s'\n" % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(tag.commit.committed_date)))
       f.write("revDate='%s'\n" % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(lastOriginCommit.committed_date)))
       f.write("modDate='%s'\n" % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(lastCommit.committed_date)))
-      if repo.is_dirty():
-        f.write("revDirty=True\n")
-      else:
-        f.write("revDirty=False\n")
       if repo.is_dirty() or str(lastCommit) != str(lastOriginCommit):
         f.write("revLocalChange=True\n")
       else:
@@ -124,6 +137,11 @@ if __name__ == '__main__':
         f.write("revOriginChange=True\n")
       else:
         f.write("revOriginChange=False\n")
+      if repo.is_dirty():
+        versionTag="tmp"
+        f.write("revDirty=True\n")
+      else:
+        f.write("revDirty=False\n")
       f.close()
       
       return repo.is_dirty()
@@ -144,11 +162,7 @@ if __name__ == '__main__':
   if installer == 'srcUpdate':
     resourcePatterns = filePatterns
     
-  for fn in os.listdir("."):
-    if fn.startswith('.') or fn in ignoredirs:
-      continue
-    if os.path.islink(fn):
-      continue
+  def checkAddItem(fn, stripdirlen=0):
     if os.path.isdir(fn):
       if os.path.exists("%s/_requires.py" % fn):
         mod=__import__("%s._requires" % fn)
@@ -163,7 +177,7 @@ if __name__ == '__main__':
         except:
           pass
         
-      data_files.extend(searchFiles(fn))
+      data_files.extend(searchFiles(fn, stripdirlen))
     else:
       if fn.startswith('ctl_') and fn.endswith('.py'):
         admResources.append(fn)
@@ -172,6 +186,14 @@ if __name__ == '__main__':
         if ext in resourcePatterns:
           admResources.append(fn)
   
+  for fn in os.listdir("."):
+    if fn.startswith('.') or fn in ignoredirs or os.path.islink(fn):
+      continue
+    checkAddItem(fn)
+  for fn in addModules:
+    fn=os.path.abspath(fn)
+    checkAddItem(fn, len(os.path.dirname(fn))+1)
+    
   data_files.append( (".", admResources) )
   data_files.extend(moreFiles)
   
@@ -180,10 +202,11 @@ if __name__ == '__main__':
   packages.extend(requiredMods)
   packages=sorted(set(packages))
 
+  if versionTag:
+    distDir += "-%s" % versionTag
   print "Required:", ", ".join(packages)
   
   if installer == 'srcUpdate':
-    distDir='dist'
     print "Collecting update into %s" %distDir
     try:
       shutil.rmtree(distDir)
@@ -204,6 +227,7 @@ if __name__ == '__main__':
         shutil.copy2(file, destDir)
     
   else:
+    print "Creating package in %s" %distDir
     import distutils.core
     __import__(installer)
     info=dict( data_files=data_files,

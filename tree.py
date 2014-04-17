@@ -251,6 +251,7 @@ class ServerTreeCtrl(TreeCtrl):
     self.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnTreeActivate)
     self.Bind(wx.EVT_TREE_BEGIN_DRAG, self.OnBeginDrag)
     self.Bind(wx.EVT_TREE_END_DRAG, self.OnEndDrag)
+    self.currentNode=None
     
     for groupName in adm.config.Read("ServerGroups", []):
       self.addGroup(groupName)
