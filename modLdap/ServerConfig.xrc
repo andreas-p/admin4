@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource>
+  <object class="wxDialog" name="ServerConfig">
+    <title>Server Configuration</title>
+    <size>150,120d</size>
+    <object class="wxBoxSizer">
+      <orient>wxVERTICAL</orient>
+      <object class="sizeritem">
+        <object class="wxFlexGridSizer">
+          <object class="sizeritem">
+            <object class="wxStaticText">
+              <label>sambaUnixIdPool DN</label>
+            </object>
+            <flag>wxRIGHT</flag>
+            <border>5</border>
+          </object>
+          <object class="sizeritem">
+            <object class="wxTextCtrl" name="sambaUnixIdPoolDN"/>
+            <option>1</option>
+            <flag>wxLEFT|wxRIGHT|wxGROW</flag>
+            <border>5</border>
+          </object>
+          <cols>2</cols>
+          <growablecols>1</growablecols>
+        </object>
+        <flag>wxTOP|wxBOTTOM|wxLEFT|wxRIGHT|wxGROW</flag>
+        <border>10</border>
+      </object>
+      <object class="sizeritem">
+        <object class="wxRadioBox" name="IdGeneratorStyle">
+          <label>uid/gid/rid generation style</label>
+          <content>
+            <item>currentMax+1</item>
+            <item>smbldap-tools</item>
+          </content>
+          <style>wxRA_VERTICAL</style>
+        </object>
+        <flag>wxTOP|wxLEFT|wxRIGHT</flag>
+        <border>10</border>
+      </object>
+      <object class="sizeritem">
+        <object class="wxStaticBoxSizer">
+          <label>Panel Ordering</label>
+          <orient>wxVERTICAL</orient>
+          <object class="sizeritem">
+            <object class="unknown" name="ValueGrid">
+              <pos>5,20d</pos>
+            </object>
+            <option>1</option>
+            <flag>wxBOTTOM|wxRIGHT|wxGROW</flag>
+            <border>5</border>
+            <minsize>100,30d</minsize>
+          </object>
+        </object>
+        <option>1</option>
+        <flag>wxTOP|wxLEFT|wxRIGHT|wxGROW</flag>
+        <border>10</border>
+      </object>
+      <object class="sizeritem">
+        <object class="wxBoxSizer">
+          <orient>wxHORIZONTAL</orient>
+          <object class="spacer">
+            <option>1</option>
+            <flag>wxGROW</flag>
+          </object>
+          <object class="sizeritem">
+            <object class="wxButton" name="OK">
+              <label>OK</label>
+              <pos>95,160d</pos>
+              <size>45,-1d</size>
+            </object>
+            <flag>wxRIGHT</flag>
+            <border>10</border>
+          </object>
+          <object class="sizeritem">
+            <object class="wxButton" name="Cancel">
+              <label>Cancel</label>
+              <pos>40,160d</pos>
+              <size>45,-1d</size>
+            </object>
+          </object>
+        </object>
+        <flag>wxTOP|wxBOTTOM|wxLEFT|wxRIGHT|wxGROW</flag>
+        <border>10</border>
+      </object>
+    </object>
+    <style>wxCAPTION|wxRESIZE_BORDER|wxCLOSE_BOX</style>
+  </object>
+</resource>

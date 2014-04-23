@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource>
+  <object class="wxPanel" name="Preferences">
+    <object class="wxStaticText">
+      <label>Admin Entry DN</label>
+      <pos>5,7d</pos>
+    </object>
+    <object class="wxTextCtrl" name="AdminLdapDn">
+      <pos>80,5d</pos>
+      <size>80,-1d</size>
+    </object>
+    <object class="wxStaticText">
+      <label>Password Hash</label>
+      <pos>5,22d</pos>
+    </object>
+    <object class="wxComboBox" name="PasswordHash">
+      <content>
+        <item>SSHA</item>
+        <item>SMD5</item>
+        <item>SHA</item>
+        <item>MD5</item>
+        <item>CLEARTEXT</item>
+      </content>
+      <selection>0</selection>
+      <pos>80,20d</pos>
+      <size>80,-1d</size>
+      <style>wxCB_READONLY|wxCB_DROPDOWN</style>
+    </object>
+  </object>
+</resource>

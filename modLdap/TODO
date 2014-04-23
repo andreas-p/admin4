@@ -1,0 +1,14 @@
+Config:
+- new RID/uid/gid QC
+
+next_uid:
+sambaUnixIdPool:uidNumber
+
+next_gid:
+sambaUnixIdPool:gidNumber
+
+next_rid:
+if sambaAlgorithmicRidBase:
+  sambaAlgorithmicRidBase + 2*uid
+else:
+  sambaDomain:sambaNextRid +1
