@@ -73,7 +73,7 @@ class Server(adm.ServerNode):
         SELECT 'fav_table', relname FROM pg_class JOIN pg_namespace nsp ON nsp.oid=relnamespace 
          WHERE nspname=%(adminspace)s AND relname=%(fav_table)s""" %
         {'datname': self.quoteString(dbname), 
-         'adminspace': self.quoteString(self.GetCfgString("AdminSpace", "Admin4")),
+         'adminspace': self.quoteString(self.GetPreference("AdminNamespace")),
          'fav_table': self.quoteString("Admin_Fav_%s" % self.user)})
 
       v=self.info['version'].split(' ')[1]
@@ -256,7 +256,7 @@ class ServerInstrument:
   def OnExecute(_parentWin, server):
     adminspace=server.adminspace
     if not adminspace:
-      adminspace=server.GetCfgString("AdminSpace", "Admin4")
+      adminspace=server.GetPreference("AdminNamespace")
       server.GetConnection().ExecuteSingle("CREATE SCHEMA %s AUTHORIZATION postgres" % server.quoteIdent(adminspace))
     fav_table="Admin_Fav_%s" % server.user
     server.GetConnection().ExecuteSingle("""
@@ -290,6 +290,6 @@ class ServerConfig(adm.PropertyDialog):
 
 
 menuinfo=[
-        {"class": ServerConfig, "nodeclasses": Server, 'sort': 40},
+#        {"class": ServerConfig, "nodeclasses": Server, 'sort': 40},
         {"class": ServerInstrument, "nodeclasses": Server, 'sort': 1},
         ]

@@ -235,15 +235,12 @@ if not hasattr(sys, 'skipSetupInit'):
       self.control.Fill(rows, 'procpid')
 
       
-  class Preferences(adm.NotebookPanel):
+  class Preferences(adm.PreferencePanel):
     name="PostgreSQL"
+    configDefaults={ "AdminNamespace":  "Admin4" }
   
-    def Go(self):
-      self.AdminNamespace = adm.config.Read("AdminNamespace", "Admin4", self)
     
-    def Save(self):
-      adm.config.Write("AdminNamespace", self.AdminNamespace, self)
-      return True
+
       
   moduleinfo={ 'name': xlt("PostgreSQL Server"),
               'modulename': "PostgreSQL",

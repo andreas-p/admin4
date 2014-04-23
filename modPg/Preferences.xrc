@@ -6,8 +6,8 @@
       <pos>5,7d</pos>
     </object>
     <object class="wxTextCtrl" name="AdminNamespace">
-      <pos>80,4d</pos>
-      <size>50,-1d</size>
+      <pos>80,5d</pos>
+      <size>80,-1d</size>
     </object>
   </object>
 </resource>

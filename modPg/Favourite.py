@@ -16,7 +16,7 @@ from Function import Function
 class Favourites(adm.Node):
   typename=xlt("Favourites")
   shortname=xlt("Favourites")
-  defaultname="unsorted"
+  defaultname=xlt("unsorted")
   def __init__(self, parentNode):
     super(Favourites, self).__init__(parentNode, xlt(Favourites.defaultname))
     
