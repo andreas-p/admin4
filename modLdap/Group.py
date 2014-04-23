@@ -217,7 +217,7 @@ class Group(SpecificEntry):
     lv.Bind(wx.EVT_MOTION, self.OnMouseMove)
 
 
-  def OnGenerate(self, evt=0):
+  def OnGenerate(self, evt):
     maxGid=0
     res=self.GetServer().SearchSubConverted("(&(objectClass=posixGroup)(gidNumber=*))", "gidNumber")
     for _dn, info in res:

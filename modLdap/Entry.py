@@ -11,7 +11,7 @@ import adm
 from wh import xlt, Menu
 import wx.propgrid as wxpg
 from . import AttrVal, ldapSyntax
-import base64, hashlib
+import os, base64, hashlib
 
 
 
@@ -153,6 +153,9 @@ class Entry(adm.Node):
       if not dn:
         logger.debug("Referral: %s", str(attribs))
         continue
+      if False: # We could suppress the admin config entry here
+        if dn == parentNode.GetServer().adminLdapDn:
+          continue
       array[dn.decode('utf8')]=attribs
     dns=array.keys()
     dns.sort()
@@ -213,7 +216,7 @@ class Entry(adm.Node):
         self.panels.append(panel)
         notebook.AddPage(panel, name)
 
-      for cls, resname in SpecificEntry.GetClasses(self.primaryClass):
+      for cls, resname in SpecificEntry.GetClasses(self.parentNode.GetServer(), self.primaryClass):
         panel=cls(self, notebook, resname)
         addPanel(panel, panel.name)
 
@@ -512,12 +515,14 @@ class GenericEntry(adm.NotebookPanel):
 
 
   def Check(self):
+    if self.grid.IsEditorFocused():
+      self.grid.CommitChangesFromEditor()
     ok=True
-    rdn=self.RDN.split('=')
-    oid=self.GetServer().GetOid(rdn[0])
     ok=self.dialog.CheckValid(ok, self.dialog.objectClasses, xlt("Select a structural object class first"))
     if self.RDN:
+      rdn=self.RDN.split('=')
       ok=self.dialog.CheckValid(ok, len(rdn) == 2 and rdn[0] and rdn[1], xlt("Invalid RDN format: <attr>=<value>"))
+      oid=self.GetServer().GetOid(rdn[0])
       ok=self.dialog.CheckValid(ok, oid in self.dialog.mayAttribs, xlt("RDN must use a valid attribute"))
     else:
       ok=self.dialog.CheckValid(ok, False, xlt("Enter RDN"))
@@ -679,6 +684,8 @@ class GenericEntry(adm.NotebookPanel):
 
 
   def OnGridChange(self, ev):
+    if not self.IsShown():
+      return
     property=ev.GetProperty()
 
     if property:
@@ -753,6 +760,7 @@ class EntryPassword:
         return True
     return False
 
+  
   @staticmethod
   def OnExecute(parentWin, node):
 #    cls=wx.PasswordEntryDialog
@@ -764,12 +772,34 @@ class EntryPassword:
       addList=[]
       chgList=[]
 
+      def EncryptPassword(passwd, hash):
+        if hash == "CLEARTEXT":
+          return passwd
+        salt=""
+        if hash == "SHA":
+          alg="SHA1"
+        elif hash == "SSHA":
+          salt=os.urandom(4)
+          alg="SHA1"
+        elif hash == "MD5":
+          alg="MD5"
+        elif hash == "SMD5":
+          salt=os.urandom(4)
+          alg="MD5"
+        else:
+          return None
+        hl=hashlib.new(alg, passwd)
+        if salt:
+          hl.update(salt)
+        crypted=base64.b64encode(hl.digest() + salt)
+        return "{%s}%s" % (hash, crypted)
+
 
       _must,may=node.GetServer().GetClassSchemaMustMayOids(node.objectClasses)
 
       userPasswordSchema=node.GetServer().GetAttributeSchema("userPassword")
       if userPasswordSchema.oid in may:
-        hash="{SHA}%s" % base64.b64encode(hashlib.sha1(passwd).digest())
+        hash=EncryptPassword(passwd, node.GetServer().GetPreference("PasswordHash"))
         userPassword=AttrVal(None, userPasswordSchema, [hash])
 
         if userPasswordSchema.oid in node.attribs:

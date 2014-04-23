@@ -321,7 +321,7 @@ SpecificEntry.AddClass(SambaGroupMapping)
 class SambaDomain(SpecificEntry):
   name=xlt("Samba Domain")
   shortname=xlt("Domain")
-  icon="Domain"
+  icon="SambaDomain"
   canClasses="sambaDomain"
 
 

@@ -117,6 +117,36 @@ class NotebookPanel(wx.Panel, adm.ControlContainer):
     return self._setattr(name, value)
 
 
+class PreferencePanel(NotebookPanel):
+  """
+  PreferencePanel
+  
+  Class representing a panel used in the main preferences dialog
+  for configuration of module specific options
+  A node can retrieve a value using node.GetPreference(key)
+  """
+
+  @classmethod
+  def GetPreference(cls, key):
+    default=cls.configDefaults.get(key)
+    return adm.config.Read(key, default, cls)
+
+  @classmethod
+  def SetPreference(cls, key, val):
+    adm.config.Write(key, val, cls)
+    
+  def Save(self):
+    for key in self.configDefaults:
+      val=self._getattr(key)
+      self.SetPreference(key, val)
+    return True
+  
+  def Go(self):
+    for key in self.configDefaults:
+      val=self.GetPreference(key)
+      self._setattr(key, val)
+
+
 class NotebookControlsPage(NotebookPage, NotebookPanel):
   """
   NotebookControlsPage

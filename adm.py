@@ -14,7 +14,7 @@ import logger
 
 from controlcontainer import ControlContainer, MenuOwner  # @UnusedImport
 from node import NodeId, Node, Collection, Group, ServerNode  # @UnusedImport
-from page import PropertyPage, NotebookPage, NotebookControlsPage, NotebookPanel, getAllPreferencePanelClasses  # @UnusedImport
+from page import PropertyPage, NotebookPage, NotebookControlsPage, NotebookPanel, PreferencePanel, getAllPreferencePanelClasses  # @UnusedImport
 from controlcontainer import Dialog, CheckedDialog, PropertyDialog, ServerPropertyDialog  # @UnusedImport
 from frame import Frame
 

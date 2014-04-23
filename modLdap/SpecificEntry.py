@@ -214,15 +214,12 @@ class SpecificEntry(adm.NotebookPanel):
 
 
   @classmethod
-  def GetClasses(self, primaryClass):
+  def GetClasses(self, server, primaryClass):
     classes=[]
     if primaryClass:
-#      if isinstance(primaryClass, StringType):
-#       pcn=primaryClass.lower()
-  #    else:
-      pcn=primaryClass.__name__.lower()
+      pcn=primaryClass.__name__
 
-      clList=panelClassDef.get(pcn)
+      clList=server.GetPanelClasses(pcn)
       if clList:
         if isinstance(clList, str):
           clList=clList.split()
@@ -241,13 +238,4 @@ class SpecificEntry(adm.NotebookPanel):
           classes.append((panelClass, resname))
     return classes
 
-#import Posix, Samba, Group
-#dummy=Posix
-#dummy=Samba
-#dummy=Group
 
-panelClassDef={
-  'useraccount': "UserAccount:UserAccountItw Personal Contact Groups ShadowAccount SambaAccount",
-  'group': "Group SambaGroupMapping",
-  'sambadomain': "SambaDomain",
-  }

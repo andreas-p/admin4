@@ -170,8 +170,11 @@ class ControlContainer():
 
   def getResource(self):
     if self.resname.startswith('.'):
-      self.resname = self.resname[1:]
       path=os.path.join(adm.loaddir, "%s.xrc" % self.resname)
+      self.resname = os.path.basename(self.resname)
+    elif self.resname.startswith('/'):
+      path="%s.xrc" % self.resname
+      self.resname = os.path.basename(self.resname)
     else:
       module=self.module.replace(".", "/")
       path = os.path.join(adm.loaddir, module, "%s.xrc" % self.resname)
@@ -330,6 +333,8 @@ class ControlContainer():
         return ctl.GetKeySelection()
       elif isinstance(ctl, wx.StaticText):
         return ctl.GetLabel()
+      elif isinstance(ctl, wx.RadioBox):
+        return ctl.GetSelection()
       else:
         return ctl.GetValue()
     else:
@@ -365,6 +370,9 @@ class ControlContainer():
           ctl.SetLabel("")
         else:
           ctl.SetLabel(unicode(value))
+      elif isinstance(ctl, wx.RadioBox):
+        if value != None:
+          ctl.SetSelection(value)
       else:
         if value == None:
           return ctl.SetValue("")

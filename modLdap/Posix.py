@@ -48,7 +48,7 @@ class ShadowAccount(SpecificEntry):
     SpecificEntry.Go(self)
     self.OnExpire()
 
-  def OnGenerate(self, evt=0):
+  def OnGenerate(self, evt):
     maxUid=0
     res=self.GetServer().SearchSubConverted("(&(objectClass=posixAccount)(uidNumber=*))", "uidNumber")
     for _dn, info in res:

@@ -1,14 +1,8 @@
-Main:
-version/revision
 
 Pg:
 - Triggers
 - Edit Table
   - Table, Column
-
-Ldap:
-- new RID/uid/gid QC
-
 
 BIND:
 PTR edit sanity

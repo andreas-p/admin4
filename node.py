@@ -542,6 +542,11 @@ class ServerNode(Node):
   def GetCfgString(self, cmd, default=None):
     cfg=adm.config.Read("%s/%s" % (self.module, cmd), default)
     return cfg
+  
+  def GetPreference(self, key):
+    prefs=self.moduleinfo()['preferences']
+    return prefs.GetPreference(key)
+  
 
   def Disconnect(self):
     self.connection=None

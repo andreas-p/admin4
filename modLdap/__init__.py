@@ -146,21 +146,22 @@ if not hasattr(sys, 'skipSetupInit'):
     def __str__(self):
       return "%s: %s" % (self.name, self.value)
   
+    @staticmethod
+    def CreateList(dict):
+      list=[]
+      for name, value in dict.items():
+        list.append(AttrVal(name, None, value))
+      return list
+    
   
-  
-  class Preferences(adm.NotebookPanel):
+  class Preferences(adm.PreferencePanel):
     name="LDAP"
-  
-    def Go(self):
-      pass
-  
-    def Save(self):
-      return True
+    configDefaults={ "AdminLdapDn": "Admin4-Preferences", "PasswordHash": "SSHA" }
   
     @staticmethod
     def Init():
       pass
-  
+    
   import Server
   moduleinfo={ 'name': xlt("LDAP Server"),
               'modulename': "LDAP",
@@ -169,7 +170,7 @@ if not hasattr(sys, 'skipSetupInit'):
               'revision': "0.9",
   						'serverclass': Server.Server,
   						'pages': [],
-  #						'preferences': Preferences,
+  						'preferences': Preferences,
               'copyright': "(c) 2013-2014 PSE Consulting Andreas Pflug",
               'credits': "python-ldap from http://www.python-ldap.org using OpenLdap 2.4 (http://www.openldap.org)",
   						 }

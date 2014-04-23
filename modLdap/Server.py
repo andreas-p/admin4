@@ -7,8 +7,10 @@
 
 import wx
 import adm
-import re
+import re, ast
+import wx.propgrid as wxpg
 
+import logger
 from wh import xlt, YesNo
 from . import AttrVal
 
@@ -23,17 +25,25 @@ class Server(adm.ServerNode):
   shortname=xlt("LDAP Server")
   typename=xlt("LDAP Server")
   wantIconUpdate=True
-
+  panelClassDefault={
+  #  'useraccount': "UserAccount:UserAccountItw Personal Contact Groups ShadowAccount SambaAccount",
+    'UserAccount': "UserAccount Personal Contact Groups ShadowAccount SambaAccount",
+    'Group': "Group SambaGroupMapping",
+    'SambaDomain': "SambaDomain",
+    }    
   def __init__(self, settings):
     adm.ServerNode.__init__(self, settings)
     if not self.user:
       self.needPassword=False
     self.dn= settings['ldapbase']
     self.attributes={}
+    self.adminLdapDn=None
+    self.config={}
 
     self.timeout=settings.get('querytimeout', standardTimeout)
     self.systemAttrs=settings.get('systemattributes', standardSystemAttributes).split()
     self.systemClasses=settings.get('systemclasses', standardSystemClasses).split()
+
 
   def GetProperties(self):
     if not self.properties:
@@ -58,7 +68,8 @@ class Server(adm.ServerNode):
     if self.connection.base:
       for name, val in self.connection.base.items():
         self.AddChildrenProperty(val, name, -1)
-
+    if self.adminLdapDn:
+      self.properties.append( (xlt("Admin Config DN"), self.adminLdapDn))
     if self.registrationChanged:
       self.properties.append( (xlt("Registration"), xlt("Registration changed"), adm.images['attention']) )
 
@@ -93,7 +104,19 @@ class Server(adm.ServerNode):
 
   def DoConnect(self):
     self.connection=LdapServer(self)
-    return self.IsConnected()
+
+    if self.IsConnected():
+      adm=self.connection.SearchOne(self.dn, "documentIdentifier=%s" % self.GetPreference("AdminLdapDn"))
+      if adm:
+        self.adminLdapDn=adm[0][0]
+        val=adm[0][1]['description']
+        try:
+          self.config=ast.literal_eval(val[0])
+        except:
+          logger.debug("Couldn't pythonize '%s[0]'", val)
+          pass
+      return True
+    return False
 
 
   def Split_DN(self, dnstr):
@@ -242,7 +265,18 @@ class Server(adm.ServerNode):
 
     return mustHave, mayHave
 
+  def GetIdGeneratorStyle(self):
+    return self.config.get('idGeneratorStyle', 1)
+  
+  def GetSambaUnixIdPoolDN(self):
+    return self.config.get('sambaUnixIdPoolDN') 
 
+  def GetPanelClasses(self, pcn):
+    panelClasses=self.config.get('panelClasses', {})
+    pcl=panelClasses.get(pcn, self.panelClassDefault.get(pcn))
+    if pcl:
+      return str(pcl)
+    return None
 
 
   class Dlg(adm.ServerPropertyDialog):
@@ -320,17 +354,80 @@ class Server(adm.ServerNode):
 nodeinfo=[ { 'class': Server, 'collection': xlt("LDAP Server") } ]
 
 
-class ServerConfig(adm.PropertyDialog):
+class ServerInstrument:
+  name=xlt("Instrument server")
+  help=xlt("Instrument server for site specific administration")
+  
+  @staticmethod
+  def CheckAvailableOn(node):
+    return isinstance(node, Server) and not node.adminLdapDn
+  
+  @staticmethod
+  def OnExecute(_parentWin, server):
+    vals={ 'description': "{}", 'objectClass': 'document', 'documentTitle': "Config data of Admin4; do not edit manually."}
+    dn="documentIdentifier=%s,%s" % (server.GetPreference("AdminLdapDn"), server.dn)
+    
+    if server.GetConnection().Add(dn, AttrVal.CreateList(vals)):
+      server.adminLdapDn=dn
+      
+    return True
+
+
+class ServerConfig(adm.Dialog):
   name=xlt("Server Configuration")
-  help=xlt("Edit ldap Server Configuration")
+  help=xlt("Edit LDAP Server Configuration")
 
+  def AddExtraControls(self, res):
+    self.grid=wxpg.PropertyGrid(self)
+    self.grid.SetMarginColour(wx.Colour(255,255,255))
+    res.AttachUnknownControl("ValueGrid", self.grid)
+    
+    
   def Go(self):
-    pass
+    self.grid.Freeze()
+    for key in Server.panelClassDefault:
+      val=self.node.GetPanelClasses(key)
+      property=wxpg.StringProperty(key, key, val)
+#      bmp=self.GetBitmap(key)
+#      if bmp:
+#        self.grid.SetPropertyImage(property, bmp)  crashes?!?
+      self.grid.Append(property)
+    self.grid.Thaw()
+    self.IdGeneratorStyle =  self.node.GetIdGeneratorStyle()
+    self.sambaUnixIdPoolDN = self.node.GetSambaUnixIdPoolDN() 
 
+  
+  def GetChanged(self):
+    return True
+    
+    
+  def Check(self):
+    if self.grid.IsEditorFocused():
+      self.grid.CommitChangesFromEditor()
+    return True
+  
+  def Save(self):
+    pc={}
+    for name in Server.panelClassDefault:
+      property=self.grid.GetProperty(name)
+      val=property.GetValue()
+      if val:
+        pc[name] = val 
+    config={}
+    config['panelClasses'] = pc
+    config['idGeneratorStyle'] = self.IdGeneratorStyle
+    config['sambaUnixIdPoolDN'] = self.sambaUnixIdPoolDN
+    
+    vals={ 'description': str(config) }
+    
+    rc=self.GetConnection().Modify(self.node.adminLdapDn, AttrVal.CreateList(vals), [], [])
+    if rc:
+      self.node.config=config
+    return rc
 
   @staticmethod
-  def CheckEnabled(unused_node):
-    return True # TODO check if available
+  def CheckEnabled(node):
+    return node.adminLdapDn != None
 
 
   @staticmethod
@@ -339,7 +436,7 @@ class ServerConfig(adm.PropertyDialog):
     return dlg.GoModal()
 
 
-
 menuinfo=[
         {"class": ServerConfig, "nodeclasses": Server, 'sort': 40},
+        {"class": ServerInstrument, "nodeclasses": Server, 'sort': 1},
         ]
