@@ -223,7 +223,6 @@ class LoggingDialog(adm.Dialog, _TimerOwner):
     nb.InsertPage(0, panel, xlt(panel.panelName))
     panel=QueryLoggingPanel(self, nb)
     nb.InsertPage(1, panel, xlt(panel.panelName))
-    nb.SetSelection(0)
     self.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.OnPageChange)
     
     self['LogLevelFile'].SetRange(0, len(self.loglevels)-1)
@@ -235,6 +234,7 @@ class LoggingDialog(adm.Dialog, _TimerOwner):
     self.LogFileLog = logger.logfile
     self.LogFileQuery=logger.queryfile
     self.OnLevel()
+
     
   def OnLevel(self, evt=None):
     self.LogLevelFileStatic=xlt(logger.LOGLEVEL.Text(self.loglevels[self.LogLevelFile]))
@@ -263,6 +263,8 @@ class LoggingDialog(adm.Dialog, _TimerOwner):
     
 
   def Go(self):
+    self.Show() # needed for wx < 3.0 for SetSelection
+    self['notebook'].SetSelection(0)
     self.OnPageChange()
 
 
