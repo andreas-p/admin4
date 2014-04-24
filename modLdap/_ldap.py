@@ -133,7 +133,7 @@ class LdapServer:
 
   def Delete(self, dn):
     try:
-      self.execute(self.ldap.delete_s, dn)
+      self.execute(self.ldap.delete_s, dn.encode('utf8'))
       return True
     except Exception as e:
       self.raiseException(e, "Delete")
@@ -193,25 +193,32 @@ class LdapServer:
     """
 
     def _searchAsync(base, scope, filter, attrs):
-      msgid=self.ldap.search(base, scope, filter, map(str, attrs))
+      msgid=self.ldap.search(base.encode('utf8'), scope, filter.encode('utf8'), map(str, attrs))
       response=self.ldap.result(msgid, 1, self.ldap.timeout)
       return response[1]
     
+    err=None
     try:
       result=self.execute(_searchAsync, base, scope, filter, attrs)
     except (ldap.NO_SUCH_OBJECT,ldap.NO_SUCH_ATTRIBUTE, ldap.INSUFFICIENT_ACCESS) as e:
-      logger.debug("Search failed: %s %s -> %s", base, filter, type(e).__name__)
-      return None
+      result=None
+      err=type(e).__name__
+      
+    logger.querylog("%s %s base=%s, scope=%s" % (filter, str(attrs), base, ['BASE','ONE','SUB'][scope]), None, err)
     return result
 
   def SearchSub(self, base, filter="(objectClass=*)", attrs=["*"]):
     if not isinstance(attrs, list):
       attrs=attrs.split()
-    return self._search(base, filter, ldap.SCOPE_SUBTREE, map(str, attrs))
+    return self._search(base, filter, ldap.SCOPE_SUBTREE, attrs)
 
   def SearchOne(self, base, filter="(objectClass=*)", attrs=["*"]):
     if not isinstance(attrs, list):
       attrs=attrs.split()
-    return self._search(base, filter, ldap.SCOPE_ONELEVEL, map(str, attrs))
+    return self._search(base, filter, ldap.SCOPE_ONELEVEL, attrs)
   
-
+def SearchBase(self, base, filter="(objectClass=*)", attrs=["*"]):
+    if not isinstance(attrs, list):
+      attrs=attrs.split()
+    return self._search(base, filter, ldap.SCOPE_BASE, attrs)
+  
