@@ -24,6 +24,8 @@ class AcceleratorHelper:
   def Add(self, flags, keycode, cmd):
     if not isinstance(cmd, int):
       cmd=self.frame.GetMenuId(cmd)
+    if not isinstance(keycode, int):
+      keycode=ord(keycode)
     self.list.append(wx.AcceleratorEntry(flags, keycode, cmd) )
   
   def GetTable(self):

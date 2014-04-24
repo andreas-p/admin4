@@ -85,9 +85,8 @@ class SqlResultGrid(wx.grid.Grid):
   def Copy(self):
     vals=self.getCells()
     if vals:
-      wx.TheClipboard.Open()
-      wx.TheClipboard.SetData(wx.TextDataObject(vals))
-      wx.TheClipboard.Close()
+      adm.SetClipboard(vals)
+
 
   def getCells(self, quoteChar="'", commaChar=', ', lfChar='\n', null='NULL'):
     def quoted(v):
@@ -215,13 +214,9 @@ class SqlFrame(adm.Frame):
     self.EnableMenu(self.querymenu, self.OnCancelQuery, False)
     
     ah=AcceleratorHelper(self)
-    if wx.Platform == "__WXMAC__":
-      ctl=wx.ACCEL_CMD
-    else:
-      ctl=wx.ACCEL_CTRL
-    ah.Add(ctl, ord('X'), self.OnCut)
-    ah.Add(ctl, ord('C'), self.OnCopy)
-    ah.Add(ctl, ord('V'), self.OnPaste)
+    ah.Add(wx.ACCEL_CTRL, 'X', self.OnCut)
+    ah.Add(wx.ACCEL_CTRL, 'C', self.OnCopy)
+    ah.Add(wx.ACCEL_CTRL, 'V', self.OnPaste)
     ah.Add(wx.ACCEL_NORMAL,wx.WXK_F5, self.OnExecuteQuery)
     ah.Add(wx.ACCEL_NORMAL,wx.WXK_F7, self.OnExplainQuery)
     ah.Add(wx.ACCEL_ALT,wx.WXK_PAUSE, self.OnCancelQuery)

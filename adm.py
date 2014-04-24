@@ -231,6 +231,12 @@ def DisplayDialog(cls, parentWin, *params):
   dlg.SetFocus()
   return dlg
 
+
+def SetClipboard(data):
+  wx.TheClipboard.Open()
+  wx.TheClipboard.SetData(wx.TextDataObject(data))
+  wx.TheClipboard.Close()
+    
 def GetCurrentFrame(wnd=None):
   if not wnd:
     wnd=wx.Window.FindFocus()
@@ -240,7 +246,7 @@ def GetCurrentFrame(wnd=None):
 
 def SetStatus(text=None):
   GetCurrentFrame().SetStatus(text)
-  
+
 def GetCurrentTree(wnd=None):
   while wnd:
     if isinstance(wnd, wx.TreeCtrl):

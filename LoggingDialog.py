@@ -8,7 +8,7 @@
 import adm
 import wx, os
 import logger
-from wh import xlt
+from wh import xlt, Menu, AcceleratorHelper
 from page import ControlledPage
 
 from notebook import _TimerOwner
@@ -29,8 +29,10 @@ class LogPanel(adm.NotebookPanel, ControlledPage):
     else:
       self['Clear'].Hide()
       
-#    self.control.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK, notebook.OnItemRightClick)
+    self.control.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK, self.OnItemRightClick)
     self.Bind('Refresh', self.OnRefresh)
+
+
     rrc=self['Refreshrate']
     rrc.SetRange(1, 22)
     rr=adm.config.Read("RefreshRate", 3, self, self.panelName)
@@ -67,6 +69,13 @@ class LogPanel(adm.NotebookPanel, ControlledPage):
   def OnRefresh(self, evt=None):
     self.TriggerTimer()
   
+     
+  def OnItemRightClick(self, evt):
+    if hasattr(self, 'OnCopy'):
+      cm=Menu()
+      cm.Append(self.dialog.BindMenuId(self.OnCopy), xlt("Copy"), xlt("Copy"))
+      self.PopupMenu(cm, evt.GetPosition())
+     
   
   def OnRefreshRate(self, evt=None):
     rr=self.RefreshRate
@@ -116,6 +125,17 @@ class LoggingPanel(LogPanel):
     self.logIndex=0
     self.insertPosition=-1 # 0: start, -1: end
 
+
+  def OnCopy(self, evt):
+    lines=[]
+    for i in self.control.GetSelection():
+      txt=self.control.GetItemText(i, 1)
+      tb=self.control.GetItemText(i, 2)
+      if tb:
+        lines.append("%s:\n%s" % (txt, tb))
+      else:
+        lines.append(txt)
+    adm.SetClipboard("\n".join(lines))
 
   def OnClear(self, evt):
     self.logIndex=0
@@ -171,6 +191,14 @@ class QueryLoggingPanel(LogPanel):
     self.RestoreListcols()
     self.logIndex=0
     self.insertPosition=-1 # 0: start, -1: end
+
+
+  def OnCopy(self, evt):
+    lines=[]
+    for i in self.control.GetSelection():
+      txt=self.control.GetItemText(i, 1)
+      lines.append(txt)
+    adm.SetClipboard("\n".join(lines))
 
 
   def OnClear(self, evt):
@@ -235,7 +263,10 @@ class LoggingDialog(adm.Dialog, _TimerOwner):
     self.LogFileQuery=logger.queryfile
     self.OnLevel()
 
-    
+    ah=AcceleratorHelper(self)
+    ah.Add(wx.ACCEL_CTRL, 'C', self.BindMenuId(self.OnCopy))
+    ah.Realize()
+        
   def OnLevel(self, evt=None):
     self.LogLevelFileStatic=xlt(logger.LOGLEVEL.Text(self.loglevels[self.LogLevelFile]))
     self.LogLevelQueryStatic=xlt(logger.LOGLEVEL.Text(self.querylevels[self.LogLevelQuery]))
@@ -245,10 +276,14 @@ class LoggingDialog(adm.Dialog, _TimerOwner):
     adm.config.Write("QueryLevel", self.querylevels[self.LogLevelQuery])
     adm.config.Write("LogFile", self.LogFileLog)
     adm.config.Write("QueryFile", self.LogFileQuery)
-
     self.Init()
     
-
+  def OnCopy(self, evt):
+    nb=self['Notebook']
+    page=nb.GetPage(nb.GetSelection())
+    if hasattr(page, "OnCopy"):
+      page.OnCopy(evt)
+  
   def OnPageChange(self, evt=None):
     nb=self['Notebook']
     if evt:
