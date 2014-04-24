@@ -15,9 +15,13 @@ if not hasattr(sys, 'frozen'):
       # the initial 3.0 release has a defective wx.propgrid module on windows
       wxversion.ensureMinimal("3.0.0")
     except:
-      wxversion.ensureMinimal("2.9.4")
+      wxversion.select("2.9.4")
   elif platform.system() == "Darwin":
-    wxversion.select("3.0")
+    try:
+      # the initial 3.0 release has a defective wx.Dialog.ShowModal behavior
+      wxversion.ensureMinimal("3.0.0")
+    except:
+      wxversion.select("2.9.4")
 #    wxversion.select("2.9.4")
   else:
     wxversion.select("3.0")

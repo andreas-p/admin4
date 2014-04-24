@@ -90,19 +90,6 @@ class Timer(wx.Timer):
     wx.EVT_TIMER(wnd, Timer.timerId, proc)
     Timer.timerId += 1
 
-
-class MultiChoiceDialog(wx.MultiChoiceDialog):
-  def ShowModal(self):
-    rc=wx.MultiChoiceDialog.ShowModal(self)
-    p=self.Parent
-    while p:
-      if p.IsTopLevel():
-        p.Raise()
-        break
-      p=p.Parent
-    
-    return rc
-  
 class Menu(wx.Menu):
   def AppendOneMenu(self, menu, txt, help=None):
     if not help:
