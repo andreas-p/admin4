@@ -17,7 +17,7 @@ from notebook import _TimerOwner
 
 class LogPanel(adm.NotebookPanel, ControlledPage):
   def __init__(self, dlg, notebook, panelName):
-    adm.NotebookPanel.__init__(self, dlg, notebook, ".LogPanel")
+    adm.NotebookPanel.__init__(self, dlg, notebook, "./LogPanel")
     self.panelName=panelName
     
     self.control=self['Listview']
