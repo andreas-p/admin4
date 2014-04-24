@@ -19,10 +19,10 @@ if not hasattr(sys, 'frozen'):
   elif platform.system() == "Darwin":
     try:
       # the initial 3.0 release has a defective wx.Dialog.ShowModal behavior
+      wxversion._EM_DEBUG=True
       wxversion.ensureMinimal("3.0.0")
     except:
       wxversion.select("2.9.4")
-#    wxversion.select("2.9.4")
   else:
     wxversion.select("3.0")
 
