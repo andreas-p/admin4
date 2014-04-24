@@ -11,7 +11,7 @@
             <object class="wxStaticText">
               <label>sambaUnixIdPool DN</label>
             </object>
-            <flag>wxRIGHT</flag>
+            <flag>wxRIGHT|wxALIGN_CENTRE</flag>
             <border>5</border>
           </object>
           <object class="sizeritem">
@@ -28,7 +28,7 @@
       </object>
       <object class="sizeritem">
         <object class="wxRadioBox" name="IdGeneratorStyle">
-          <label>uid/gid/rid generation style</label>
+          <label>UID/GID/RID Generation Style</label>
           <content>
             <item>currentMax+1</item>
             <item>smbldap-tools</item>
@@ -40,7 +40,7 @@
       </object>
       <object class="sizeritem">
         <object class="wxStaticBoxSizer">
-          <label>Panel Ordering</label>
+          <label>Panel Resource Configuration</label>
           <orient>wxVERTICAL</orient>
           <object class="sizeritem">
             <object class="unknown" name="ValueGrid">

@@ -106,15 +106,8 @@ class Server(adm.ServerNode):
     self.connection=LdapServer(self)
 
     if self.IsConnected():
-      adm=self.connection.SearchOne(self.dn, "documentIdentifier=%s" % self.GetPreference("AdminLdapDn"))
-      if adm:
-        self.adminLdapDn=adm[0][0]
-        val=adm[0][1]['description']
-        try:
-          self.config=ast.literal_eval(val[0])
-        except:
-          logger.debug("Couldn't pythonize '%s[0]'", val)
-          pass
+      cfg=ServerConfigData(self)
+      self.config = cfg.Read()
       return True
     return False
 
@@ -354,6 +347,44 @@ class Server(adm.ServerNode):
 nodeinfo=[ { 'class': Server, 'collection': xlt("LDAP Server") } ]
 
 
+class ServerConfigData:
+  attrib='audio'
+  
+  def __init__(self, server):
+    self.server=server
+
+  def rdn(self):
+    return self.server.GetPreference("AdminLdapRdn")
+
+  def Init(self):
+    vals=AttrVal.CreateList( {'objectClass': 'inetorgPerson', 
+                            'sn': "Admin4 Configuration Data",
+                            'description': "Configuration data of Admin4; do not edit manually.", 
+                            self.attrib: "{}" } )
+    dn="cn=%s,%s" % (self.rdn(), self.server.dn)
+    rc= self.server.GetConnection().Add(dn, vals)
+    if rc:
+      self.server.adminLdapDn=dn
+    return rc
+
+  def Read(self):
+    adm=self.server.connection.SearchOne(self.server.dn, "cn=%s" % self.rdn())
+    config={}
+    if adm:
+      self.server.adminLdapDn=adm[0][0]
+      val=adm[0][1][self.attrib]
+      try:
+        config=ast.literal_eval(val[0])
+      except:
+        logger.debug("Couldn't pythonize '%s[0]'", val)
+    return config
+      
+  def Update(self, value):    
+    dn=self.server.adminLdapDn
+    rc=self.GetConnection().Modify(dn, [AttrVal(self.attrib, None, value)], [], [])
+    return rc
+
+  
 class ServerInstrument:
   name=xlt("Instrument server")
   help=xlt("Instrument server for site specific administration")
@@ -364,11 +395,8 @@ class ServerInstrument:
   
   @staticmethod
   def OnExecute(_parentWin, server):
-    vals={ 'description': "{}", 'objectClass': 'document', 'documentTitle': "Config data of Admin4; do not edit manually."}
-    dn="documentIdentifier=%s,%s" % (server.GetPreference("AdminLdapDn"), server.dn)
-    
-    if server.GetConnection().Add(dn, AttrVal.CreateList(vals)):
-      server.adminLdapDn=dn
+    cfg=ServerConfigData(server)
+    return cfg.Init()
       
     return True
 
@@ -418,9 +446,8 @@ class ServerConfig(adm.Dialog):
     config['idGeneratorStyle'] = self.IdGeneratorStyle
     config['sambaUnixIdPoolDN'] = self.sambaUnixIdPoolDN
     
-    vals={ 'description': str(config) }
-    
-    rc=self.GetConnection().Modify(self.node.adminLdapDn, AttrVal.CreateList(vals), [], [])
+    cfg=ServerConfigData(self.node)
+    rc=cfg.Update(str(config))
     if rc:
       self.node.config=config
     return rc

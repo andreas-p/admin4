@@ -2,10 +2,10 @@
 <resource>
   <object class="wxPanel" name="Preferences">
     <object class="wxStaticText">
-      <label>Admin Entry DN</label>
+      <label>Admin Entry RDN</label>
       <pos>5,7d</pos>
     </object>
-    <object class="wxTextCtrl" name="AdminLdapDn">
+    <object class="wxTextCtrl" name="AdminLdapRdn">
       <pos>80,5d</pos>
       <size>80,-1d</size>
     </object>

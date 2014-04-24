@@ -37,22 +37,12 @@
             </object>
           </object>
           <object class="sizeritem">
-            <object class="wxStaticText" name="nextURidLabel">
+            <object class="wxStaticText" name="nextRidLabel">
               <label>next User RID</label>
             </object>
           </object>
           <object class="sizeritem">
-            <object class="wxTextCtrl" name="ldap:label=nextURidLabel:sambaNextUserRid-uint">
-              <size>40,-1d</size>
-            </object>
-          </object>
-          <object class="sizeritem">
-            <object class="wxStaticText" name="nextGRidLabel">
-              <label>next Group RID</label>
-            </object>
-          </object>
-          <object class="sizeritem">
-            <object class="wxTextCtrl" name="ldap:label=nextGRidLabel:sambaNextGroupRid-uint">
+            <object class="wxTextCtrl" name="ldap:label=nextRidLabel:sambaNextRid-uint">
               <size>40,-1d</size>
             </object>
           </object>

@@ -156,7 +156,7 @@ if not hasattr(sys, 'skipSetupInit'):
   
   class Preferences(adm.PreferencePanel):
     name="LDAP"
-    configDefaults={ "AdminLdapDn": "Admin4-Preferences", "PasswordHash": "SSHA" }
+    configDefaults={ "AdminLdapRdn": "Admin4ConfigData", "PasswordHash": "SSHA" }
   
     @staticmethod
     def Init():

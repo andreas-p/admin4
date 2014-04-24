@@ -188,6 +188,8 @@ class SpecificEntry(adm.NotebookPanel):
 
   @classmethod
   def GetSpecificClass(self, node):
+    if node.dn == node.GetServer().adminLdapDn:
+      return AdminConfigEntry
     candidates=[]
 
     for cls in self.allSpecificClasses.values():
@@ -239,3 +241,7 @@ class SpecificEntry(adm.NotebookPanel):
     return classes
 
 
+class AdminConfigEntry(SpecificEntry):
+  name="Admin4 Configuration Data"
+  shortname="Admin4Config"
+  icon="Server"
