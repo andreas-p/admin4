@@ -390,7 +390,7 @@ def splitValUnit(value):
   return num, unit.strip()
 
 
-def strToIsoDate(val, long):
+def strToIsoDate(val):
   zpos=val.find('Z')
   if zpos > 0:
     l=zpos
