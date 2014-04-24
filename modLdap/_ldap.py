@@ -114,7 +114,16 @@ class LdapServer:
     raise adm.ServerException(self.node, info)
 
 
-  def Modify(self, dn, chgList, addList, delList):
+  def Modify(self, dn, chgList, addList=None, delList=None):
+    def chkLst(lst):
+      if lst == None:
+        lst=[]
+      elif not isinstance(lst, list):
+        lst=[lst]
+      return lst
+    chgList=chkLst(chgList)
+    addList=chkLst(addList)
+    delList=chkLst(delList)
     logger.querylog("Modify %s: Chg %s, Add %s, Del %s" % (dn, map(str, chgList), map(str, addList), map(str, delList)))
     mods=[]
     for attr in delList:
@@ -206,19 +215,18 @@ class LdapServer:
       
     logger.querylog("%s %s base=%s, scope=%s" % (filter, str(attrs), base, ['BASE','ONE','SUB'][scope]), None, err)
     return result
+  
+  def Search(self, base, filter, attrs=["*"], scope=ldap.SCOPE_SUBTREE):
+    if not isinstance(attrs, list):
+      attrs=attrs.split()
+    return self._search(base, filter, scope, attrs)
 
   def SearchSub(self, base, filter="(objectClass=*)", attrs=["*"]):
-    if not isinstance(attrs, list):
-      attrs=attrs.split()
-    return self._search(base, filter, ldap.SCOPE_SUBTREE, attrs)
+    return self.Search(base, filter, attrs, ldap.SCOPE_SUBTREE)
 
   def SearchOne(self, base, filter="(objectClass=*)", attrs=["*"]):
-    if not isinstance(attrs, list):
-      attrs=attrs.split()
-    return self._search(base, filter, ldap.SCOPE_ONELEVEL, attrs)
+    return self.Search(base, filter, attrs, ldap.SCOPE_ONELEVEL)
   
-def SearchBase(self, base, filter="(objectClass=*)", attrs=["*"]):
-    if not isinstance(attrs, list):
-      attrs=attrs.split()
-    return self._search(base, filter, ldap.SCOPE_BASE, attrs)
+  def SearchBase(self, base, filter="(objectClass=*)", attrs=["*"]):
+    return self.Search(base, filter, attrs, ldap.SCOPE_BASE)
   

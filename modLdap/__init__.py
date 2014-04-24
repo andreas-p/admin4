@@ -154,6 +154,21 @@ if not hasattr(sys, 'skipSetupInit'):
       return list
     
   
+  def ConvertResult(res):
+    """
+    ConvertResult(ldapResult res)
+    converts result to utf8, attrib names to lowercase
+    """
+    out=[]
+    if res:
+      for dn, info in res:
+        do={}
+        for key in info:
+          do[key.decode('utf8').lower()] = map(lambda x: x.decode('utf8'), info[key])
+        out.append( (dn, do) )
+    return out
+    
+  
   class Preferences(adm.PreferencePanel):
     name="LDAP"
     configDefaults={ "AdminLdapRdn": "Admin4ConfigData", "PasswordHash": "SSHA" }

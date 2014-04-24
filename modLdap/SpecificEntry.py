@@ -9,6 +9,7 @@ nodeinfo=[]
 import adm, logger
 import wx
 from wh import xlt
+from . import AttrVal, ConvertResult
 
 class SpecificEntry(adm.NotebookPanel):
   name=xlt("Specific")
@@ -62,7 +63,7 @@ class SpecificEntry(adm.NotebookPanel):
               break;
             if how:
               how2=how
-              if "modLdap" in ctl.flags:
+              if "ldap" in ctl.flags:
                 if not hasattr(ctl, "ldapOid") or not ctl.ldapOid in self.dialog.mayAttribs:
                   how2=False
               ctl.Enable(how2)
@@ -241,6 +242,31 @@ class SpecificEntry(adm.NotebookPanel):
     return classes
 
 
+  def GetIdFromMax(self, objectClass, attrName):
+    if self.GetServer().GetIdGeneratorStyle():
+      dn=self.GetServer().GetSambaUnixIdPoolDN()
+      if not dn:
+        sdn=self.dialog.GetAttrValue("sambaDomainName")
+        if sdn:
+          dn="sambaDomainName=%s,%s" % (sdn[0], self.GetServer().dn)
+      if dn:
+        res=ConvertResult(self.GetConnection().SearchBase(dn, "(objectClass=sambaUnixIdPool)", attrName))
+        if res:
+          id=int(res[0][1].get(attrName)[0])
+          self.dialog.SetValue(attrName, id)
+          self.GetConnection().Modify(dn, AttrVal(attrName, None, [str(id+1)]))
+        return True
+    else:
+      maxId=0
+      res=self.GetServer().SearchSubConverted("(&(objectClass=%s)(%s=*))" % (objectClass, attrName), attrName)
+      for _dn, info in res:
+        uid=int(info[attrName][0])
+        maxId = max(maxId, uid)
+      self.dialog.SetValue(attrName, maxId+1)
+      self.dialog.SetStatus("Generated %(attr)s from highest used %(attr)s" % {"attr": attrName})
+    return False
+
+    
 class AdminConfigEntry(SpecificEntry):
   name="Admin4 Configuration Data"
   shortname="Admin4Config"

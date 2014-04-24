@@ -49,16 +49,23 @@ class ShadowAccount(SpecificEntry):
     self.OnExpire()
 
   def OnGenerate(self, evt):
-    maxUid=0
-    res=self.GetServer().SearchSubConverted("(&(objectClass=posixAccount)(uidNumber=*))", "uidNumber")
-    for _dn, info in res:
-      uid=int(info['uidnumber'][0])
-      maxUid = max(maxUid, uid)
-    self.dialog.SetValue("uidNumber", maxUid+1)
-    self.dialog.SetStatus("Generated uidNumber from highest used uidNumber")
+    if self.GetIdFromMax("posixAccount", "uidnumber"):
+      self['GenerateUid'].Disable()
 
 
-
+  def Check(self):
+    ok=SpecificEntry.Check(self)
+    
+    if self.dialog.HasObjectClass("posixAccount"):
+      if not self.uidNumber and self.GetServer().GetIdGeneratorStyle():
+        dn=self.GetServer().GetSambaUnixIdPoolDN()
+        if not dn:
+          if not self.dialog.HasObjectClass("sambaSamAccount"):
+            ok=self.dialog.CheckValid(ok, dn, xlt("Need sambaUnixIdPoolDN configured for this server or Samba Account data"))
+        
+    return ok
+  
+  
   def OnExpire(self, ev=None):
     if self.shadowAccount:
       self.EnableControls("shadowExpire shadowWarning", self.Expires)

@@ -30,7 +30,7 @@
             </object>
           </object>
           <object class="sizeritem">
-            <object class="wxTextCtrl" name="must:homeDirectory"/>
+            <object class="wxTextCtrl" name="ldap:must:homeDirectory"/>
             <flag>wxEXPAND</flag>
           </object>
           <object class="sizeritem">

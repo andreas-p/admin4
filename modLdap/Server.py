@@ -12,7 +12,7 @@ import wx.propgrid as wxpg
 
 import logger
 from wh import xlt, YesNo
-from . import AttrVal
+from . import AttrVal, ConvertResult
 
 from _ldap import LdapServer, ldap
 
@@ -27,7 +27,7 @@ class Server(adm.ServerNode):
   wantIconUpdate=True
   panelClassDefault={
   #  'useraccount': "UserAccount:UserAccountItw Personal Contact Groups ShadowAccount SambaAccount",
-    'UserAccount': "UserAccount Personal Contact Groups ShadowAccount SambaAccount",
+    'UserAccount': "UserAccount SambaAccount ShadowAccount Personal Contact Groups",
     'Group': "Group SambaGroupMapping",
     'SambaDomain': "SambaDomain",
     }    
@@ -84,14 +84,10 @@ class Server(adm.ServerNode):
     return self.connection.SearchSub(self.dn, filter, attrs)
 
 
+  
   def SearchSubConverted(self, filter="(objectClass=*)", attrs=["*"]):
-    out=[]
-    for dn, info in self.SearchSub(filter, attrs):
-      do={}
-      for key in info:
-        do[key.decode('utf8').lower()] = map(lambda x: x.decode('utf8'), info[key])
-      out.append( (dn, do) )
-    return out
+    res=self.SearchSub(filter, attrs)
+    return ConvertResult(res)
 
   def IsConnected(self, deep=False):
     if not self.connection:
@@ -381,7 +377,7 @@ class ServerConfigData:
       
   def Update(self, value):    
     dn=self.server.adminLdapDn
-    rc=self.GetConnection().Modify(dn, [AttrVal(self.attrib, None, value)], [], [])
+    rc=self.GetConnection().Modify(dn, [AttrVal(self.attrib, None, value)])
     return rc
 
   

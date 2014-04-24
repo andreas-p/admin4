@@ -516,7 +516,7 @@ class EntryPassword:
 
       node.GetConnection().SetPassword(node.dn, passwd)
       if chgList or addList:
-        node.GetConnection().Modify(node.dn, chgList, addList, [])
+        node.GetConnection().Modify(node.dn, chgList, addList)
         return True
       return False
 

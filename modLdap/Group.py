@@ -165,7 +165,7 @@ class Groups(SpecificEntry):
       else:
         chgList[0].AppendValue(self.dialog.dn)
 
-      self.dialog.GetConnection().Modify(dn, chgList, [], [])
+      self.dialog.GetConnection().Modify(dn, chgList)
 
     for dn in delList:
       group=self.allGroups[dn]
@@ -178,7 +178,7 @@ class Groups(SpecificEntry):
       else:
         chgList[0].RemoveValue(self.dialog.dn)
 
-      self.dialog.GetConnection().Modify(dn, chgList, [], [])
+      self.dialog.GetConnection().Modify(dn, chgList)
 SpecificEntry.AddClass(Groups)
 
 
@@ -218,13 +218,8 @@ class Group(SpecificEntry):
 
 
   def OnGenerate(self, evt):
-    maxGid=0
-    res=self.GetServer().SearchSubConverted("(&(objectClass=posixGroup)(gidNumber=*))", "gidNumber")
-    for _dn, info in res:
-      gid=int(info['gidnumber'][0])
-      maxGid = max(maxGid, gid)
-    self.dialog.SetValue("gidNumber", maxGid+1)
-    self.dialog.SetStatus("Generated gidNumber from highest used gidNumber")
+    if self.GetIdFromMax("posixAccount", "gidnumber"):
+      self['GenerateGid'].Disable()
 
 
   def OnListColResize(self, evt):
