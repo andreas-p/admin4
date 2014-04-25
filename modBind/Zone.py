@@ -10,7 +10,7 @@ import time
 from wh import xlt, floatToTime, timeToFloat, Validator, Menu
 from _dns import Rdataset, Rdata, RdataClass, rdatatype, rdataclass, rcode
 from _dns import Name, DnsName, DnsAbsName, DnsRevName, DnsRevAddress, DnsSupportedTypes, checkIpAddress
-
+from Server import Server
 
 prioTypes=['MX', 'NS', 'SRV', 'TXT']
 individualTypes=['A', 'AAAA', 'CNAME', 'PTR']
@@ -42,6 +42,8 @@ class Zone(adm.Node):
     return instances
   
   def MayHaveChildren(self):
+    if self.zones:
+      return True
     return self.GetServer().GetSubzones(self)
 
   def Updater(self):
@@ -58,6 +60,9 @@ class Zone(adm.Node):
 
   def GetProperties(self):
     if not self.properties:
+      self.properties=[ (xlt("Zone not available"))]
+      
+      # if a first attempt to read the zone failed we don't try again
       self.zone=self.GetServer().GetZone(self.zonename)
 
       if self.zone:
@@ -116,32 +121,9 @@ class Zone(adm.Node):
         for lst in self.others.items():
           cnt += len(lst)
         self.AddProperty(xlt("Other record count"), cnt, -1)
-      else:
-        self.properties=[ (xlt("Zone not available"))]
     return self.properties
 
    
-  def unusedDelete(self):
-    self.parentNode.RemoveZone(self)
-    return True
-
-    
-  @staticmethod
-  def unusedNew(parentWin, parentNode):
-    dlg=wx.TextEntryDialog(parentWin, xlt("Zone name"), xlt("Register new Zone"))
-    if dlg.ShowModal() == wx.ID_OK:
-      dlg.Hide()
-      parentWin.SetFocus()
-      if isinstance(parentNode, Zone):
-        name="%s.%s" % (dlg.GetValue(), parentNode.name)
-      else:
-        name=dlg.GetValue()
-      zone=Zone(parentNode, name)
-      if zone.name not in parentNode.zones:
-        parentNode.AddZone(zone)
-        return True
-    return False
-
   def readZones(self):
     return adm.config.Read("Zones/%s" % self.GetServer().name, [], self, self.name)
 
@@ -199,6 +181,47 @@ class RevZone(Zone):
 # Menus
 #=======================================================================
 
+class UnregisterZone:
+  name="Unregister Zone"
+  help="Unregister DNS zone"
+  @staticmethod
+  def CheckAvailableOn(node):
+    if not isinstance(node, (Zone, RevZone)):
+      return False
+    return node.GetServer().stats == None
+
+  @staticmethod
+  def OnExecute(_parentWin, node):
+    node.parentNode.RemoveZone(node)
+    node.parentNode.Refresh()
+    return True
+  
+    
+class RegisterZone:
+  name="Register Zone"
+  help="Register DNS zone"
+  @staticmethod
+  def CheckAvailableOn(node):
+    if not isinstance(node, (Zone, RevZone, Server)):
+      return False
+    return node.GetServer().stats == None
+
+  @staticmethod
+  def OnExecute(parentWin, parentNode):
+    dlg=wx.TextEntryDialog(parentWin, xlt("Zone name"), xlt("Register new Zone"))
+    if dlg.ShowModal() == wx.ID_OK:
+      dlg.Hide()
+      parentWin.SetFocus()
+      if isinstance(parentNode, Zone):
+        name="%s.%s" % (dlg.GetValue(), parentNode.name)
+      else:
+        name=dlg.GetValue()
+      zone=Zone(parentNode, name)
+      if zone.name not in parentNode.zones:
+        parentNode.AddZone(zone)
+        return True
+    return False
+    
 class IncrementSerial:
   name=("Increment Serial")
   help=xlt("Increment SOA serial number")
@@ -1195,5 +1218,8 @@ nodeinfo= [
            ]
 
 menuinfo=[ { 'class': IncrementSerial, 'nodeclasses': [Zone, RevZone], 'sort': 10 },
-           { 'class': CleanDanglingPtr, 'nodeclasses': RevZone, 'sort': 30 }]
+           { 'class': CleanDanglingPtr, 'nodeclasses': RevZone, 'sort': 30 },
+           { 'class': RegisterZone, 'sort': 80 },
+           { 'class': UnregisterZone, 'sort': 81 }
+           ]
 

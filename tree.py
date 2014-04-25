@@ -436,7 +436,7 @@ class ServerTreeCtrl(TreeCtrl):
         wx.MessageBox(xlt("Connect failed."), xlt("%(type)s %(name)s") % { "type": server.typename, "name": server.name})
         return rc
 
-    adm.StopWaiting(frame, xlt("connected."))
+      adm.StopWaiting(frame, xlt("connected."))
 
     tree=adm.trees.get(treename)
     if tree:

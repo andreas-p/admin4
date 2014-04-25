@@ -120,10 +120,11 @@ class Server(adm.ServerNode):
   def DoConnect(self):
     if not self.connection:
       self.connection = BindConnection(self)
-      self.RefreshVolatile(True)
       self.bindVersion=self.connection.GetVersion()
       if self.bindVersion == None:
+        self.connection = None
         return False
+      self.RefreshVolatile(True)
     return True
   
   
