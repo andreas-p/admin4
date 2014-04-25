@@ -95,8 +95,8 @@ class Groups(SpecificEntry):
         if kgc not in knownDnGroupClasses:
           clsFilter="|(objectClass=%s)(%s)" % (kgc, clsFilter)
 
-
-    for dn, info in self.GetServer().SearchSub("(%s)" % clsFilter, "* structuralObjectClass"):
+    baseDn=self.GetServer().dn
+    for dn, info in self.GetConnection().SearchSub(baseDn, "(%s)" % clsFilter, "* structuralObjectClass"):
       self.allGroups[dn] = Groups.GroupInfo(dn, info)
 
     userFilter="|(member=%s)(uniquemember=%s)" % (self.dialog.dn, self.dialog.dn)
@@ -104,8 +104,8 @@ class Groups(SpecificEntry):
       userFilter="|(%s)(memberuid=%s)" % (userFilter, uidVal.GetValue()[0])
 
     filter="(&(%s)(%s))" % (clsFilter, userFilter)
-    for dn, info in self.GetServer().SearchSub(filter, "dn"):
-      dn=dn.decode('utf8')
+    for res in self.GetConnection().SearchSub(baseDn, filter, "dn"):
+      dn=res[0].decode('utf8')
       self.memberOf.append(dn)
       self.addMember(dn)
 
@@ -158,7 +158,7 @@ class Groups(SpecificEntry):
     for dn in addList:
       group=self.allGroups[dn]
       n=group.GetParamName()
-      chgList=[AttrVal(n, None, group.GetParamValue(n))]
+      chgList=[AttrVal(n, group.GetParamValue(n))]
 
       if uid and group.WantUid():
         chgList[0].AppendValue(uid)
@@ -171,7 +171,7 @@ class Groups(SpecificEntry):
       group=self.allGroups[dn]
 
       n=group.GetParamName()
-      chgList=[AttrVal(n, None, group.GetParamValue(n))]
+      chgList=[AttrVal(n, group.GetParamValue(n))]
 
       if uid and group.WantUid():
         chgList[0].RemoveValue(uid)
@@ -218,7 +218,7 @@ class Group(SpecificEntry):
 
 
   def OnGenerate(self, evt):
-    if self.GetIdFromMax("posixAccount", "gidnumber"):
+    if self.GetIdFromMax("posixAccount", "gidNumber"):
       self['GenerateGid'].Disable()
 
 

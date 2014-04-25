@@ -9,7 +9,7 @@ nodeinfo=[]
 import adm, logger
 import wx
 from wh import xlt
-from . import AttrVal, ConvertResult
+from . import ConvertResult
 
 class SpecificEntry(adm.NotebookPanel):
   name=xlt("Specific")
@@ -200,7 +200,7 @@ class SpecificEntry(adm.NotebookPanel):
         if node.HasObjectClass(clsCand):
           candidates.append(cls)
     if not candidates:
-      logger.debug("No Candidates for %s", node.objectClasses)
+      logger.debug("No specific class for objectClass %s", node.objectClasses)
       return None
     if len(candidates) == 1:
       return candidates[0]
@@ -244,19 +244,27 @@ class SpecificEntry(adm.NotebookPanel):
 
   def GetIdFromMax(self, objectClass, attrName):
     if self.GetServer().GetIdGeneratorStyle():
+      # using SambaUnixIdPool
       dn=self.GetServer().GetSambaUnixIdPoolDN()
       if not dn:
         sdn=self.dialog.GetAttrValue("sambaDomainName")
         if sdn:
           dn="sambaDomainName=%s,%s" % (sdn[0], self.GetServer().dn)
+        else:
+          self.dialog.SetStatus(xlt("Either sambaUnixIdPoolDN must be configured or a samba domain specified."))
+          return
       if dn:
         res=ConvertResult(self.GetConnection().SearchBase(dn, "(objectClass=sambaUnixIdPool)", attrName))
         if res:
-          id=int(res[0][1].get(attrName)[0])
+          id=int(res[0][1].get(attrName.lower())[0])
           self.dialog.SetValue(attrName, id)
-          self.GetConnection().Modify(dn, AttrVal(attrName, None, [str(id+1)]))
-        return True
+          self.GetConnection().Modify(dn, {attrName: id+1})
+          return True
+        else:
+          self.dialog.SetStatus(xlt("Couldn't read %s from %s") % (attrName, dn))
+          return False
     else:
+      # using max+1 method
       maxId=0
       res=self.GetServer().SearchSubConverted("(&(objectClass=%s)(%s=*))" % (objectClass, attrName), attrName)
       for _dn, info in res:

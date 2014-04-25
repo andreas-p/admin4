@@ -167,7 +167,7 @@ class Entry(adm.Node):
         self.objectClasses=value
         self.objectClasses.sort()
       schemaAttr=self.GetServer().GetAttributeSchema(name)
-      attrval=AttrVal(name, schemaAttr, value)
+      attrval=AttrVal(name, value, schemaAttr)
       oid=attrval.GetOid()
       if not oid:
         oid=name
@@ -263,7 +263,7 @@ class Entry(adm.Node):
 
     def UpdateObjectClasses(self):
       self.objectClasses.sort()
-      attrval=AttrVal('objectClass', self.GetServer().GetAttributeSchema('objectClass'), self.objectClasses)
+      attrval=AttrVal('objectClass', self.objectClasses, self.GetServer().GetAttributeSchema('objectClass'))
       self.attribs[self.objectClassOid] = attrval
 
       self.mustAttribs, self.mayAttribs= self.GetServer().GetClassSchemaMustMayOids(self.objectClasses)
@@ -313,8 +313,7 @@ class Entry(adm.Node):
         if not schemaAttr:
           logger.debug("No Schema for %s", oid)
           return
-        name = schemaAttr.names[0]
-        attrval=AttrVal(name, schemaAttr)
+        attrval=AttrVal(None, None, schemaAttr)
         self.attribs[oid] = attrval
       if value != None and not attrval.IsSingleValue() and not isinstance(value, list):
         attrval.SetValue([value])
@@ -497,7 +496,7 @@ class EntryPassword:
       userPasswordSchema=node.GetServer().GetAttributeSchema("userPassword")
       if userPasswordSchema.oid in may:
         hash=EncryptPassword(passwd, node.GetServer().GetPreference("PasswordHash"))
-        userPassword=AttrVal(None, userPasswordSchema, [hash])
+        userPassword=AttrVal(None, hash, userPasswordSchema)
 
         if userPasswordSchema.oid in node.attribs:
           chgList.append(userPassword)
@@ -507,7 +506,7 @@ class EntryPassword:
       ntPasswordSchema=node.GetServer().GetAttributeSchema("sambaNTpassword")
       if ntPasswordSchema.oid in may:
         md4hash=hashlib.new('md4', passwd.encode('utf-16le')).hexdigest().upper()
-        ntPassword=AttrVal(None, ntPasswordSchema, [md4hash])
+        ntPassword=AttrVal(None, md4hash, ntPasswordSchema)
 
         if ntPasswordSchema.oid in node.attribs:
           chgList.append(ntPassword)

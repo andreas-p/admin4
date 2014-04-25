@@ -5,7 +5,7 @@
       <orient>wxVERTICAL</orient>
       <object class="sizeritem">
         <object class="wxCheckBox" name="objectClass:posixAccount">
-          <label>Posix Account</label>
+          <label>POSIX Account</label>
         </object>
         <flag>wxTOP|wxLEFT</flag>
         <border>5</border>
@@ -71,8 +71,21 @@
             </object>
           </object>
           <object class="sizeritem">
-            <object class="wxTextCtrl" name="ldap:gidNumber-uint">
-              <size>30,-1d</size>
+            <object class="wxBoxSizer">
+              <orient>wxHORIZONTAL</orient>
+              <object class="sizeritem">
+                <object class="wxTextCtrl" name="ldap:gidNumber-uint">
+                  <size>30,-1d</size>
+                </object>
+              </object>
+              <object class="spacer">
+                <size>30,1d</size>
+              </object>
+              <object class="sizeritem">
+                <object class="wxButton" name="GenerateGid">
+                  <label>Generate</label>
+                </object>
+              </object>
             </object>
           </object>
         </object>

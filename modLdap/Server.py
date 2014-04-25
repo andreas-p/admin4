@@ -79,14 +79,9 @@ class Server(adm.ServerNode):
     if self.connection:
       return self.connection.lastError
 
-
-  def SearchSub(self, filter="(objectClass=*)", attrs=["*"]):
-    return self.connection.SearchSub(self.dn, filter, attrs)
-
-
   
   def SearchSubConverted(self, filter="(objectClass=*)", attrs=["*"]):
-    res=self.SearchSub(filter, attrs)
+    res=self.connection.SearchSub(self.dn, filter, attrs)
     return ConvertResult(res)
 
   def IsConnected(self, deep=False):
@@ -115,13 +110,6 @@ class Server(adm.ServerNode):
       dn.append(rdn.decode('utf8'))
     return dn
 
-  def CreateAttrVal(self, name, value=None):
-    schema=self.GetAttributeSchema(name)
-    if schema:
-      if name == schema.oid:
-        name=None
-      return AttrVal(name, schema, value)
-    return None
 
   def GetAttributeSchema(self, name):
     # site-packages/ldap/schema/models.py
@@ -377,7 +365,7 @@ class ServerConfigData:
       
   def Update(self, value):    
     dn=self.server.adminLdapDn
-    rc=self.GetConnection().Modify(dn, [AttrVal(self.attrib, None, value)])
+    rc=self.GetConnection().Modify(dn, {self.attrib: value} )
     return rc
 
   

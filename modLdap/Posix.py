@@ -38,19 +38,24 @@ Entry.addNewEntryClass(UserAccount)
 
 
 class ShadowAccount(SpecificEntry):
-  name=xlt("Posix/Shadow")
+  name=xlt("POSIX/Shadow")
   def __init__(self, dlg, notebook, resname=None):
     SpecificEntry.__init__(self, dlg, notebook, resname)
     self.Bind("Expires", wx.EVT_CHECKBOX, self.OnExpire)
-    self.Bind("GenerateUid", self.OnGenerate)
+    self.Bind("GenerateUid", self.OnGenerateUid)
+    self.Bind("GenerateGid", self.OnGenerateGid)
 
   def Go(self):
     SpecificEntry.Go(self)
     self.OnExpire()
 
-  def OnGenerate(self, evt):
-    if self.GetIdFromMax("posixAccount", "uidnumber"):
+  def OnGenerateUid(self, evt):
+    if self.GetIdFromMax("posixAccount", "uidNumber"):
       self['GenerateUid'].Disable()
+      
+  def OnGenerateGid(self, evt):
+    if self.GetIdFromMax("posixAccount", "gidNumber"):
+      self['GenerateGid'].Disable()
 
 
   def Check(self):

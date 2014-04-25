@@ -307,3 +307,4 @@ class GenericEntry(adm.NotebookPanel):
       if property.GetValue() != value:
         property.SetValue(value)
 
+nodeinfo=[]

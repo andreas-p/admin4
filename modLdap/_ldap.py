@@ -12,6 +12,8 @@ try:
   import ldap.schema
 except:
   ldap=None
+from . import AttrVal
+
 
 class LdapServer:
   """
@@ -114,17 +116,21 @@ class LdapServer:
     raise adm.ServerException(self.node, info)
 
 
+  def _chkLst(self, lst):
+    if lst == None:
+      lst=[]
+    elif isinstance(lst, dict):
+      lst=AttrVal.CreateList(lst)
+    elif not isinstance(lst, list):
+      lst=[lst]
+    return lst
+  
   def Modify(self, dn, chgList, addList=None, delList=None):
-    def chkLst(lst):
-      if lst == None:
-        lst=[]
-      elif not isinstance(lst, list):
-        lst=[lst]
-      return lst
-    chgList=chkLst(chgList)
-    addList=chkLst(addList)
-    delList=chkLst(delList)
+    chgList=self._chkLst(chgList)
+    addList=self._chkLst(addList)
+    delList=self._chkLst(delList)
     logger.querylog("Modify %s: Chg %s, Add %s, Del %s" % (dn, map(str, chgList), map(str, addList), map(str, delList)))
+
     mods=[]
     for attr in delList:
       mods.append( (ldap.MOD_DELETE, attr.name, attr.value) )
@@ -141,6 +147,7 @@ class LdapServer:
 
 
   def Delete(self, dn):
+    logger.querylog("Delete %s" % dn)
     try:
       self.execute(self.ldap.delete_s, dn.encode('utf8'))
       return True
@@ -150,6 +157,8 @@ class LdapServer:
 
   def Add(self, dn, addList):
     mods=[]
+    addList=self._chkLst(addList)
+    logger.querylog("Add %s: %s" % (dn, map(str, addList)))
     for attr in addList:
       mods.append( (attr.name, attr.value) )
 
@@ -160,6 +169,7 @@ class LdapServer:
       self.raiseException(e, "Add")
 
   def Rename(self, dn, newRdn, newParentDn=None):
+    logger.querylog("Rename %s to %s %s" % (dn, newRdn, newParentDn))
     if newParentDn:
       newParentDn=newParentDn.encode('utf8')
     try:

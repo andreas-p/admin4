@@ -29,23 +29,46 @@ class _SambaRidObject:
           sdn.SetClientData(id, info['sambasid'][0])
 
 
-  def generateRid(self, posixAttr, ridbase, domsid, domname):
-    posixNumber=self.dialog.GetAttrValue(posixAttr)
-    if posixNumber:
-      res=self.GetServer().SearchSub("(sambaDomainName=%s)" % domname, "sambaAlgorithmicRidBase")
+  def generateRid(self, posixAttr, ridOffs):
+    domname=self.sambaDomainName
+    if self.GetServer().GetIdGeneratorStyle():
+      # using RidBase or NextRid
+      if not domname:
+        self.dialog.SetStatus(xlt("For SID creation domain name must be set first"))
+        return False
+      res=self.GetServer().SearchSubConverted("(&(objectClass=sambaDomain)(sambaDomainName=%s))" % domname, "sambaAlgorithmicRidBase sambaNextRid")
       if len(res) == 1:
-        _dn,info=res
-        ridbase=int(info['sambaalgorithmicbase'][0])
-        ridbasetext="sambaAlgorithmicRidBase (%d)" % ridbase
+        # found domain info
+        dn,info=res[0]
+        rb=info.get('sambaalgorithmicridbase')
+        nr=info.get('sambanextrid')
+        if rb:
+          # old-style using uidnumber/gidnumber 
+          ridbase=int(rb[0]) +ridOffs
+          posixNumber=self.dialog.GetAttrValue(posixAttr)
+          if not posixNumber:
+            self.dialog.SetStatus(xlt("For sambaAlgorithmicRidBase SID creation POSIX %s must be set first") % posixAttr)
+            return False
+          rid=posixNumber*2+ridbase
+          self.sambaRid=rid
+          self.dialog.SetStatus(xlt("Samba SID generated from posix %s and sambaAlgorithmicRidBase") % posixAttr)
+          return False
+        elif nr:
+          # using sambaNextRid
+          rid=int(nr[0])+1
+          self.sambaRid=rid
+          self.GetConnection().Modify(dn, { 'sambaNextRid': rid } )
+          
+          self.dialog.SetStatus(xlt("Samba SID generated from sambaNextRid"))
+          return True
       else:
-        ridbasetext="RID base %d" % ridbase
-
-      rid=posixNumber*2+ridbase
-      self.sambaRid=rid
-      self.dialog.SetStatus(xlt("Samba SID generated from posix %s and %s") % (posixAttr, ridbasetext))
+        self.dialog.SetStatus(xlt("Neither sambaNextRid nor sambaAlgorithmicRidBase (old style) are set"))
+        return False
     else:
+      # using max+1 method
       res=self.GetServer().SearchSubConverted("(sambaSid=*)", "sambaSid")
 
+      domsid="%s-" % self.sambaDomainSid
       maxsid=""
       for _dn, info in res:
         testsid=info['sambasid'][0]
@@ -59,6 +82,7 @@ class _SambaRidObject:
       else:
         self.sambaRid=None
         self.dialog.SetStatus(xlt("No SIDs in Domain %s assigned so far") % domname)
+    return False
 
 
   def OnRidChange(self, ev=None):
@@ -126,9 +150,8 @@ class SambaAccount(SpecificEntry, _SambaRidObject):
 
 
   def OnRidGen(self, evt):
-    domsid="%s-" % self.sambaDomainSid
-    domname=self.sambaDomainName
-    self.generateRid("uidNumber", 1000, domsid, domname)
+    if self.generateRid("uidNumber", 0):
+      self['ridGen'].Disable()
 
 
   def OnChangeDomain(self, ev=None):
@@ -263,9 +286,8 @@ class SambaGroupMapping(SpecificEntry, _SambaRidObject):
     self.Bind("sambaDomainSid", self.OnChangeDomain)
 
   def OnRidGen(self, evt):
-    domsid="%s-" % self.sambaDomainSid
-    domname=self.sambaDomainName
-    self.generateRid("gidNumber", 1001, domsid, domname)
+    if self.generateRid("gidNumber", 1):
+      self['RidGen'].Disable()
 
 
   def Check(self):

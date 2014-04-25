@@ -27,22 +27,22 @@
             </object>
           </object>
           <object class="sizeritem">
-            <object class="wxStaticText" name="algRidLabel">
-              <label>Algorithmic RID base</label>
-            </object>
-          </object>
-          <object class="sizeritem">
-            <object class="wxStaticText" name="ldap:label=algRidLabel:sambaAlgorithmicRidBase">
-              <label></label>
-            </object>
-          </object>
-          <object class="sizeritem">
             <object class="wxStaticText" name="nextRidLabel">
               <label>next User RID</label>
             </object>
           </object>
           <object class="sizeritem">
             <object class="wxTextCtrl" name="ldap:label=nextRidLabel:sambaNextRid-uint">
+              <size>40,-1d</size>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText" name="algRidLabel">
+              <label>Algorithmic RID base</label>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxTextCtrl" name="ldap:label=algRidLabel:sambaAlgorithmicRidBase">
               <size>40,-1d</size>
             </object>
           </object>
@@ -163,7 +163,7 @@
             </object>
           </object>
           <object class="sizeritem">
-            <object class="wxTextCtrl" name="ldap:must:uidNumber-uint"/>
+            <object class="wxTextCtrl" name="ldap:must:label=uidNumberLabel:uidNumber-uint"/>
           </object>
           <object class="sizeritem">
             <object class="wxStaticText" name="gidNumberLabel">
@@ -171,7 +171,7 @@
             </object>
           </object>
           <object class="sizeritem">
-            <object class="wxTextCtrl" name="ldap:must:gidNumber-uint"/>
+            <object class="wxTextCtrl" name="ldap:must:label=gidNumberLabel:gidNumber-uint"/>
           </object>
         </object>
         <flag>wxTOP|wxBOTTOM|wxLEFT</flag>

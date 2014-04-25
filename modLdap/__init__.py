@@ -30,7 +30,7 @@ if not hasattr(sys, 'skipSetupInit'):
     EmptyAllowed=[IA5STRING, OCTETSTRING]
   
   class AttrVal:
-    def __init__(self, name, schema=None, value=None):
+    def __init__(self, name, value=None, schema=None):
       if isinstance(name, AttrVal):
         self.name=name.name
         self.schema=name.schema
@@ -38,10 +38,13 @@ if not hasattr(sys, 'skipSetupInit'):
       else:
         self.schema=schema
         if name == None:
-          self.name=self.schema.names[0]
+          self.name=schema.names[0]
         else:
           self.name=name
-        self.value=value
+        if isinstance(value, list):
+          self.value=value
+        else:
+          self.value=[value]
       self.empty = (self.value == None)
       self.items={}
   
@@ -146,11 +149,13 @@ if not hasattr(sys, 'skipSetupInit'):
     def __str__(self):
       return "%s: %s" % (self.name, self.value)
   
+    
     @staticmethod
     def CreateList(dict):
       list=[]
       for name, value in dict.items():
-        list.append(AttrVal(name, None, value))
+        av=AttrVal(name, str(value).encode('utf8'))
+        list.append(av)
       return list
     
   
@@ -182,7 +187,7 @@ if not hasattr(sys, 'skipSetupInit'):
               'modulename': "LDAP",
               'description': "LDAP server",
               'version': "3",
-              'revision': "0.9",
+              'revision': "0.95",
   						'serverclass': Server.Server,
   						'pages': [],
   						'preferences': Preferences,
