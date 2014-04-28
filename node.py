@@ -533,8 +533,7 @@ class ServerNode(Node):
     self.address = self.settings.get('host')
     self.user=self.settings.get('user')
     self.port=self.settings.get('port')
-    self.password=self.settings.get('password')
-    self.needPassword=(self.password != None)
+    self.needPassword=(self.settings.get('password') != None)
 
   def SetCfgString(self, cmd, value):
     adm.config.Write("%s/%s" % (self.module, cmd), value)
@@ -573,6 +572,7 @@ class ServerNode(Node):
     if self.needPassword:
       # user/pass dialog
       pass
+    self.password=self.settings.get('password')
     rc=self.DoConnect()
     return rc
 
@@ -592,4 +592,3 @@ class ServerNode(Node):
     logger.debug("ExternCall %s", call)
     pid=wx.Execute(call)
     return pid
-
