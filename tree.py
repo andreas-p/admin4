@@ -437,6 +437,7 @@ class ServerTreeCtrl(TreeCtrl):
         return rc
 
       adm.StopWaiting(frame, xlt("connected."))
+      server.registrationChanged=False
 
     tree=adm.trees.get(treename)
     if tree:

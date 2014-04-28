@@ -96,7 +96,7 @@ class Frame(wx.Frame, adm.MenuOwner):
 
 
 class DetailFrame(Frame):
-  def __init__(self, parentWin, name, title=None):
+  def __init__(self, parentWin, name, args=None, title=None):
     if not title:
       title=name
     style=wx.MAXIMIZE_BOX|wx.RESIZE_BORDER|wx.SYSTEM_MENU|wx.CAPTION|wx.CLOSE_BOX
@@ -104,6 +104,7 @@ class DetailFrame(Frame):
     self.SetIcon(name)
     self.name=name
     self.lastNode=None
+    self.appArgs=args
 
     self.manager=wx.aui.AuiManager(self)
     self.manager.SetFlags(wx.aui.AUI_MGR_ALLOW_FLOATING|wx.aui.AUI_MGR_TRANSPARENT_HINT | \
@@ -191,19 +192,23 @@ class DetailFrame(Frame):
     self.OnToggleStatusBar(None)
     self.manager.Update()
     self.manager.Bind(wx.aui.EVT_AUI_PANE_CLOSE, self.OnAuiCloseEvent)
+    self.BindMenuId(self.AutoConnect)
 
-  def init(self, args):
+  def AutoConnect(self, evt):
     haveOne=False
-    if args:
+    if self.appArgs:
       for server in self.servers.nodes:
-        if "%s/%s" % (server.module, server.name) in args:
+        if "%s/%s" % (server.module, server.name) in self.appArgs:
           rc=self.servers.ConnectServer(server, self.tree.name)
           haveOne = haveOne or rc
     else:
       for server in self.servers.nodes:
         if server.settings.get("autoconnect"):
-          rc=self.servers.ConnectServer(server, self.tree.name)
-          haveOne = haveOne or rc
+          #try:
+            rc=self.servers.ConnectServer(server, self.tree.name)
+            haveOne = haveOne or rc
+#          except StringException:
+#            pass
     if not haveOne:
       self.OnShowServers(None)
     self.servers.ExpandFirst()

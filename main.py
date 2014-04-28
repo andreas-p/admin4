@@ -264,7 +264,7 @@ def main(argv):
   loadModules(modules)
   xmlres.init(adm.loaddir)
 
-  adm.mainframe=frame.DetailFrame(None, "Admin4")
+  adm.mainframe=frame.DetailFrame(None, "Admin4", args)
   app.SetTopWindow(adm.mainframe)
 
   for panelclass in adm.getAllPreferencePanelClasses():
@@ -272,6 +272,6 @@ def main(argv):
       panelclass.Init()
 
   adm.mainframe.Show()
-  adm.mainframe.init(args)
+  adm.mainframe.AddPendingEvent(wx.CommandEvent(wx.wxEVT_COMMAND_MENU_SELECTED, adm.mainframe.GetMenuId(adm.mainframe.AutoConnect)))
 
   app.MainLoop()
