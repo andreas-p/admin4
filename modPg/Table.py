@@ -179,8 +179,10 @@ class ColumnsPage(adm.NotebookPage):
               n[0] = "bigserial"
             else:
               logger.debug("Unknown serial type %s for %s", n[0], default)
+              n.append("DEFAULT")
               n.append(default)
           else:
+            n.append("DEFAULT")
             n.append(default)
         return "  ".join(n)
 
