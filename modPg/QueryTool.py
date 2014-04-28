@@ -354,8 +354,19 @@ class SqlFrame(adm.Frame):
     self.EnableMenu(self.querymenu, self.OnExecuteQuery, True)
     self.EnableMenu(self.querymenu, self.OnExplainQuery, True)
 
-    errmsg=str(worker.error)
-    errlines=errmsg.splitlines()
+    if worker.error:
+      errmsg=worker.error.error.decode('utf8')
+      errlines=errmsg.splitlines()
+
+      self.messages.SetValue(errmsg)
+      self.msgHistory.AppendText(errmsg)
+      for i in range(1, len(errlines)-2):
+        if errlines[i].startswith("LINE "):
+          lineinfo=errlines[i].split(':')[0][5:]
+          colinfo=errlines[i+1].find('^')
+          dummy=colinfo
+          self.input.MarkerAdd(0, int(lineinfo))
+          break
 
     if worker.cancelled:
       self.SetStatusText(xlt("Cancelled."), STATUSPOS_MSGS);
@@ -377,17 +388,6 @@ class SqlFrame(adm.Frame):
     self.SetStatusText(rowsMsg, STATUSPOS_ROWS)
     self.msgHistory.AppendText("-- %s\n" % rowsMsg)
     
-    if worker.error:
-      self.messages.SetValue(errmsg)
-      self.msgHistory.AppendText(errmsg)
-      for i in range(1, len(errlines)-2):
-        if errlines[i].startswith("LINE "):
-          lineinfo=errlines[i].split(':')[0][5:]
-          colinfo=errlines[i+1].find('^')
-          dummy=colinfo
-          self.input.MarkerAdd(0, int(lineinfo))
-          break
-        
       
     self.msgHistory.AppendText("\n")
     currentPage=self.output.GetPage(0)
