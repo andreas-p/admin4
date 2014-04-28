@@ -34,6 +34,13 @@ class LdapServer:
     ldap.set_option(ldap.OPT_REFERRALS,0)
 
 
+    frame=adm.StartWaiting(xlt("connecting to %s...") % node.name)
+    def raiseConnectException(e, spot):
+      self.ldap=None
+      self.lastError = str(e)
+      adm.StopWaiting(frame)
+      raise adm.ConnectionException(self.node, spot, self.lastError)
+      
     if node.settings['security'] == "ssl":
       protocol="ldaps"
     else:
@@ -44,17 +51,15 @@ class LdapServer:
       self.ldap=ldap.ldapobject.SimpleLDAPObject(uri)
     except Exception as e:
       self.ldap=None
-      raise e
+      raiseConnectException(e, "Connect")
 
     if node.settings['security'] == "tls":
       try:
         self.ldap.start_tls_s()
       except Exception as e:
-        self.ldap=None
-        raise e
+        raiseConnectException(e, "StartTLS")
 
     ldap.timeout=node.timeout
-    frame=adm.StartWaiting(xlt("connecting to %s...") % node.name)
     try:
       self.ldap.set_option(ldap.OPT_REFERRALS,0)
       user=node.settings['user']
@@ -63,11 +68,7 @@ class LdapServer:
       else:
         self.ldap.simple_bind_s("", "")
     except Exception as e:
-      self.ldap=None
-      self.lastError = str(e)
-      adm.StopWaiting(frame)
-      spot=xlt("Bind failed")
-      raise adm.ConnectionException(self.node, spot, self.lastError)
+      raiseConnectException(e, xlt("Bind failed"))
 
     try:
       result=self.ldap.search_s("", ldap.SCOPE_BASE, "(objectClass=*)", ['*','+'] )
