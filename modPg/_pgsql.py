@@ -159,7 +159,7 @@ class pgConnection:
       application="Admin4 browser"
     try:
       self.conn=psycopg2.connect(host=node.GetServer().address, port=node.GetServer().port,
-                                 application_name=application, 
+                                 application_name=application, connect_timeout=3,
                                  database=dbname, user=node.GetServer().user, password=passwd, async=async)
       self.wait("Connect")
       self.cur=self.conn.cursor()
