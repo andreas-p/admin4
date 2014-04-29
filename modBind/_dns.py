@@ -22,7 +22,6 @@ except:
 
 import requests
 import xml.etree.cElementTree as xmltree
-import socket
 
 
 DnsSupportedTypes={'A':           "IPV4 Address",
