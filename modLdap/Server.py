@@ -35,11 +35,14 @@ class Server(adm.ServerNode):
     adm.ServerNode.__init__(self, settings)
     if not self.user:
       self.needPassword=False
-    self.dn= settings['ldapbase']
     self.attributes={}
     self.adminLdapDn=None
     self.config={}
-
+    self.ReInit(settings)
+    
+  def ReInit(self, settings):
+    self.settings=settings
+    self.dn=settings['ldapbase']
     self.timeout=settings.get('querytimeout', standardTimeout)
     self.systemAttrs=settings.get('systemattributes', standardSystemAttributes).split()
     self.systemClasses=settings.get('systemclasses', standardSystemClasses).split()
@@ -314,7 +317,7 @@ class Server(adm.ServerNode):
         settings=self.GetSettings()
         adm.config.storeServerSettings(self, settings)
         if self.node:
-          self.node.settings=settings
+          self.node.ReInit(settings)
           self.node.registrationChanged=True
         else:
           adm.RegisterServer(settings)

@@ -187,7 +187,7 @@ if not hasattr(sys, 'skipSetupInit'):
               'modulename': "LDAP",
               'description': "LDAP server",
               'version': "3",
-              'revision': "0.95",
+              'revision': "0.95.1",
   						'serverclass': Server.Server,
   						'pages': [],
   						'preferences': Preferences,
