@@ -51,7 +51,7 @@
             <object class="wxBoxSizer">
               <orient>wxHORIZONTAL</orient>
               <object class="sizeritem">
-                <object class="wxTextCtrl" name="ldap:uidNumber-uint">
+                <object class="wxTextCtrl" name="ldap:uidNumber-uint 5">
                   <size>30,-1d</size>
                 </object>
               </object>
@@ -74,7 +74,7 @@
             <object class="wxBoxSizer">
               <orient>wxHORIZONTAL</orient>
               <object class="sizeritem">
-                <object class="wxTextCtrl" name="ldap:gidNumber-uint">
+                <object class="wxTextCtrl" name="ldap:gidNumber-uint 5">
                   <size>30,-1d</size>
                 </object>
               </object>

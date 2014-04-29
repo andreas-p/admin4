@@ -8,7 +8,8 @@
 import adm
 import inspect
 import wx.xrc as xrc
-from wh import xlt, StringType, Validator
+from wh import xlt, StringType
+from Validator import Validator
 import wx, os
 import xmlres
 import xmlhelp

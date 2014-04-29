@@ -27,7 +27,7 @@
             <object class="wxBoxSizer">
               <orient>wxHORIZONTAL</orient>
               <object class="sizeritem">
-                <object class="wxTextCtrl" name="must:label=gidLabel:gidNumber-uint">
+                <object class="wxTextCtrl" name="must:label=gidLabel:gidNumber-uint 5">
                   <size>35,-1d</size>
                 </object>
               </object>
