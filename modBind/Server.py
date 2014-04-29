@@ -158,6 +158,7 @@ class Server(adm.ServerNode):
       self.revzones.remove(zone.name)
     else:
       self.zones.remove(zone.name)
+    self.writeZones()
   
   def AddZone(self, zone):
     if zone.__class__.__name__ == "RevZone":
@@ -165,6 +166,9 @@ class Server(adm.ServerNode):
     else:
       self.zones.append(zone.name)
     self.appendChild(zone)
+    self.writeZones()
+    
+  def writeZones(self):
     adm.config.Write(self.name, self.zones, self, "Zones")
     adm.config.Write(self.name, self.revzones, self, "RevZones")
     

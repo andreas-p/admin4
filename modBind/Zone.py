@@ -159,23 +159,6 @@ class RevZone(Zone):
         instances.append(RevZone(parentNode, zone))
     return instances
 
-  @staticmethod
-  def unusedNew(parentWin, parentNode):
-    dlg=wx.TextEntryDialog(parentWin, xlt("Reverse Zone name"), xlt("Register new Reverse Zone"))
-    if dlg.ShowModal() == wx.ID_OK:
-      dlg.Hide()
-      parentWin.SetFocus()
-      if isinstance(parentNode, Zone):
-        name="%s.%s" % (parentNode.name, dlg.GetValue())
-      else:
-        name=dlg.GetValue()
-      
-      zone=RevZone(parentNode, name)
-      if zone.name not in parentNode.revzones:
-        parentNode.AddZone(zone)
-        return True
-    return False
-
 
 #=======================================================================
 # Menus
@@ -196,19 +179,26 @@ class UnregisterZone:
     node.parentNode.Refresh()
     return True
   
-    
+
 class RegisterZone:
   name="Register Zone"
   help="Register DNS zone"
+
   @staticmethod
   def CheckAvailableOn(node):
-    if not isinstance(node, (Zone, RevZone, Server)):
+    if isinstance(node, RevZone):
+      return False
+    if not isinstance(node, (Zone, Server)):
       return False
     return node.GetServer().stats == None
 
   @staticmethod
   def OnExecute(parentWin, parentNode):
-    dlg=wx.TextEntryDialog(parentWin, xlt("Zone name"), xlt("Register new Zone"))
+    if isinstance(parentNode, Zone):
+      txt=xlt("Sub zone name")
+    else:
+      txt=xlt("Zone name")
+    dlg=wx.TextEntryDialog(parentWin, txt, xlt("Register new Zone"))
     if dlg.ShowModal() == wx.ID_OK:
       dlg.Hide()
       parentWin.SetFocus()
@@ -222,6 +212,67 @@ class RegisterZone:
         return True
     return False
     
+class RegisterRevZone:
+  name="Register Reverse Zone"
+  help="Register Reverse DNS zone"
+
+  @staticmethod
+  def CheckAvailableOn(node):
+    if not isinstance(node, (RevZone, Server)):
+      return False
+    return node.GetServer().stats == None
+
+  @staticmethod
+  def OnExecute(parentWin, parentNode):
+    if isinstance(parentNode, Zone):
+      txt=xlt("Reverse subzone")
+    else:
+      txt=xlt("Reverse Zone IP Network")
+    dlg=wx.TextEntryDialog(parentWin, txt, xlt("Register new Reverse Zone"))
+    if dlg.ShowModal() == wx.ID_OK:
+      dlg.Hide()
+      parentWin.SetFocus()
+      if isinstance(parentNode, Zone):
+        name="%s.%s" % (dlg.GetValue(), parentNode.name)
+      else:
+        name=dlg.GetValue()
+        v6parts=name.split(':')
+        
+        if len(v6parts) > 1: #ipv6
+          if name.count('::'):
+            raise Exception("IPV6 network may not contain ::")
+
+          mask=0
+          strip=64-len(v6parts)*8
+          v6end=v6parts[-1]
+          if v6end != '':
+            masks=name.split('/')
+            if len(masks) > 0: # has mask
+              name=masks[0] + ":"
+              mask=int(masks[1])
+              if mask % 4:
+                raise Exception("mask must be multiple of 4")
+              strip=64-mask/2
+            else:
+              name += ":"
+          else:
+            strip += 8
+        else:
+          dc=name.count('.')
+          strip=0
+          while dc < 3:
+            strip += 2
+            dc += 1
+            name += ".0"
+        name=DnsRevName(name).to_text(True)
+        name = name[strip:]
+      
+      zone=RevZone(parentNode, name)
+      if zone.name not in parentNode.revzones:
+        parentNode.AddZone(zone)
+        return True
+    return False
+
 class IncrementSerial:
   name=("Increment Serial")
   help=xlt("Increment SOA serial number")
@@ -1220,6 +1271,7 @@ nodeinfo= [
 menuinfo=[ { 'class': IncrementSerial, 'nodeclasses': [Zone, RevZone], 'sort': 10 },
            { 'class': CleanDanglingPtr, 'nodeclasses': RevZone, 'sort': 30 },
            { 'class': RegisterZone, 'sort': 80 },
-           { 'class': UnregisterZone, 'sort': 81 }
+           { 'class': RegisterRevZone, 'sort': 81 },
+           { 'class': UnregisterZone, 'sort': 82 }
            ]
 

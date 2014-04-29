@@ -17,7 +17,7 @@ if not hasattr(sys, 'skipSetupInit'):
               'modulename': "BIND",
               'description': xlt("BIND9 DNS server"),
               'version': "9.9",
-              'revision': "0.98",
+              'revision': "0.98.1",
               'supports': "BIND V9.6 ... V9.9",
               'serverclass': Server.Server,
               'copyright': "(c) 2014 PSE Consulting Andreas Pflug",
