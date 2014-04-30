@@ -8,7 +8,7 @@
 resourcePatterns=['.png', '.ico', '.xrc']
 filePatterns=['.png', '.ico', '.xrc', '.py']
 ignoredirs=['xrced', 'build', 'dist']
-moreFiles=["LICENSE.TXT"]
+moreFiles=["LICENSE.TXT", 'CHANGELOG']
 
 requiredMods=['wx.lib.ogl', 'xml']
 appEntry='admin4.py'
