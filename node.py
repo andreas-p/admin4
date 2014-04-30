@@ -582,11 +582,6 @@ class ServerNode(Node):
                                        % { "type": self.typename, "name": self.name } )
       if self.password == None:
         return None
-    self.user=self.settings.get('user')
-    if not self.password and self.user:
-      self.password = adm.AskPassword(parentWin, xlt("Password for %s:" % self.user), xlt("Enter password for %s %s") % (self.typename, self.name))
-      if self.password == None:
-        return None
     rc=self.DoConnect()
     return rc
 
