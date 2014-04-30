@@ -10,13 +10,12 @@
 
 try:
   import dns.query, dns.update, dns.message, dns.resolver, dns.tokenizer
-  import dns.rdatatype as rdatatype, dns.rdataclass as rdataclass
   import dns.zone, dns.tsigkeyring, dns.reversename
   from dns.name import Name
   import dns.ipv4, dns.ipv6
   import dns.rdata, dns.rdataset
-  import dns.rcode as rcode
-  _ign=[rcode, rdataclass, rdatatype]
+  import dns.rdatatype as rdatatype, dns.rdataclass as rdataclass # @UnusedImport
+  import dns.rcode as rcode # @UnusedImport
 except:
   dns=None
 
