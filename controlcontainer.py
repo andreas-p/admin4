@@ -631,7 +631,6 @@ class ServerPropertyDialog(PropertyDialog):
   keyvals= [ ("HostName", 'name') ,
              ("HostAddress", 'host'),
              "Port",
-             "Remember",
              "User",
              "Password",
              "Autoconnect",

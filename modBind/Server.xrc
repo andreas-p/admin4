@@ -51,7 +51,6 @@
           </object>
           <object class="sizeritem">
             <object class="wxTextCtrl" name="StatsPort-uint">
-              <value>8053</value>
               <size>35,-1d</size>
             </object>
           </object>

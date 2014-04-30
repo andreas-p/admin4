@@ -567,12 +567,21 @@ class ServerNode(Node):
   def IsHealthy(self):
     return self.server != None
 
-  def Connect(self, _win):
+  def Connect(self, parentWin):
+    """
+    Connect(parentWin) returns
+    True: connected
+    False: error
+    None: aborted
+    """
     self.connectException=None
-    if self.needPassword:
-      # user/pass dialog
-      pass
     self.password=self.settings.get('password')
+    self.user=self.settings.get('user')
+    if not self.password and self.user:
+      self.password = adm.AskPassword(parentWin, xlt("Password for %s:" % self.user), xlt("Enter password for %(type)s \"%(name)s\"") 
+                                       % { "type": self.typename, "name": self.name } )
+      if self.password == None:
+        return None
     rc=self.DoConnect()
     return rc
 

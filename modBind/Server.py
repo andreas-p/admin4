@@ -185,6 +185,8 @@ class Server(adm.ServerNode):
       if self.node:
         self.SetSettings(self.node.settings)
         self["HostName"].Disable()
+      else:
+        self.StatsPort=8053
       self.OnCheck()
 
     def Check(self):

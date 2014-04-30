@@ -259,6 +259,17 @@ def GetCurrentTree(wnd=None):
   return None
 
 
+def AskPassword(parentWin, msg, caption):
+#    dlg=wx.PasswordEntryDialog(parentWin, msg, caption)
+# We might support "Remember" here
+    dlg=wx.TextEntryDialog(parentWin, msg, caption)
+    passwd=None
+    if dlg.ShowModal() == wx.ID_OK:
+      passwd=dlg.GetValue()
+    dlg.Destroy()
+    return passwd
+  
+  
 def ConfirmDelete(msg, hdr, force=False):
   if confirmDeletes or force:
     rc=wx.MessageBox(msg, hdr, wx.YES_NO|wx.ICON_EXCLAMATION|wx.YES_DEFAULT)
