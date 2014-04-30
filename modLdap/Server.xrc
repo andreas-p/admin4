@@ -62,23 +62,9 @@
                         <size>35,-1d</size>
                       </object>
                     </object>
-                    <object class="sizeritem">
-                      <object class="wxStaticText">
-                        <label>Remember</label>
-                        <pos>5,67d</pos>
-                      </object>
-                    </object>
                     <vgap>10</vgap>
                     <hgap>9</hgap>
                     <growablecols>1</growablecols>
-                    <object class="sizeritem">
-                      <object class="wxCheckBox" name="Remember">
-                        <label></label>
-                        <checked>1</checked>
-                        <pos>80,67d</pos>
-                        <size>-1,12d</size>
-                      </object>
-                    </object>
                     <object class="sizeritem">
                       <object class="wxStaticText">
                         <label>User</label>
@@ -108,7 +94,9 @@
                         <label>Ldap Base</label>
                         <pos>5,112d</pos>
                         <object class="wxTextCtrl" name="LdapBase">
+                          
                           <pos>80,110d</pos>
+                          
                           <size>80,-1d</size>
                         </object>
                       </object>

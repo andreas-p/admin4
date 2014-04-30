@@ -26,15 +26,12 @@ class Server(adm.ServerNode):
   typename=xlt("LDAP Server")
   wantIconUpdate=True
   panelClassDefault={
-  #  'useraccount': "UserAccount:UserAccountItw Personal Contact Groups ShadowAccount SambaAccount",
     'UserAccount': "UserAccount SambaAccount ShadowAccount Personal Contact Groups",
     'Group': "Group SambaGroupMapping",
     'SambaDomain': "SambaDomain",
     }    
   def __init__(self, settings):
     adm.ServerNode.__init__(self, settings)
-    if not self.user:
-      self.needPassword=False
     self.attributes={}
     self.adminLdapDn=None
     self.config={}
@@ -267,18 +264,12 @@ class Server(adm.ServerNode):
       adm.PropertyDialog.__init__(self, parentWin, node, None)
       self['Security'].Append( { 'tls': "TLS", 'ssl': "SSL", 'none': xlt("None") } )
       self.Bind("HostName HostAddress Port User Password LdapBase Autoconnect QueryTimeout SystemClasses SystemAttributes")
-      self.Bind("Remember", wx.EVT_CHECKBOX, self.OnCheckRemember)
       self.Bind("Security", wx.EVT_COMBOBOX, self.OnChangeSecurity)
 
-    def OnCheckRemember(self, evt=None):
-      self["User"].Enable(self.Remember)
-      self["Password"].Enable(self.Remember)
-      self.OnCheck()
 
     def Go(self):
       if self.node:
         self.SetSettings(self.node.settings)
-        self.OnCheckRemember()
         self["HostName"].Disable()
       else:
         self.Security="tls"
@@ -310,10 +301,6 @@ class Server(adm.ServerNode):
 
     def Save(self):
       if self.GetChanged():
-        if self.Remember:
-          _password=self.Password
-        else:
-          _password=None
         settings=self.GetSettings()
         adm.config.storeServerSettings(self, settings)
         if self.node:

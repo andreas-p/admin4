@@ -433,7 +433,8 @@ class ServerTreeCtrl(TreeCtrl):
 
       if not rc:
         adm.StopWaiting(frame, xlt("Not connected"))
-        wx.MessageBox(xlt("Connect failed."), xlt("%(type)s %(name)s") % { "type": server.typename, "name": server.name})
+        if rc != None:
+          wx.MessageBox(xlt("Connect failed."), xlt("%(type)s %(name)s") % { "type": server.typename, "name": server.name})
         return rc
 
       adm.StopWaiting(frame, xlt("connected."))

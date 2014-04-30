@@ -68,19 +68,6 @@
           </object>
           <object class="sizeritem">
             <object class="wxStaticText">
-              <label>Remember</label>
-              <pos>5,67d</pos>
-            </object>
-          </object>
-          <object class="sizeritem">
-            <object class="wxCheckBox" name="Remember">
-              <label></label>
-              <checked>1</checked>
-              <pos>50,67d</pos>
-            </object>
-          </object>
-          <object class="sizeritem">
-            <object class="wxStaticText">
               <label>User</label>
               <pos>5,82d</pos>
             </object>

@@ -459,12 +459,8 @@ class EntryPassword:
   
   @staticmethod
   def OnExecute(parentWin, node):
-#    cls=wx.PasswordEntryDialog
-    cls=wx.TextEntryDialog
-    dlg=cls(parentWin, xlt("Enter new password:"), xlt("Set password for %s \"%s\"") % (node.typename, node.name))
-    if dlg.ShowModal() == wx.ID_OK:
-      passwd=dlg.GetValue()
-
+    passwd=adm.AskPassword(parentWin, xlt("Enter new password:"), xlt("Set password for %s \"%s\"") % (node.typename, node.name))
+    if passwd != None:
       addList=[]
       chgList=[]
 
@@ -518,8 +514,6 @@ class EntryPassword:
         node.GetConnection().Modify(node.dn, chgList, addList)
         return True
       return False
-
-    dlg.Destroy()
     return False
 
 nodeinfo=[

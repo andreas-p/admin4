@@ -181,17 +181,11 @@ class Server(adm.ServerNode):
       adm.PropertyDialog.__init__(self, parentWin, node, None)
       self['Security'].Append( { ' ': " ", 'require': xlt("required"), 'prefer': xlt("preferred"), 'allow': xlt("allowed"), 'disable': xlt("disabled") } )
       self.Bind("HostName HostAddress Port User Password Autoconnect MaintDb")
-      self.Bind("Remember", wx.EVT_CHECKBOX, self.OnCheckRemember)
 
-    def OnCheckRemember(self, evt=None):
-      self["User"].Enable(self.Remember)
-      self["Password"].Enable(self.Remember)
-      self.OnCheck()
 
     def Go(self):
       if self.node:
         self.SetSettings(self.node.settings)
-        self.OnCheckRemember()
         self["HostName"].Disable()
       else:
         self.Security="prefer"
@@ -209,10 +203,6 @@ class Server(adm.ServerNode):
 
     def Save(self):
       if self.GetChanged():
-        if self.Remember:
-          _password=self.Password
-        else:
-          _password=None
         settings=self.GetSettings()
         adm.config.storeServerSettings(self, settings)
         if self.node:
