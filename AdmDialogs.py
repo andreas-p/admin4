@@ -209,6 +209,7 @@ class UpdateDlg(adm.Dialog):
       version=None
       tagDate=revDate=modDate=None
       revLocalChange=revOriginChange=revDirty=False
+      requiredAdmVersion="2.1.0"
       
       try:
         sys.skipSetupInit=True
@@ -272,7 +273,10 @@ class UpdateDlg(adm.Dialog):
           canInstall=False
           msg.append(xlt("Update version older than current Core version %s") % admVersion.version)
         elif version == admVersion.version:
-          msg.append(xlt("Update version same as current Core version"))
+          msg.append(xlt("Update has same same version as current Core"))
+        elif requiredAdmVersion > admVersion.version:
+          msg.append(xlt("Full install of %s %s or newer required") % (adm.appTitle, requiredAdmVersion))
+          canInstall=False
         if revDirty:
           msg.append(xlt("uncommitted data present!"))
         self.ModuleInfo="\n".join(msg)
