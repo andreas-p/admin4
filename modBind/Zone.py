@@ -7,7 +7,8 @@
 import adm, wx, wx.grid as wxGrid
 import logger
 import time
-from wh import xlt, floatToTime, timeToFloat, Validator, Menu
+from Validator import Validator
+from wh import xlt, floatToTime, timeToFloat, Menu
 from _dns import Rdataset, Rdata, RdataClass, rdatatype, rdataclass, rcode
 from _dns import Name, DnsName, DnsAbsName, DnsRevName, DnsRevAddress, DnsSupportedTypes, checkIpAddress
 from Server import Server
