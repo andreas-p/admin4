@@ -249,7 +249,7 @@ class UpdateDlg(adm.Dialog):
             canInstall=False
           else:
             testedVer=moduleinfo.get('testedAdmVersion')
-            if testedVer and testedVer < version.version:
+            if testedVer and testedVer < admVersion.version:
               msg.append(xlt("not verified with this Admin4 Core version"))
         except Exception as _e:
           logger.exception("Format error of %s moduleinfo", self.Target)
