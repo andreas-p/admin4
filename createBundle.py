@@ -60,7 +60,7 @@ if __name__ == '__main__':
   if '--skipGit' in sys.argv:
     i=sys.argv.index('--skipGit')
     del sys.argv[i]
-    checkGit=True
+    checkGit=False
     
   def cleanWxDir(dir):
     remainder=0

@@ -34,14 +34,14 @@
       </object>
       <object class="sizeritem">
         <object class="wxStaticBoxSizer">
-          <label>Module Info</label>
+          <label>Update Info</label>
           <orient>wxVERTICAL</orient>
           <object class="sizeritem">
             <object class="wxStaticText" name="ModuleInfo">
               <label></label>
-              <size>140, 55d</size>
+              <size>150, 55d</size>
             </object>
-            <minsize>140, 55d</minsize>
+            <minsize>150, 55d</minsize>
           </object>
         </object>
         <option>1</option>
