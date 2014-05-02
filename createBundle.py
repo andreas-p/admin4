@@ -7,7 +7,9 @@
 
 resourcePatterns=['.png', '.ico', '.xrc']
 filePatterns=['.png', '.ico', '.xrc', '.py']
+resourcePatterns=filePatterns
 ignoredirs=['xrced', 'build', 'dist']
+ignoredfiles=['admin4.py', 'createBundle.py']
 moreFiles=["LICENSE.TXT", 'CHANGELOG']
 
 requiredMods=['wx.lib.ogl', 'xml']
@@ -20,6 +22,7 @@ distDir="../admin4-release"
 buildDir=".build"
 appName="Admin4"
 versionTag=None
+checkGit=True
 
 if __name__ == '__main__':
   import sys, os
@@ -55,6 +58,10 @@ if __name__ == '__main__':
     del sys.argv[i]
     distDir=sys.argv[i]
     del sys.argv[i]
+  if '--skipGit' in sys.argv:
+    i=sys.argv.index('--skipGit')
+    del sys.argv[i]
+    checkGit=True
     
   def cleanWxDir(dir):
     remainder=0
@@ -151,16 +158,24 @@ if __name__ == '__main__':
     
 
   # Start of code
-  if writeVersion():
-    print "\nWARNING: Repository has uncommitted data\n\n"
+  if checkGit:
+    if writeVersion():
+      print "\nWARNING: Repository has uncommitted data\n\n"
+  else:
+    if os.path.exists('__version.py'):
+      print "\nWARNING: using existing __version.py file."
+    else:
+      print "\nWARNING: No __version file!"
+      sys.exit()
+      
   sys.skipSetupInit=True
   
-
   data_files=[]
   admResources=[]
   
   if installer == 'srcUpdate':
     resourcePatterns = filePatterns
+    ignoredfiles=[]
     
   def checkAddItem(fn, stripdirlen=0):
     if os.path.isdir(fn):
@@ -187,7 +202,7 @@ if __name__ == '__main__':
           admResources.append(fn)
   
   for fn in os.listdir("."):
-    if fn.startswith('.') or fn in ignoredirs or os.path.islink(fn):
+    if fn.startswith('.') or fn in ignoredirs or fn in ignoredfiles or os.path.islink(fn):
       continue
     checkAddItem(fn)
   for fn in addModules:
