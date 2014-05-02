@@ -5,8 +5,21 @@
 # see LICENSE.TXT for conditions of usage
 
 
+moduleinfo={ 'name': "LDAP Server",
+            'modulename': "LDAP",
+            'description': "LDAP server",
+            'version': "3",
+            'revision': "0.95.2",
+            'requiredAdmVersion': "2.1.3", 
+            'testedAdmVersion': "2.1.3", 
+            'pages': [],
+            'copyright': "(c) 2013-2014 PSE Consulting Andreas Pflug",
+            'credits': "python-ldap from http://www.python-ldap.org using OpenLdap 2.4 (http://www.openldap.org)",
+             }
+
 import sys
 if not hasattr(sys, 'skipSetupInit'):
+
   import wx
   import adm
   from wh import xlt, strToIsoDate, isoDateToStr
@@ -181,16 +194,5 @@ if not hasattr(sys, 'skipSetupInit'):
     @staticmethod
     def Init():
       pass
-    
+  
   import Server
-  moduleinfo={ 'name': xlt("LDAP Server"),
-              'modulename': "LDAP",
-              'description': "LDAP server",
-              'version': "3",
-              'revision': "0.95.1",
-  						'serverclass': Server.Server,
-  						'pages': [],
-  						'preferences': Preferences,
-              'copyright': "(c) 2013-2014 PSE Consulting Andreas Pflug",
-              'credits': "python-ldap from http://www.python-ldap.org using OpenLdap 2.4 (http://www.openldap.org)",
-  						 }

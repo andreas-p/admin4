@@ -5,10 +5,20 @@
 # see LICENSE.TXT for conditions of usage
 
 
+moduleinfo={ 'name': "PostgreSQL Server",
+            'modulename': "PostgreSQL",
+            'description': "PostgreSQL database server",
+            'version': "9.3",
+            'revision': "0.3.1",
+            'requiredAdmVersion': "2.1.3", 
+            'testedAdmVersion': "2.1.3", 
+            'supports': "PostgreSQL 8.0 ... 9.3 (pre-9.0 with restrictions)",
+            'copyright': "(c) 2013-2014 PSE Consulting Andreas Pflug",
+            'credits': "psycopg2 from http://initd.org/psycopg using libpq (http://www.postgresql.org)",
+     }
+
 import sys
 if not hasattr(sys, 'skipSetupInit'):
-
-  import Server
   import adm
   import wx
   from wh import xlt, floatToTime
@@ -234,23 +244,11 @@ if not hasattr(sys, 'skipSetupInit'):
         rows.append( (row, icon))
       self.control.Fill(rows, 'procpid')
 
+  moduleinfo['pages'] = [StatisticsPage, ConnectionPage, SqlPage]
+
       
   class Preferences(adm.PreferencePanel):
     name="PostgreSQL"
     configDefaults={ "AdminNamespace":  "Admin4" }
-  
-    
 
-      
-  moduleinfo={ 'name': xlt("PostgreSQL Server"),
-              'modulename': "PostgreSQL",
-              'description': xlt("PostgreSQL database server"),
-              'version': "9.3",
-              'revision': "0.3",
-              'supports': "PostgreSQL 8.0 ... 9.3 (pre-9.0 with restrictions)",
-              'serverclass': Server.Server,
-              'pages': [StatisticsPage, ConnectionPage, SqlPage],
-              'preferences': Preferences,
-              'copyright': "(c) 2013-2014 PSE Consulting Andreas Pflug",
-              'credits': "psycopg2 from http://initd.org/psycopg using libpq (http://www.postgresql.org)",
-       }
+  import Server

@@ -129,6 +129,11 @@ def error(fmt, *args):
   _log(LOGLEVEL.ERROR, fmt, args)
 
 def exception(fmt, *args):
+  """
+  exception(formatStr, [args])
+  
+  logs error and exception traceback
+  """
   _log(LOGLEVEL.ERROR, fmt, args, traceback.format_exc())
   
 def sysexception(extype, args, tb):

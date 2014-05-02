@@ -12,7 +12,7 @@ from wh import xlt, StringType, GetBitmap, Menu, restoreSize
 from tree import NodeTreeCtrl, ServerTreeCtrl
 from notebook import Notebook
 from LoggingDialog import LoggingDialog
-from AdmDialogs import PreferencesDlg, AboutDlg
+from AdmDialogs import PreferencesDlg, AboutDlg, UpdateDlg
 
 class Frame(wx.Frame, adm.MenuOwner):
   def __init__(self, parentWin, title, style, _size, _pos):
@@ -139,7 +139,7 @@ class DetailFrame(Frame):
     if wx.Platform != "__WXMAC__":
       menu.AppendSeparator()
     self.AddMenu(menu, xlt("Preferences"), xlt("Preferences"), self.OnPreferences, wx.ID_PREFERENCES, adm.app.SetMacPreferencesMenuItemId)
-    self.AddMenu(menu, xlt("Quit"), xlt("Quit Admin3"), self.OnQuit, wx.ID_EXIT, adm.app.SetMacExitMenuItemId)
+    self.AddMenu(menu, xlt("Quit"), xlt("Quit Admin4"), self.OnQuit, wx.ID_EXIT, adm.app.SetMacExitMenuItemId)
 
     menubar.Append(menu, xlt("&File"))
 
@@ -156,10 +156,8 @@ class DetailFrame(Frame):
 
     self.AddMenu(menu, xlt("Help"), xlt("Show help"), self.OnHelp, wx.ID_HELP)
     self.AddMenu(menu, xlt("Logging"), xlt("Show logged problems"), self.OnLogging)
-    if wx.VERSION > (2,9):
-      self.AddMenu(menu, xlt("About"), xlt("About %s") % adm.app.GetAppDisplayName(), self.OnAbout, wx.ID_ABOUT, adm.app.SetMacAboutMenuItemId)
-    else:
-      self.AddMenu(menu, xlt("About"), xlt("About %s") % adm.app.GetAppName(), self.OnAbout, wx.ID_ABOUT, adm.app.SetMacAboutMenuItemId)
+    self.AddMenu(menu, xlt("Update"), xlt("Update program modules"), self.OnUpdate)
+    self.AddMenu(menu, xlt("About"), xlt("About %s") % adm.appTitle, self.OnAbout, wx.ID_ABOUT, adm.app.SetMacAboutMenuItemId)
 
     menubar.Append(menu, xlt("&Help"))
 
@@ -214,40 +212,44 @@ class DetailFrame(Frame):
     self.servers.ExpandFirst()
 
    
-  def OnAuiCloseEvent(self, ev):
-    if ev.GetPane().name == "objectBrowser":
+  def OnAuiCloseEvent(self, evt):
+    if evt.GetPane().name == "objectBrowser":
       self.viewmenu.Check(self.GetMenuId(self.OnToggleTree), False)
   
-  def OnQuit(self, _ev):
+  def OnQuit(self, evt):
     self.Close()
 
-  def OnToggleTree(self, ev):
+  def OnToggleTree(self, evt):
     show=self.viewmenu.IsChecked(self.GetMenuId(self.OnToggleTree))
     self.manager.GetPane("objectBrowser").Show(show)
-    if ev:
+    if evt:
       self.manager.Update()
       adm.config.Write("TreeShown", show)
   
-  def OnToggleToolBar(self, ev):
+  def OnToggleToolBar(self, evt):
     show=self.viewmenu.IsChecked(self.GetMenuId(self.OnToggleToolBar))
     self.GetToolBar().Show(show)
-    if ev:
+    if evt:
       self.manager.Update()
       adm.config.Write("ToolbarShown", show)
   
-  def OnToggleStatusBar(self, ev):
+  def OnToggleStatusBar(self, evt):
     show=self.viewmenu.IsChecked(self.GetMenuId(self.OnToggleStatusBar))
     self.GetStatusBar().Show(show)
-    if ev:
+    if evt:
       self.manager.Update()
       adm.config.Write("StatusbarShown", show)
 
-  def OnLogging(self, _ev):
+  def OnLogging(self, evt):
     dlg=LoggingDialog(self)
     dlg.Go()
     dlg.Show()
 
-
+  def OnUpdate(self, evt):
+    dlg=UpdateDlg(self)
+    dlg.Go()
+    dlg.ShowModal()
+    
   def GetNode(self):
     if self.currentNode:
       return self.currentNode
@@ -257,18 +259,18 @@ class DetailFrame(Frame):
   def OnHelp(self, ev):
     pass
 
-  def OnPreferences(self, _ev):
+  def OnPreferences(self, evt):
     dlg=PreferencesDlg(self)
     dlg.Go()
     dlg.Show()
 
 
-  def OnAbout(self, _ev):
+  def OnAbout(self, evt):
     about=AboutDlg(self)
     about.ShowModal()
     
     
-  def OnShowServers(self, _ev):
+  def OnShowServers(self, evt):
     self.manager.GetPane("servers").Show(True)
     self.manager.Update()
 

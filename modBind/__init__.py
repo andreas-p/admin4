@@ -4,22 +4,19 @@
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
 
+moduleinfo={ 'name': "BIND DNS Server",
+            'modulename': "BIND",
+            'description': "BIND9 DNS server",
+            'version': "9.9",
+            'revision': "0.98.2",
+            'requiredAdmVersion': "2.1.3", 
+            'testedAdmVersion': "2.1.3", 
+            'supports': "BIND V9.6 ... V9.9",
+            'copyright': "(c) 2014 PSE Consulting Andreas Pflug",
+            'credits': "dnspython from http://www.dnspython.org",
+     }
+
 import sys
 if not hasattr(sys, 'skipSetupInit'):
-
   import Server
-  import adm
-  import wx
-  from wh import xlt
- 
       
-  moduleinfo={ 'name': xlt("BIND DNS Server"),
-              'modulename': "BIND",
-              'description': xlt("BIND9 DNS server"),
-              'version': "9.9",
-              'revision': "0.98.1",
-              'supports': "BIND V9.6 ... V9.9",
-              'serverclass': Server.Server,
-              'copyright': "(c) 2014 PSE Consulting Andreas Pflug",
-              'credits': "dnspython from http://www.dnspython.org",
-       }

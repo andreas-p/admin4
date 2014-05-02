@@ -30,6 +30,7 @@ trees={}
 dialogs={}
 app=None
 appname=None
+appTitle=None
 mainframe=None
 confirmDeletes=True
 

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource>
+  <object class="wxDialog" name="UpdateDlg">
+    <title>Update</title>
+    <centered>1</centered>
+    <style>wxCAPTION|wxCLOSE_BOX</style>
+    <object class="wxBoxSizer">
+      <orient>wxVERTICAL</orient>
+      <object class="sizeritem">
+        <object class="wxBoxSizer">
+          <orient>wxHORIZONTAL</orient>
+          <object class="sizeritem">
+            <object class="wxStaticText">
+              <label>Update source</label>
+            </object>
+            <flag>wxLEFT|wxALIGN_CENTRE_VERTICAL</flag>
+            <border>10</border>
+          </object>
+          <object class="sizeritem">
+            <object class="wxTextCtrl" name="Target"/>
+            <flag>wxALL</flag>
+            <border>10</border>
+            <minsize>100,-1d</minsize>
+          </object>
+          <object class="sizeritem">
+            <object class="wxButton" name="Search">
+              <label>...</label>
+              <size>12,12d</size>
+            </object>
+            <flag>wxRIGHT|wxALIGN_CENTRE_VERTICAL</flag>
+            <border>10</border>
+          </object>
+        </object>
+      </object>
+      <object class="sizeritem">
+        <object class="wxStaticBoxSizer">
+          <label>Module Info</label>
+          <orient>wxVERTICAL</orient>
+          <object class="sizeritem">
+            <object class="wxStaticText" name="ModuleInfo">
+              <label></label>
+              <size>140, 55d</size>
+            </object>
+            <minsize>140, 55d</minsize>
+          </object>
+        </object>
+        <option>1</option>
+        <flag>wxLEFT|wxRIGHT|wxEXPAND|wxGROW</flag>
+        <border>10</border>
+      </object>
+      <object class="sizeritem">
+        <object class="wxBoxSizer">
+          <orient>wxHORIZONTAL</orient>
+          <object class="spacer">
+            <option>1</option>
+          </object>
+          <object class="sizeritem">
+            <object class="wxButton" name="Cancel">
+              <label>Cancel</label>
+            </object>
+            <flag>wxLEFT|wxRIGHT|wxALIGN_RIGHT</flag>
+            <border>10</border>
+          </object>
+          <object class="sizeritem">
+            <object class="wxButton" name="Ok">
+              <label>Ok</label>
+            </object>
+            <flag>wxALIGN_RIGHT</flag>
+          </object>
+        </object>
+        <flag>wxTOP|wxBOTTOM|wxLEFT|wxRIGHT|wxGROW</flag>
+        <border>10</border>
+      </object>
+    </object>
+  </object>
+</resource>

@@ -79,7 +79,18 @@ def loadModule(modid, path, modlist=None):
       modname=mod.moduleinfo['name']
       adm.modules[modid] = mod
       mod.moduleinfo['class'] = modid
+      if not mod.moduleinfo.get('serverclass'):
+        if not hasattr(mod, "Server"):
+          logger.debug("Module %s has no Server import" % modid)
+          return
+        if not hasattr(mod.Server, "Server"):
+          logger.debug("Module %s.Server has no Server class" % modid)
+          return
+        mod.moduleinfo['serverclass'] = mod.Server.Server
+
       logger.debug("Loading Module %s '%s'", modid, modname)
+      if hasattr(mod, "Preferences"):
+        mod.moduleinfo['preferences'] = mod.Preferences
 
       modRevision=mod.moduleinfo.get('revision', 0)
       modDate=None
@@ -229,7 +240,6 @@ def main(argv):
   else:
     adm.appname=an
 
-  sys.path.insert(0, adm.loaddir)
   sys.excepthook=LoggerExceptionHook
   if wx.VERSION < (2,9):
     logger.debug("Using old wxPython version %s", wx.version())
@@ -246,9 +256,9 @@ def main(argv):
   adm.config=config.Config(adm.appname)
   frame.LoggingDialog.Init()
 
-  title=adm.config.Read("Title", adm.appname.title())
+  adm.appTitle=adm.config.Read("Title", adm.appname.title())
   if wx.VERSION > (2,9):
-    app.SetAppDisplayName(title)
+    app.SetAppDisplayName(adm.appTitle)
     from version import vendor, vendorDisplay
     app.SetVendorName(vendor)
     app.SetVendorDisplayName(vendorDisplay)
