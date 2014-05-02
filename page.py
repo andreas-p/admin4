@@ -164,7 +164,7 @@ class NotebookControlsPage(NotebookPage, NotebookPanel):
     
   
 def getAllPreferencePanelClasses():
-  from frame import Preferences
+  from AdmDialogs import Preferences
   panelclasses=[Preferences]
   for modname, mod in adm.modules.items():
     panel=mod.moduleinfo.get('preferences')

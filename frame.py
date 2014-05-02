@@ -12,7 +12,7 @@ from wh import xlt, StringType, GetBitmap, Menu, restoreSize
 from tree import NodeTreeCtrl, ServerTreeCtrl
 from notebook import Notebook
 from LoggingDialog import LoggingDialog
-
+from AdmDialogs import PreferencesDlg, AboutDlg
 
 class Frame(wx.Frame, adm.MenuOwner):
   def __init__(self, parentWin, title, style, _size, _pos):
@@ -264,83 +264,7 @@ class DetailFrame(Frame):
 
 
   def OnAbout(self, _ev):
-    class About(adm.Dialog):
-      def __init__(self, parent):
-        super(About, self).__init__(parent)
-        stdFont=self.GetFont()
-        pt=stdFont.GetPointSize()
-        family=stdFont.GetFamily()
-        bigFont=wx.Font(pt*2 , family, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD)
-        mediumFont=wx.Font(pt*1.4, family, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD)
-        self['Admin'].SetFont(bigFont)
-        self['Version'].SetFont(mediumFont)
-
-        import version
-        self.Admin="Admin4"
-        self.Version=xlt("Version %s") % version.version
-
-        if not hasattr(sys, "frozen"):
-            self.Revision = xlt("(%s)\nunknown changes") % version.revDate 
-            rev=xlt("unknown")
-        elif version.revLocalChange:
-          if version.revDirty:
-            self.Revision = xlt("(+ %s)\nLocally changed/uncommitted") % version.modDate 
-            rev=xlt("locally changed %s") % version.modDate
-          else:
-            self.Revision = xlt("(+ %s)\nLocally committed") % version.revDate 
-            rev="+ %s" % version.revDate
-        elif version.revOriginChange:
-          self.Revision = "(+ %s)" % version.revDate
-          rev="+ %s" % version.revDate 
-        else:
-          if version.tagDate:
-            self.Revision = "(%s)" % version.tagDate
-          rev=version.tagDate 
-        self.Description = version.description
-        copyrights=[version.copyright]
-        licenses=[xlt("%s\nFor details see LICENSE.TXT") % version.license]
-
-        lv=self['Modules']
-        lv.AddColumn(xlt("Module"), "PostgreSQL")
-        lv.AddColumn(xlt("Ver."), "2.4.5")
-        lv.AddColumn(xlt("Rev."), "2014-01-01++")
-        lv.AddColumn(xlt("Description"), 30)
-        
-        vals=["Core", version.version, rev, xlt("Admin4 core framework")]
-        lv.AppendItem(adm.images.GetId("Admin4Small"), vals)
-
-        wxver=wx.version().split(' ')
-        v=wxver[0].split('.')
-        vals=["wxWidgets", '.'.join(v[:3]), '.'.join(v[3:]), "wxWidgets %s" % ' '.join(wxver[1:])]
-        lv.AppendItem(adm.images.GetId("wxWidgets"), vals)
-
-        for modid, mod in adm.modules.items():
-          vals=[]
-          mi=mod.moduleinfo
-          modulename=mi.get('modulename', modid)
-          vals.append(modulename)
-          vals.append(mi.get('version'))
-          rev=mi.get('revision')
-          if rev:
-            vals.append(rev)
-          else:
-            vals.append("")
-          vals.append(mi.get('description'))
-          serverclass=mi['serverclass'].__name__.split('.')[-1]
-          icon=adm.images.GetId(os.path.join(modid, serverclass))
-          lv.AppendItem(icon, vals)
-          credits=mi.get('credits')
-          if credits:
-            copyrights.append(credits)
-          license=mi.get("license")
-          if license:
-            licenses.append("%s: %s" % (modulename, license))
-        self.Copyright = "\n\n".join(copyrights).replace("(c)", unichr(169))
-        
-        licenses.append("Additional licenses from libraries used may apply.")
-        self.License="\n\n".join(licenses)
-
-    about=About(self)
+    about=AboutDlg(self)
     about.ShowModal()
     
     
@@ -546,67 +470,5 @@ class DetachFrame(Frame):
       self.node.detachedWindow=None
       self.node=None
       Frame.OnClose(self, evt)
-
-  
-class PreferencesDlg(adm.CheckedDialog):
-  def __init__(self, parentWin):
-    adm.Dialog.__init__(self, parentWin)
-    self.panels=[]
-
-    notebook=self['Notebook']
-    for panelclass in adm.getAllPreferencePanelClasses():
-        panel=panelclass(self, notebook)
-        self.panels.append(panel)
-        notebook.AddPage(panel, panel.name)
-
-  def Go(self):
-    for panel in self.panels:
-      panel.Go()
-      panel.SetUnchanged()
-
-  def GetChanged(self):
-    for panel in self.panels:
-      if panel.GetChanged():
-        return True
-    return False
-
-  def Check(self):
-    for panel in self.panels:
-      if hasattr(panel, "Check"):
-        if not panel.Check():
-          return False
-    return True
-
-  def Save(self):
-    for panel in self.panels:
-      if not panel.Save():
-        return False
-    return True
-
-
-class Preferences(adm.NotebookPanel):
-  name="Admin4"
-  
-  def Go(self):
-    if adm.availableModules:
-      self['Modules'].InsertItems(adm.availableModules, 0)
-
-    self.ConfirmDeletes=adm.confirmDeletes
-    currentModules=adm.config.Read("Modules", adm.modules.keys())
-    for key in currentModules:
-      i=self['Modules'].FindString(key)
-      if i >= 0:
-        self['Modules'].Check(i)
-
-  def Save(self):
-    adm.config.Write("Modules", self['Modules'].GetCheckedStrings())
-    adm.confirmDeletes=self.ConfirmDeletes
-    adm.config.Write("ConfirmDeletes", adm.confirmDeletes)
-    return True
-
-  @staticmethod
-  def Init():
-    adm.confirmDeletes=adm.config.Read("ConfirmDeletes", True)
-
 
   

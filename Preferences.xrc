@@ -8,22 +8,6 @@
       <growablecols>1</growablecols>
       <object class="sizeritem">
         <object class="wxStaticText">
-          <label>Modules</label>
-          <pos>5,5d</pos>
-        </object>
-        <flag>wxTOP|wxLEFT</flag>
-        <border>10</border>
-      </object>
-      <object class="sizeritem">
-        <object class="wxCheckListBox" name="Modules">
-          <content/>
-        </object>
-        <option>1</option>
-        <flag>wxALL|wxEXPAND|wxGROW</flag>
-        <border>10</border>
-      </object>
-      <object class="sizeritem">
-        <object class="wxStaticText">
           <label>Confirm deletes</label>
         </object>
       </object>

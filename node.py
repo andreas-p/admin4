@@ -578,10 +578,14 @@ class ServerNode(Node):
     self.password=self.settings.get('password')
     self.user=self.settings.get('user')
     if not self.password and self.user:
-      self.password = adm.AskPassword(parentWin, xlt("Password for %s:" % self.user), xlt("Enter password for %(type)s \"%(name)s\"") 
-                                       % { "type": self.typename, "name": self.name } )
+      self.password, remember = adm.AskPassword(parentWin, xlt("Password for %s:" % self.user), xlt("Enter password for %(type)s \"%(name)s\"") 
+                                       % { "type": self.typename, "name": self.name }, True )
       if self.password == None:
         return None
+      if remember:
+        self.settings['password'] = self.password
+        adm.config.storeServerSettings(self, self.settings)
+
     rc=self.DoConnect()
     return rc
 

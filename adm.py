@@ -17,6 +17,7 @@ from node import NodeId, Node, Collection, Group, ServerNode  # @UnusedImport
 from page import PropertyPage, NotebookPage, NotebookControlsPage, NotebookPanel, PreferencePanel, getAllPreferencePanelClasses  # @UnusedImport
 from controlcontainer import Dialog, CheckedDialog, PropertyDialog, ServerPropertyDialog  # @UnusedImport
 from frame import Frame
+from AdmDialogs import PasswordDlg
 
 
 modules={}
@@ -259,15 +260,24 @@ def GetCurrentTree(wnd=None):
   return None
 
 
-def AskPassword(parentWin, msg, caption):
+def AskPassword(parentWin, msg, caption, withRememberCheck=False):
 #    dlg=wx.PasswordEntryDialog(parentWin, msg, caption)
 # We might support "Remember" here
-    dlg=wx.TextEntryDialog(parentWin, msg, caption)
+#    dlg=wx.TextEntryDialog(parentWin, msg, caption)
+    dlg=PasswordDlg(parentWin, msg, caption)
+    if not withRememberCheck:
+      dlg['Remember'].Hide()
     passwd=None
+    remember=False
     if dlg.ShowModal() == wx.ID_OK:
-      passwd=dlg.GetValue()
+      passwd=dlg.Password
+      remember=dlg.Remember
+      
     dlg.Destroy()
-    return passwd
+    if withRememberCheck:
+      return passwd, remember
+    else:
+      return passwd
   
   
 def ConfirmDelete(msg, hdr, force=False):

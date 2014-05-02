@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resource>
-  <object class="wxDialog" name="About">
+  <object class="wxDialog" name="AboutDlg">
     <title>About</title>
     <centered>1</centered>
     <style>wxCLOSE_BOX|wxCAPTION</style>
