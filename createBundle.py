@@ -5,9 +5,7 @@
 # see LICENSE.TXT for conditions of usage
 
 
-resourcePatterns=['.png', '.ico', '.xrc']
 filePatterns=['.png', '.ico', '.xrc', '.py']
-resourcePatterns=filePatterns
 ignoredirs=['xrced', 'build', 'dist']
 ignoredfiles=['admin4.py', 'createBundle.py']
 moreFiles=["LICENSE.TXT", 'CHANGELOG']
@@ -18,7 +16,6 @@ packages=['wx']
 includes=[]
 addModules=[]
 excludes=['lib2to3', 'hotshot', 'distutils', 'ctypes', 'unittest']
-distDir="../admin4-release"
 buildDir=".build"
 appName="Admin4"
 versionTag=None
@@ -37,16 +34,18 @@ if __name__ == '__main__':
   else:
     if platform == "Windows":
       installer='py2exe'
+      distDir="../Admin4-%s-Win"
     else:
       if platform == "Darwin":
         installer='py2app'
+        distDir="../Admin4-%s-Mac"
       else:
         print "Platform %s not supported" % platform
         sys.exit(1)
     sys.argv.insert(1, installer)
 
   if installer == "srcUpdate":
-    distDir='../admin4Update'
+    distDir='../Admin4-%s-Src'
 
   while '--addModule' in sys.argv:
     i=sys.argv.index('--addModule')
@@ -97,76 +96,91 @@ if __name__ == '__main__':
       lst.append( (dir[stripdirlen:], filenames) )
     return lst
 
+  def readVersion():
+    version=None
+    try:
+      f=open('__version.py')
+      verSrc=f.read()
+      f.close()
+      exec verSrc
+    except:
+      pass
+    return version
+  
+
   def writeVersion():
     # https://pythonhosted.org/GitPython/0.3.2/index.html
     # https://pythonhosted.org/GitPython/0.1/index.html
-    try: 
-      import git, time
-      if git.__version__ < "0.3":
-        print "\nWARNING: GIT too old, must be >0.3\n\n"
+    global versionTag
+    
+    if checkGit:
+      try: 
+        import git, time
+        if git.__version__ < "0.3":
+          print "\nWARNING: GIT too old, must be >0.3\n\n"
+          return False
+      except:
+        print "\nWARNING: No GIT installed\n\n"
         return False
-    except:
-      print "\nWARNING: No GIT installed\n\n"
-      return False
-
-    repo=git.Repo(os.path.dirname(os.path.abspath(sys.argv[0])))
-    tags={}
-    for t in repo.tags:
-      tags[str(t.commit)] = t
-
-    lastOriginCommit=repo.commit('origin/master')
-    lastCommit=repo.commit('master')
-    
-    def findTag(c):
-      if str(c) in tags:
-        return tags[str(c)]
-      if c.parents:
-        for c in c.parents:
-          tag=findTag(c)
-          if tag:
-            return tag
-      return None
-    tag=findTag(lastCommit)
-    if tag:
-      global versionTag
-      versionTag=tag.name
-      f=open("__version.py", "w")
-      f.write("# Automatically created from GIT by createBundle.\n# Do not edit manually!\n\n")
-      f.write("version='%s'\n" % tag.name)
-      f.write("tagDate='%s'\n" % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(tag.commit.committed_date)))
-      f.write("revDate='%s'\n" % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(lastOriginCommit.committed_date)))
-      f.write("modDate='%s'\n" % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(lastCommit.committed_date)))
-      if repo.is_dirty() or str(lastCommit) != str(lastOriginCommit):
-        f.write("revLocalChange=True\n")
-      else:
-        f.write("revLocalChange=False\n")
-      if str(lastOriginCommit) != str(tag.commit):
-        f.write("revOriginChange=True\n")
-      else:
-        f.write("revOriginChange=False\n")
-      if repo.is_dirty():
-        versionTag="tmp"
-        f.write("revDirty=True\n")
-      else:
-        f.write("revDirty=False\n")
-      f.close()
+  
+      repo=git.Repo(os.path.dirname(os.path.abspath(sys.argv[0])))
+      tags={}
+      for t in repo.tags:
+        tags[str(t.commit)] = t
+  
+      lastOriginCommit=repo.commit('origin/master')
+      lastCommit=repo.commit('master')
       
-      return repo.is_dirty()
-    else:
-      print "No tags found"
-      return True    
-    
+      def findTag(c):
+        if str(c) in tags:
+          return tags[str(c)]
+        if c.parents:
+          for c in c.parents:
+            tag=findTag(c)
+            if tag:
+              return tag
+        return None
+      tag=findTag(lastCommit)
+      if tag:
+        versionTag=tag.name
+        f=open("__version.py", "w")
+        f.write("# Automatically created from GIT by createBundle.\n# Do not edit manually!\n\n")
+        f.write("version='%s'\n" % tag.name)
+        f.write("tagDate='%s'\n" % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(tag.commit.committed_date)))
+        f.write("revDate='%s'\n" % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(lastOriginCommit.committed_date)))
+        f.write("modDate='%s'\n" % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(lastCommit.committed_date)))
+        if repo.is_dirty() or str(lastCommit) != str(lastOriginCommit):
+          f.write("revLocalChange=True\n")
+        else:
+          f.write("revLocalChange=False\n")
+        if str(lastOriginCommit) != str(tag.commit):
+          f.write("revOriginChange=True\n")
+        else:
+          f.write("revOriginChange=False\n")
+        if repo.is_dirty():
+          versionTag="tmp"
+          f.write("revDirty=True\n")
+        else:
+          f.write("revDirty=False\n")
+        f.close()
+        
+        return repo.is_dirty()
+      else:
+        print "No tags found"
+        return True    
 
-  # Start of code
-  if checkGit:
-    if writeVersion():
-      print "\nWARNING: Repository has uncommitted data\n\n"
-  else:
-    if os.path.exists('__version.py'):
+    versionTag=readVersion()
+    if versionTag != None:
       print "\nWARNING: using existing __version.py file."
+      return False
     else:
       print "\nWARNING: No __version file!"
       sys.exit()
+    
+
+  # Start of code
+  if writeVersion():
+    print "\nWARNING: Repository has uncommitted data\n\n"
       
   sys.skipSetupInit=True
   
@@ -174,7 +188,6 @@ if __name__ == '__main__':
   admResources=[]
   
   if installer == 'srcUpdate':
-    resourcePatterns = filePatterns
     ignoredfiles=[]
     
   def checkAddItem(fn, stripdirlen=0):
@@ -198,7 +211,7 @@ if __name__ == '__main__':
         admResources.append(fn)
       else:
         ext=fn[fn.rfind('.'):].lower()
-        if ext in resourcePatterns:
+        if ext in filePatterns:
           admResources.append(fn)
   
   for fn in os.listdir("."):
@@ -209,16 +222,19 @@ if __name__ == '__main__':
     fn=os.path.abspath(fn)
     checkAddItem(fn, len(os.path.dirname(fn))+1)
     
+  admResources.extend(moreFiles)
   data_files.append( (".", admResources) )
-  data_files.extend(moreFiles)
   
   data_files.reverse()
   requiredDirs = tuple(d.replace('.', '/') for d in requiredMods)
   packages.extend(requiredMods)
   packages=sorted(set(packages))
 
-  if versionTag:
+  if distDir.find('%s') >=0:
+    distDir = distDir % versionTag
+  elif versionTag:
     distDir += "-%s" % versionTag
+    
   print "Required:", ", ".join(packages)
   
   if installer == 'srcUpdate':
