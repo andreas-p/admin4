@@ -6,10 +6,10 @@
 
 import adm
 import logger
-import sys, os, zipfile
+import sys, os, zipfile, shutil
 import wx
 from wh import xlt, copytree
-import version
+import version as admVersion
 
 class PasswordDlg(adm.Dialog):
   def __init__(self, parentWin, msg, caption):
@@ -32,28 +32,28 @@ class AboutDlg(adm.Dialog):
     self['Version'].SetFont(mediumFont)
 
     self.Admin="Admin4"
-    self.Version=xlt("Version %s") % version.version
+    self.Version=xlt("Version %s") % admVersion.version
 
     if not hasattr(sys, "frozen"):
-        self.Revision = xlt("(%s)\nunknown changes") % version.revDate 
+        self.Revision = xlt("(%s)\nunknown changes") % admVersion.revDate 
         rev=xlt("unknown")
-    elif version.revLocalChange:
-      if version.revDirty:
-        self.Revision = xlt("(+ %s)\nLocally changed/uncommitted") % version.modDate 
-        rev=xlt("locally changed %s") % version.modDate
+    elif admVersion.revLocalChange:
+      if admVersion.revDirty:
+        self.Revision = xlt("(+ %s)\nLocally changed/uncommitted") % admVersion.modDate 
+        rev=xlt("locally changed %s") % admVersion.modDate
       else:
-        self.Revision = xlt("(+ %s)\nLocally committed") % version.revDate 
-        rev="+ %s" % version.revDate
-    elif version.revOriginChange:
-      self.Revision = "(+ %s)" % version.revDate
-      rev="+ %s" % version.revDate 
+        self.Revision = xlt("(+ %s)\nLocally committed") % admVersion.revDate 
+        rev="+ %s" % admVersion.revDate
+    elif admVersion.revOriginChange:
+      self.Revision = "(+ %s)" % admVersion.revDate
+      rev="+ %s" % admVersion.revDate 
     else:
-      if version.tagDate:
-        self.Revision = "(%s)" % version.tagDate
-      rev=version.tagDate 
-    self.Description = version.description
-    copyrights=[version.copyright]
-    licenses=[xlt("%s\nFor details see LICENSE.TXT") % version.license]
+      if admVersion.tagDate:
+        self.Revision = "(%s)" % admVersion.tagDate
+      rev=admVersion.tagDate 
+    self.Description = admVersion.description
+    copyrights=[admVersion.copyright]
+    licenses=[xlt("%s\nFor details see LICENSE.TXT") % admVersion.license]
 
     lv=self['Modules']
     lv.AddColumn(xlt("Module"), "PostgreSQL")
@@ -61,7 +61,7 @@ class AboutDlg(adm.Dialog):
     lv.AddColumn(xlt("Rev."), "2014-01-01++")
     lv.AddColumn(xlt("Description"), 30)
     
-    vals=["Core", version.version, rev, xlt("Admin4 core framework")]
+    vals=["Core", admVersion.version, rev, xlt("Admin4 core framework")]
     lv.AppendItem(adm.images.GetId("Admin4Small"), vals)
 
     wxver=wx.version().split(' ')
@@ -164,6 +164,8 @@ class UpdateDlg(adm.Dialog):
     self.modid=fnp[0]
     if os.path.isdir(self.Target):
       initMod=os.path.join(self.Target, "__init__.py")
+      if not os.path.exists(initMod):
+        initMod=os.path.join(self.Target, "__version.py")
       if os.path.exists(initMod):
         try:
           f=open(initMod, "r")
@@ -171,19 +173,31 @@ class UpdateDlg(adm.Dialog):
           f.close
         except:
           pass
+      else: # core
+        pass
     elif self.Target.lower().endswith(".zip") and os.path.exists(self.Target) and zipfile.is_zipfile(self.Target):
       if len(fnp) < 2:
         logger.debug("Not an update zip: %s", self.Target)
         return False
       try:
         zip=zipfile.ZipFile(self.Target)
-        modnameSlash=self.modid+os.path.sep
-        for f in zip.namelist():
-          if not f.startswith(modnameSlash):
+        names=zip.namelist()
+        if self.modid.lower() == "admin4":
+          self.modnameSlash=names[0]
+        else:
+          self.modnameSlash = self.modid+os.path.sep
+          
+        for f in names:
+          if not f.startswith(self.modnameSlash):
             logger.debug("Update zip %s contains additional non-module data", self.Target)
             return False
-        f=zip.open("%s__init__.py" % modnameSlash)
-        modSrc=f.read()
+          
+        initMod="%s__init__.py" % self.modnameSlash
+        if not initMod in names:
+          initMod="%s__version.py" % self.modnameSlash
+        if initMod in names:
+          f=zip.open(initMod)
+          modSrc=f.read()
         zip.close()
         
       except Exception as _e:
@@ -192,6 +206,10 @@ class UpdateDlg(adm.Dialog):
 
     if modSrc:
       moduleinfo=None
+      version=None
+      tagDate=revDate=modDate=None
+      revLocalChange=revOriginChange=revDirty=False
+      
       try:
         sys.skipSetupInit=True
         exec modSrc
@@ -199,7 +217,7 @@ class UpdateDlg(adm.Dialog):
         logger.exception("Error executing code in %s", self.Target)
       finally:
         del sys.skipSetupInit
-          
+
       if moduleinfo:
         try:
           self.modname=moduleinfo['modulename']
@@ -225,7 +243,7 @@ class UpdateDlg(adm.Dialog):
 
           rqVer=moduleinfo['requiredAdmVersion']
           msg.append("")
-          if moduleinfo['requiredAdmVersion'] > version.version:
+          if rqVer > admVersion.version:
             msg.append(xlt("Module requires Admin4 Core version %s") % rqVer)
             canInstall=False
           else:
@@ -238,6 +256,27 @@ class UpdateDlg(adm.Dialog):
         
         self.ModuleInfo="\n".join(msg)
         return canInstall
+      elif version:
+        if revLocalChange:
+          if revDirty:
+            rev=modDate
+          else:
+            rev=revDate
+        elif revOriginChange:
+          rev=revDate 
+        else:
+          rev=tagDate 
+        self.modname="Core"
+        msg=[ xlt("%s Core") % adm.appTitle, xlt("Version %s (%s)") % (version, rev), "" ]
+        if version < admVersion.version:
+          canInstall=False
+          msg.append(xlt("Update version older than current Core version %s") % admVersion.version)
+        elif version == admVersion.version:
+          msg.append(xlt("Update version same as current Core version"))
+        if revDirty:
+          msg.append(xlt("uncommitted data present!"))
+        self.ModuleInfo="\n".join(msg)
+        return canInstall
 
     return False
 
@@ -245,22 +284,34 @@ class UpdateDlg(adm.Dialog):
   
   def Execute(self):
     if os.path.isdir(self.Target):
-      dst=os.path.join(adm.loaddir, self.modid)
-      try:
-        os.mkdir(dst)
-      except:
-        pass
+      if self.modname == "Core":
+        dst=adm.loaddir
+        dst=os.path.join(adm.loaddir, "_update")
+      else:
+        dst=os.path.join(adm.loaddir, self.modid)
       copytree(self.Target, dst)
     else:
+      if self.modname == "Core":
+        tmpDir=os.path.join(adm.loaddir, "_update")
+        try:
+          shutil.rmtree(tmpDir)
+          os.mkdir(tmpDir)
+        except:
+          pass
+      else:
+        tmpDir=adm.loaddir
       try:
         zip=zipfile.ZipFile(self.Target)
-        zip.extractall(adm.loaddir)
+        zip.extractall(tmpDir)
         zip.close()
       except Exception as _e:
         logger.exception("Error extracting %s", self.Target)
         return False
+      if self.modname == "Core":
+        copytree(os.path.join(tmpDir, self.modnameSlash), adm.loaddir )
+        shutil.rmtree(tmpDir)
     
-    dlg=wx.MessageDialog(self, xlt("New module requires program restart.\nExit now?"), 
+    dlg=wx.MessageDialog(self, xlt("New program files require restart.\nExit now?"), 
                          xlt("Installed new module %s") % self.modname,
                          wx.YES_NO|wx.NO_DEFAULT)
     if dlg.ShowModal() == wx.ID_YES:

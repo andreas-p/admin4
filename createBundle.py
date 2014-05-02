@@ -6,7 +6,7 @@
 
 
 filePatterns=['.png', '.ico', '.xrc', '.py']
-ignoredirs=['xrced', 'build', 'dist']
+ignoredirs=['xrced', 'build', 'dist', '_update']
 ignoredfiles=['admin4.py', 'createBundle.py']
 moreFiles=["LICENSE.TXT", 'CHANGELOG']
 
