@@ -147,7 +147,7 @@ if __name__ == '__main__':
         f=open("__version.py", "w")
         f.write("# Automatically created from GIT by createBundle.\n# Do not edit manually!\n\n")
         f.write("version='%s'\n" % tag.name)
-        f.write("requiredAdmVersion='%s'\n" & requiredAdmVersion)
+        f.write("requiredAdmVersion='%s'\n" % requiredAdmVersion)
         f.write("tagDate='%s'\n" % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(tag.commit.committed_date)))
         f.write("revDate='%s'\n" % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(lastOriginCommit.committed_date)))
         f.write("modDate='%s'\n" % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(lastCommit.committed_date)))
