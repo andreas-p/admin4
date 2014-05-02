@@ -6,7 +6,7 @@
 
 
 import wx.aui
-import adm, os, sys
+import adm
 import logger
 from wh import xlt, StringType, GetBitmap, Menu, restoreSize
 from tree import NodeTreeCtrl, ServerTreeCtrl
@@ -217,6 +217,7 @@ class DetailFrame(Frame):
       self.viewmenu.Check(self.GetMenuId(self.OnToggleTree), False)
   
   def OnQuit(self, evt):
+    self.tree.Unbind(wx.EVT_TREE_SEL_CHANGED, self.GetMenuId(self.OnTreeSelChange)) # this is for Win C++ dtor
     self.Close()
 
   def OnToggleTree(self, evt):
