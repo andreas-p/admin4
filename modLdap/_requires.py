@@ -23,8 +23,6 @@
 # other OS:
 # http://www.python-ldap.org/download.shtml
  
-import ldap
-
 def GetPrerequisites(info=False):
   try:
     import ldap

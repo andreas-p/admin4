@@ -342,16 +342,17 @@ class ServerConfigData:
     return rc
 
   def Read(self):
-    adm=self.server.connection.SearchOne(self.server.dn, "cn=%s" % self.rdn())
-    config={}
-    if adm:
-      self.server.adminLdapDn=adm[0][0]
-      val=adm[0][1][self.attrib]
-      try:
-        config=ast.literal_eval(val[0])
-      except:
-        logger.debug("Couldn't pythonize '%s[0]'", val)
-    return config
+    result=self.server.connection.SearchOne(self.server.dn, "cn=%s" % self.rdn())
+    for dn, entry in result:
+      if dn:
+        self.server.adminLdapDn=dn
+        try:
+          val=entry[self.attrib]
+          config=ast.literal_eval(val[0])
+          return config
+        except:
+          logger.debug("Couldn't pythonize '%s[0]'", val)
+    return {}
       
   def Update(self, value):    
     dn=self.server.adminLdapDn
