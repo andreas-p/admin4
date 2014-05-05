@@ -86,6 +86,10 @@ class Entry(adm.Node):
 
       rdnOid=self.GetServer().GetOid(self.name.split('=')[0])
 
+      def checkUC(v):
+        
+        return unicode(v)
+      
       def addSingle(oid):
         if oid in oids:
           attrval=self.attribs[oid]
@@ -104,10 +108,16 @@ class Entry(adm.Node):
               val=attrval.GetValue()
             except:
               val=attrval.value
-          try:
-            unicode(val)
-          except:
-            val = "".join(map(lambda x: "%02x" % ord(x), val))
+          if isinstance(val, list):
+            try:
+              map(unicode, val)
+            except:
+              val = " ".join(map(lambda y: "".join(map(lambda x: "%02x" % ord(x), y)), val))
+          else:
+            try:
+              unicode(val)
+            except:
+              val = "".join(map(lambda x: "%02x" % ord(x), val))
 
           self.AddChildrenProperty(val, attrval.name, self.GetImageId(icon))
           oids.remove(oid)
