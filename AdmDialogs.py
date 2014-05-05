@@ -189,7 +189,7 @@ class UpdateDlg(adm.Dialog):
           
         for f in names:
           if not f.startswith(self.modnameSlash):
-            logger.debug("Update zip %s contains additional non-module data", self.Target)
+            logger.debug("Update zip %s contains additional non-module data: %s", self.Target, f)
             return False
           
         initMod="%s__init__.py" % self.modnameSlash
