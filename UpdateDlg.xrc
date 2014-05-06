@@ -73,10 +73,11 @@
           <label>Update Info</label>
           <orient>wxVERTICAL</orient>
           <object class="sizeritem">
-            <object class="wxStaticText" name="ModuleInfo">
-              <label></label>
+            <object class="wxTextCtrl" name="ModuleInfo">
               <size>150, 55d</size>
+              <style>wxTE_MULTILINE|wxTE_READONLY</style>
             </object>
+            <flag>wxEXPAND</flag>
             <minsize>150, 55d</minsize>
           </object>
         </object>

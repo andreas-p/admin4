@@ -138,14 +138,15 @@ class PreferencesDlg(adm.CheckedDialog):
 class UpdateDlg(adm.Dialog):
   def __init__(self, parentWin):
     adm.Dialog.__init__(self, parentWin)
+    self.SetTitle(xlt("Update %s modules") % adm.appTitle)
+
     self.onlineUpdateInfo=None
     self.onlineTimeout=5
 
     self.Bind("Source")
     self.Bind("Search", self.OnSearch)
     self.Bind("CheckUpdate", self.OnCheckUpdate)
-    self.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.OnPageChange)
-    self.SetTitle(xlt("Update %s modules") % adm.appTitle)
+    self.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.OnCheck)
     
   def Go(self):
     if not os.access(adm.loaddir, os.W_OK):
@@ -154,9 +155,6 @@ class UpdateDlg(adm.Dialog):
       self['Ok'].Disable()
     else:
       self.Check()
-
-  def OnPageChange(self, evt):
-    self.OnCheck()
   
   def OnCheckUpdate(self, evt):
 
@@ -180,7 +178,7 @@ class UpdateDlg(adm.Dialog):
       keyBytes=f.read()
       f.close()
 
-      #https://www.dlitz.net/software/pycrypto/api/current/Crypto-module.html
+      # https://www.dlitz.net/software/pycrypto/api/current/Crypto-module.html
       pubkey=Crypto.PublicKey.RSA.importKey(keyBytes)
       verifier = Crypto.Signature.PKCS1_v1_5.new(pubkey)
       hash=Crypto.Hash.SHA.new(xmlText)
@@ -201,6 +199,7 @@ class UpdateDlg(adm.Dialog):
         path = os.path.dirname(path)
       self.Source=path
       self.OnCheck()
+
     
   def Check(self):
     if self['Notebook'].GetSelection():
@@ -220,12 +219,14 @@ class UpdateDlg(adm.Dialog):
             modSrc=f.read()
             f.close
           except:
-            pass
+            self.ModuleInfo = xlt("Module file %s cannot be opened.") % initMod
+            return False
         else: # core
-          pass
+          self.ModuleInfo = xlt("%s is no module.") % self.Source
+          return False
       elif self.Source.lower().endswith(".zip") and os.path.exists(self.Source) and zipfile.is_zipfile(self.Source):
         if len(fnp) < 2:
-          logger.debug("Not an update zip: %s", self.Source)
+          self.Module = xlt("%s is no update zip.") % self.Source
           return False
         try:
           zip=zipfile.ZipFile(self.Source)
@@ -233,11 +234,12 @@ class UpdateDlg(adm.Dialog):
           zipDir=names[0]
           if self.modid.lower() != "admin4":
             if zipDir.split('-')[0] != self.modid:
-              logger.debug("Update zip &s doesn't contain module directory %s.", self.Source, self.modid)
+              self.ModuleInfo=xlt("Update zip %s doesn't contain module directory %s.") % ( self.Source, self.modid)
+              return False
             
           for f in names:
             if not f.startswith(zipDir):
-              logger.debug("Update zip %s contains additional non-module data: %s", self.Source, f)
+              self.ModuleInfo=xlt("Update zip %s contains additional non-module data: %s") % (self.Source, f)
               return False
             
           initMod="%s__init__.py" % zipDir
@@ -246,11 +248,11 @@ class UpdateDlg(adm.Dialog):
           if initMod in names:
             f=zip.open(initMod)
             modSrc=f.read()
-          zip.close()
+            zip.close()
           
         except Exception as _e:
-          logger.exception("Error while reading moduleinfo from zip %s", self.Source)
-          pass
+          self.ModuleInfo=xlt("Error while reading moduleinfo from zip %s") % self.Source
+          return False
   
       if modSrc:
         moduleinfo=None
@@ -262,10 +264,11 @@ class UpdateDlg(adm.Dialog):
         try:
           sys.skipSetupInit=True
           exec modSrc
-        except Exception as _e:
-          logger.exception("Error executing code in %s", self.Source)
-        finally:
           del sys.skipSetupInit
+        except Exception as _e:
+          self.ModuleInfo=xlt("Error executing version code in %s") % self.Source
+          del sys.skipSetupInit
+          return False
   
         if moduleinfo:
           try:
@@ -356,7 +359,10 @@ class UpdateDlg(adm.Dialog):
                 hasCoreUpdate=True
             elif name == "Lib":
               if admVersion.libVersion < version:
-                self.ModuleInfo = msg[0] +"\nThere is a newer %(app)s Core version %(new)s available.\nHowever, the current version %(old)s can't update online.\nPlease download and install a full package manually." % info
+                msg=[msg[0], "There is a newer %(app)s Core version %(new)s available.\nHowever, the current version %(old)s can't update online.\nPlease download and install a full package manually." % info]
+                if not hasattr(sys, 'frozen'):
+                  msg.append(xlt("In addition, the library requirements have changed;\ncheck the new documentation."))
+                self.ModuleInfo = "\n".join(msg)
                 return False
             else:
               mod=adm.modules.get(name)
