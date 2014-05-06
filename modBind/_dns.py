@@ -186,6 +186,7 @@ class BindConnection():
       return None
     try:
       response=requests.get("http://%s:%d" % (self.server.settings['host'], self.server.settings['statsport']), timeout=self.server.settings.get('timeout', 1.))
+      response.raise_for_status()
       txt=response.text
     except Exception as _e:
       return None
