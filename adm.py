@@ -32,7 +32,10 @@ app=None
 appname=None
 appTitle=None
 mainframe=None
+
 confirmDeletes=True
+monthlyChecks=True
+proxy=None
 
 config=None
 
@@ -46,6 +49,12 @@ def getModule(instance):
     else:
       return ""
 
+
+def GetProxies():
+    if proxy:
+      return { 'http': proxy, 'https': proxy }
+    else:
+      return None
 
 def TextExtent(text):
   if isinstance(text, StringType):

@@ -12,7 +12,6 @@ from wh import xlt, StringType
 from Validator import Validator
 import wx, os
 import xmlres
-import xmlhelp
 
 class MenuOwner:
   """
@@ -239,9 +238,10 @@ class ControlContainer():
   else: # wx2.8
 
     def addControls(self, res):
+      from xmlhelp import Document as XmlDocument
       module=self.module.replace(".", "/")
       path = os.path.join(adm.loaddir, module, "%s.xrc" % self.resname)
-      doc=xmlhelp.Document.parseFile(path)
+      doc=XmlDocument.parseFile(path)
       root=doc.getElement('object')
       objects=root.getElements('object')
       for obj in objects:

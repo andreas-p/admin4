@@ -7,30 +7,66 @@
     <object class="wxBoxSizer">
       <orient>wxVERTICAL</orient>
       <object class="sizeritem">
-        <object class="wxBoxSizer">
-          <orient>wxHORIZONTAL</orient>
-          <object class="sizeritem">
-            <object class="wxStaticText">
-              <label>Update source</label>
+        <object class="wxNotebook" name="Notebook">
+          <object class="notebookpage">
+            <label>Online Update</label>
+            <object class="wxPanel">
+              <object class="wxFlexGridSizer">
+                <cols>2</cols>
+                <object class="sizeritem">
+                  <object class="wxStaticText">
+                    <label>Check for available update</label>
+                  </object>
+                  <flag>wxLEFT|wxALIGN_CENTRE_VERTICAL</flag>
+                  <border>10</border>
+                </object>
+                <object class="sizeritem">
+                  <object class="wxButton" name="CheckUpdate">
+                    <label>Check now</label>
+                  </object>
+                  <flag>wxTOP|wxBOTTOM|wxLEFT|wxRIGHT</flag>
+                  <border>10</border>
+                </object>
+              </object>
             </object>
-            <flag>wxLEFT|wxALIGN_CENTRE_VERTICAL</flag>
-            <border>10</border>
           </object>
-          <object class="sizeritem">
-            <object class="wxTextCtrl" name="Target"/>
-            <flag>wxALL</flag>
-            <border>10</border>
-            <minsize>100,-1d</minsize>
-          </object>
-          <object class="sizeritem">
-            <object class="wxButton" name="Search">
-              <label>...</label>
-              <size>12,12d</size>
+          <object class="notebookpage">
+            <label>Manual Update</label>
+            <object class="wxPanel">
+              <object class="wxBoxSizer">
+                <orient>wxVERTICAL</orient>
+                <object class="sizeritem">
+                  <object class="wxBoxSizer">
+                    <orient>wxHORIZONTAL</orient>
+                    <object class="sizeritem">
+                      <object class="wxStaticText">
+                        <label>Update source</label>
+                      </object>
+                      <flag>wxLEFT|wxALIGN_CENTRE_VERTICAL</flag>
+                      <border>10</border>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxTextCtrl" name="Source"/>
+                      <flag>wxALL</flag>
+                      <border>10</border>
+                      <minsize>100,-1d</minsize>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxButton" name="Search">
+                        <label>...</label>
+                        <size>12,12d</size>
+                      </object>
+                      <flag>wxRIGHT|wxALIGN_CENTRE_VERTICAL</flag>
+                      <border>10</border>
+                    </object>
+                  </object>
+                </object>
+              </object>
             </object>
-            <flag>wxRIGHT|wxALIGN_CENTRE_VERTICAL</flag>
-            <border>10</border>
           </object>
         </object>
+        <flag>wxLEFT|wxRIGHT|wxEXPAND</flag>
+        <border>10</border>
       </object>
       <object class="sizeritem">
         <object class="wxStaticBoxSizer">
@@ -44,8 +80,7 @@
             <minsize>150, 55d</minsize>
           </object>
         </object>
-        <option>1</option>
-        <flag>wxLEFT|wxRIGHT|wxEXPAND|wxGROW</flag>
+        <flag>wxBOTTOM|wxLEFT|wxRIGHT|wxGROW</flag>
         <border>10</border>
       </object>
       <object class="sizeritem">

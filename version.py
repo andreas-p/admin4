@@ -36,6 +36,7 @@ except:
   revDirty=True
   revOriginChange=True
 
+libVersion="2.1.0"
 
 description="4th generation\nAdministration Tool\n"
 vendor="PSE"

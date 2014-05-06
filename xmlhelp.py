@@ -114,7 +114,7 @@ class Document(minidom.Document):
     return e
 
   def createElementNS(self, namespaceURI, qualifiedName):
-    prefix, localName = minidom._nssplit(qualifiedName)
+    prefix, _localName = minidom._nssplit(qualifiedName)
     e = Element(qualifiedName, namespaceURI, prefix)
     e.ownerDocument = self
     return e

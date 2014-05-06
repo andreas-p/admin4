@@ -1,15 +1,31 @@
+Changes in 2.1.4
+Core:
+- Online update
+
+modLdap 0.95.3:
+- fix connect to non-instrumented Active Directory
+- fix multi-value octet attribs
+
+modBind 0.98.3:
+- check status connection 
+
+
+
 Changes in 2.1.3
-core:
+Core:
 - Core and Module update procedure
 - AskPassword remembers password
+
 modLdap 0.95.2:
 - updatable
+
 modBind 0.98.2:
 - updatable
 
 
+
 Changes in 2.1.2 (2014-04-30)
-core:
+Core:
 - centralized AskPassword
 - uint Validator length check fix
 

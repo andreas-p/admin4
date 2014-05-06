@@ -254,7 +254,8 @@ class ListView(wx.ListView):
       val=vals[col]
       if val == None:
         val=""
-      self.SetStringItem(row, col, unicode(val));
+      val=unicode(val)
+      self.SetStringItem(row, col, val);
     return row
 
   def AppendItem(self, icon, vals):

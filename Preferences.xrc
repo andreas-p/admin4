@@ -1,21 +1,48 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resource>
   <object class="wxPanel" name="Preferences">
-    <object class="wxFlexGridSizer">
-      <cols>2</cols>
-      <vgap>5</vgap>
-      <hgap>5</hgap>
-      <growablecols>1</growablecols>
+    <object class="wxBoxSizer">
+      <orient>wxVERTICAL</orient>
       <object class="sizeritem">
-        <object class="wxStaticText">
-          <label>Confirm deletes</label>
+        <object class="wxFlexGridSizer">
+          <cols>2</cols>
+          <vgap>5</vgap>
+          <hgap>5</hgap>
+          <growablecols>1</growablecols>
+          <object class="sizeritem">
+            <object class="wxStaticText">
+              <label>Confirm deletes</label>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxCheckBox" name="ConfirmDeletes">
+              <label></label>
+              <checked>1</checked>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText">
+              <label>Monthly check for updates</label>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxCheckBox" name="MonthlyChecks">
+              <label></label>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText">
+              <label>Proxy</label>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxTextCtrl" name="Proxy"/>
+            <flag>wxALL|wxEXPAND</flag>
+          </object>
         </object>
-      </object>
-      <object class="sizeritem">
-        <object class="wxCheckBox" name="ConfirmDeletes">
-          <label></label>
-          <checked>1</checked>
-        </object>
+        <option>1</option>
+        <flag>wxALL|wxEXPAND|wxGROW</flag>
+        <border>10</border>
       </object>
     </object>
   </object>

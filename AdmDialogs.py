@@ -8,7 +8,10 @@ import adm
 import logger
 import sys, os, zipfile, shutil
 import wx
+import requests
+import Crypto.PublicKey.RSA, Crypto.Hash.SHA, Crypto.Signature.PKCS1_v1_5
 from wh import xlt, copytree
+from xmlhelp import Document as XmlDocument
 import version as admVersion
 
 class PasswordDlg(adm.Dialog):
@@ -135,185 +138,311 @@ class PreferencesDlg(adm.CheckedDialog):
 class UpdateDlg(adm.Dialog):
   def __init__(self, parentWin):
     adm.Dialog.__init__(self, parentWin)
-    self.Bind("Target")
+    self.onlineUpdateInfo=None
+    self.onlineTimeout=5
+
+    self.Bind("Source")
     self.Bind("Search", self.OnSearch)
+    self.Bind("CheckUpdate", self.OnCheckUpdate)
+    self.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.OnPageChange)
     self.SetTitle(xlt("Update %s modules") % adm.appTitle)
     
   def Go(self):
     if not os.access(adm.loaddir, os.W_OK):
       self.EnableControls("Target Search Ok", False)
       self.ModuleInfo=xlt("Update not possible:\nProgram directory cannot be written.")
+      self['Ok'].Disable()
     else:
       self.Check()
- 
+
+  def OnPageChange(self, evt):
+    self.OnCheck()
+  
+  def OnCheckUpdate(self, evt):
+
+    self.onlineUpdateInfo=None
+    try:
+      # no need use SSL here; we'll verify the update.xml later
+      response=requests.get("http://www.admin4.org/update.xml", timeout=self.onlineTimeout, proxies=adm.GetProxies())
+      response.raise_for_status()
+      xmlText=response.text
+      sigres=requests.get("http://www.admin4.org/update.sign", timeout=self.onlineTimeout, proxies=adm.GetProxies())
+      sigres.raise_for_status()
+      signature=sigres.content
+      
+    except Exception as ex:
+      print ex
+      self.ModuleInfo=xlt("Online update check failed.\n\nError reported:\n  %s") % str(ex)
+      return
+
+    if True: # we want to check the signature
+      f=open(os.path.join(adm.loaddir, 'admin4.pubkey'))
+      keyBytes=f.read()
+      f.close()
+
+      #https://www.dlitz.net/software/pycrypto/api/current/Crypto-module.html
+      pubkey=Crypto.PublicKey.RSA.importKey(keyBytes)
+      verifier = Crypto.Signature.PKCS1_v1_5.new(pubkey)
+      hash=Crypto.Hash.SHA.new(xmlText)
+
+      if not verifier.verify(hash, signature):
+        self.ModuleInfo = xlt("Online update check failed:\nupdate.xml cryptographic signature not valid.")
+        return
+    
+    self.onlineUpdateInfo=XmlDocument.parse(xmlText)
+    self.OnCheck()
+
+   
   def OnSearch(self, evt):
     dlg=wx.FileDialog(self, xlt("Select Update dir or zip"), wildcard="Module ZIP (*.zip)|*.zip|Module (*.py)|*.py", style=wx.FD_CHANGE_DIR|wx.FD_FILE_MUST_EXIST|wx.FD_OPEN)
     if dlg.ShowModal() == wx.ID_OK:
       path=dlg.GetPath()
       if path.endswith('.py'):
         path = os.path.dirname(path)
-      self.Target=path
+      self.Source=path
       self.OnCheck()
     
   def Check(self):
-    modSrc=None
-    canInstall=True
-    self.ModuleInfo = xlt("Please select module update ZIP file or directory.")
-
-    fnp=os.path.basename(self.target).split('-')
-    self.modid=fnp[0]
-    if os.path.isdir(self.Target):
-      initMod=os.path.join(self.Target, "__init__.py")
-      if not os.path.exists(initMod):
-        initMod=os.path.join(self.Target, "__version.py")
-      if os.path.exists(initMod):
-        try:
-          f=open(initMod, "r")
-          modSrc=f.read()
-          f.close
-        except:
+    if self['Notebook'].GetSelection():
+      modSrc=None
+      canInstall=True
+      self.ModuleInfo = xlt("Please select module update ZIP file or directory.")
+  
+      fnp=os.path.basename(self.Source).split('-')
+      self.modid=fnp[0]
+      if os.path.isdir(self.Source):
+        initMod=os.path.join(self.Source, "__init__.py")
+        if not os.path.exists(initMod):
+          initMod=os.path.join(self.Source, "__version.py")
+        if os.path.exists(initMod):
+          try:
+            f=open(initMod, "r")
+            modSrc=f.read()
+            f.close
+          except:
+            pass
+        else: # core
           pass
-      else: # core
-        pass
-    elif self.Target.lower().endswith(".zip") and os.path.exists(self.Target) and zipfile.is_zipfile(self.Target):
-      if len(fnp) < 2:
-        logger.debug("Not an update zip: %s", self.Target)
-        return False
-      try:
-        zip=zipfile.ZipFile(self.Target)
-        names=zip.namelist()
-        if self.modid.lower() == "admin4":
-          self.modnameSlash=names[0]
-        else:
-          self.modnameSlash = self.modid+os.path.sep
+      elif self.Source.lower().endswith(".zip") and os.path.exists(self.Source) and zipfile.is_zipfile(self.Source):
+        if len(fnp) < 2:
+          logger.debug("Not an update zip: %s", self.Source)
+          return False
+        try:
+          zip=zipfile.ZipFile(self.Source)
+          names=zip.namelist()
+          zipDir=names[0]
+          if self.modid.lower() != "admin4":
+            if zipDir.split('-')[0] != self.modid:
+              logger.debug("Update zip &s doesn't contain module directory %s.", self.Source, self.modid)
+            
+          for f in names:
+            if not f.startswith(zipDir):
+              logger.debug("Update zip %s contains additional non-module data: %s", self.Source, f)
+              return False
+            
+          initMod="%s__init__.py" % zipDir
+          if not initMod in names:
+            initMod="%s__version.py" % zipDir
+          if initMod in names:
+            f=zip.open(initMod)
+            modSrc=f.read()
+          zip.close()
           
-        for f in names:
-          if not f.startswith(self.modnameSlash):
-            logger.debug("Update zip %s contains additional non-module data: %s", self.Target, f)
+        except Exception as _e:
+          logger.exception("Error while reading moduleinfo from zip %s", self.Source)
+          pass
+  
+      if modSrc:
+        moduleinfo=None
+        version=None
+        tagDate=revDate=modDate=None
+        revLocalChange=revOriginChange=revDirty=False
+        requiredAdmVersion="2.1.0"
+        
+        try:
+          sys.skipSetupInit=True
+          exec modSrc
+        except Exception as _e:
+          logger.exception("Error executing code in %s", self.Source)
+        finally:
+          del sys.skipSetupInit
+  
+        if moduleinfo:
+          try:
+            self.modname=moduleinfo['modulename']
+            revision= moduleinfo.get('revision')
+            msg=[ xlt("Module %s : %s") % (self.modname, moduleinfo['description']), "" ]
+            
+            if revision:
+              delta=""
+              installed=adm.modules.get(self.modid)
+              if installed:
+                instrev=installed.moduleinfo.get('revision')
+                if instrev:
+                  if instrev == revision:
+                    delta = xlt(" - already installed")
+                  elif instrev > revision:
+                    delta=xlt(" - %s already installed" % instrev)
+                else:
+                  delta=xlt(" - can't check installed")
+  
+                msg.append(xlt("Version %s Revision %s%s") % (moduleinfo['version'], revision, delta))
+            else:
+              msg.append(xlt("Version %s Revision unknown") % moduleinfo['version'])
+  
+            rqVer=moduleinfo['requiredAdmVersion']
+            msg.append("")
+            if rqVer > admVersion.version:
+              msg.append(xlt("Module requires Admin4 Core version %s") % rqVer)
+              canInstall=False
+            else:
+              testedVer=moduleinfo.get('testedAdmVersion')
+              if testedVer and testedVer < admVersion.version:
+                msg.append(xlt("not verified with this Admin4 Core version"))
+          except Exception as _e:
+            logger.exception("Format error of %s moduleinfo", self.Source)
             return False
           
-        initMod="%s__init__.py" % self.modnameSlash
-        if not initMod in names:
-          initMod="%s__version.py" % self.modnameSlash
-        if initMod in names:
-          f=zip.open(initMod)
-          modSrc=f.read()
-        zip.close()
-        
-      except Exception as _e:
-        logger.exception("Error while reading moduleinfo from zip %s", self.Target)
-        pass
-
-    if modSrc:
-      moduleinfo=None
-      version=None
-      tagDate=revDate=modDate=None
-      revLocalChange=revOriginChange=revDirty=False
-      requiredAdmVersion="2.1.0"
-      
-      try:
-        sys.skipSetupInit=True
-        exec modSrc
-      except Exception as _e:
-        logger.exception("Error executing code in %s", self.Target)
-      finally:
-        del sys.skipSetupInit
-
-      if moduleinfo:
-        try:
-          self.modname=moduleinfo['modulename']
-          revision= moduleinfo.get('revision')
-          msg=[ xlt("Module %s : %s") % (self.modname, moduleinfo['description']), "" ]
-          
-          if revision:
-            delta=""
-            installed=adm.modules.get(self.modid)
-            if installed:
-              instrev=installed.moduleinfo.get('revision')
-              if instrev:
-                if instrev == revision:
-                  delta = xlt(" - already installed")
-                elif instrev > revision:
-                  delta=xlt(" - %s already installed" % instrev)
-              else:
-                delta=xlt(" - can't check installed")
-
-              msg.append(xlt("Version %s Revision %s%s") % (moduleinfo['version'], revision, delta))
+          self.ModuleInfo="\n".join(msg)
+          return canInstall
+        elif version:
+          if revLocalChange:
+            if revDirty:
+              rev=modDate
+            else:
+              rev=revDate
+          elif revOriginChange:
+            rev=revDate 
           else:
-            msg.append(xlt("Version %s Revision unknown") % moduleinfo['version'])
-
-          rqVer=moduleinfo['requiredAdmVersion']
-          msg.append("")
-          if rqVer > admVersion.version:
-            msg.append(xlt("Module requires Admin4 Core version %s") % rqVer)
+            rev=tagDate 
+          self.modname="Core"
+          msg=[ xlt("%s Core") % adm.appTitle, xlt("Version %s (%s)") % (version, rev), "" ]
+          if version < admVersion.version:
             canInstall=False
-          else:
-            testedVer=moduleinfo.get('testedAdmVersion')
-            if testedVer and testedVer < admVersion.version:
-              msg.append(xlt("not verified with this Admin4 Core version"))
-        except Exception as _e:
-          logger.exception("Format error of %s moduleinfo", self.Target)
-          return False
-        
-        self.ModuleInfo="\n".join(msg)
-        return canInstall
-      elif version:
-        if revLocalChange:
+            msg.append(xlt("Update version older than current Core version %s") % admVersion.version)
+          elif version == admVersion.version:
+            msg.append(xlt("Update has same same version as current Core"))
+          elif requiredAdmVersion > admVersion.version:
+            msg.append(xlt("Full install of %s %s or newer required") % (adm.appTitle, requiredAdmVersion))
+            canInstall=False
           if revDirty:
-            rev=modDate
-          else:
-            rev=revDate
-        elif revOriginChange:
-          rev=revDate 
+            msg.append(xlt("uncommitted data present!"))
+          self.ModuleInfo="\n".join(msg)
+          return canInstall
+  
+      return False
+    else: # Notebook.GetSelection=0, online update
+      if self.onlineUpdateInfo:
+        msg=[]
+        canUpdate=True
+        haveUpdate=False
+        hasCoreUpdate=False
+        try:
+          el=self.onlineUpdateInfo.getElement('updateUrl')
+          self.updateUrl=el.getText().strip()
+          self.updateZipHash=el.getAttribute('sha1')
+          msg.append(xlt("Update info as of %s:") % self.onlineUpdateInfo.getElementText('status'))
+          #msg.append("")
+          modules=self.onlineUpdateInfo.getElements('module')
+          
+          for module in modules:
+            name=module.getAttribute('name')
+            version=module.getAttribute('version')
+            if name == "Core":
+              info = { 'app': adm.appTitle, 'old': admVersion.version, 'new': version }
+              if admVersion.version < version:
+                msg.append("  Core: %(old)s can be updated to %(new)s" % info)
+                haveUpdate=True
+                hasCoreUpdate=True
+            elif name == "Lib":
+              if admVersion.libVersion < version:
+                self.ModuleInfo = msg[0] +"\nThere is a newer %(app)s Core version %(new)s available.\nHowever, the current version %(old)s can't update online.\nPlease download and install a full package manually." % info
+                return False
+            else:
+              mod=adm.modules.get(name)
+              rev=mod.moduleinfo.get('revision')
+              if rev:
+                info= { 'name': mod.moduleinfo['modulename'], 'old': rev, 'new': version }
+                if rev < version:
+                  if hasCoreUpdate:
+                    msg.append("  %(name)s: %(old)s upgrade to %(new)s" % info)
+                  else:
+                    msg.append("Current %(name)s module revision %(old)s can be updated to  %(new)s." % info)
+                    haveUpdate=True
+                elif rev > version:
+                  if hasCoreUpdate:
+                    msg.append("  %(name)s: %(old)s DOWNGRADE to %(new)s, please check" % info)
+              
+        except Exception as ex:
+          print ex
+          msg=[xlt("Online update information invalid.")]
+          return False
+        if haveUpdate and canUpdate:
+          msg.insert(1, xlt("An update is available."))
         else:
-          rev=tagDate 
-        self.modname="Core"
-        msg=[ xlt("%s Core") % adm.appTitle, xlt("Version %s (%s)") % (version, rev), "" ]
-        if version < admVersion.version:
-          canInstall=False
-          msg.append(xlt("Update version older than current Core version %s") % admVersion.version)
-        elif version == admVersion.version:
-          msg.append(xlt("Update has same same version as current Core"))
-        elif requiredAdmVersion > admVersion.version:
-          msg.append(xlt("Full install of %s %s or newer required") % (adm.appTitle, requiredAdmVersion))
-          canInstall=False
-        if revDirty:
-          msg.append(xlt("uncommitted data present!"))
-        self.ModuleInfo="\n".join(msg)
-        return canInstall
-
-    return False
-
+          msg.append("No update available.")
+        
+        self.ModuleInfo = "\n".join(msg)
+        return haveUpdate and canUpdate
+      else:
+        self.ModuleInfo = ""
+        return False
   
   
   def Execute(self):
-    if os.path.isdir(self.Target):
-      if self.modname == "Core":
-        dst=adm.loaddir
-        dst=os.path.join(adm.loaddir, "_update")
-      else:
-        dst=os.path.join(adm.loaddir, self.modid)
-      copytree(self.Target, dst)
+    tmpDir=os.path.join(adm.loaddir, "_update")
+    
+    try: shutil.rmtree(tmpDir)
+    except: pass
+    try: os.mkdir(tmpDir)
+    except: pass
+    
+    if self['Notebook'].GetSelection():
+      source = self.Source
     else:
-      if self.modname == "Core":
-        tmpDir=os.path.join(adm.loaddir, "_update")
-        try:
-          shutil.rmtree(tmpDir)
-          os.mkdir(tmpDir)
-        except:
-          pass
-      else:
-        tmpDir=adm.loaddir
+      self.ModuleInfo = xlt("Downloading...\n\n%s") % self.updateUrl
       try:
-        zip=zipfile.ZipFile(self.Target)
+        response=requests.get(self.updateUrl, timeout=self.onlineTimeout*5, proxies=adm.GetProxies())
+        response.raise_for_status()
+      except Exception as ex:
+        self.ModuleInfo = xlt("The download failed:\n%s\n\n%s") % (str(ex), self.updateUrl)
+        return False
+      
+      content=response.content
+      hash=Crypto.Hash.SHA.new(content)
+      if hash.hexdigest() != self.updateZipHash:
+        self.ModuleInfo = xlt("The download failed:\nSHA1 checksum invalid.\n\n%s") % self.updateUrl
+        self['Ok'].Disable()
+        return False
+      
+      source=os.path.join(tmpDir, "Admin4-OnlineUpdate-Src.zip")
+      f=open(source, "w")
+      f.write(content)
+      f.close()
+      self.modname = "Core"
+      
+    self.ModuleInfo = xlt("Installing...")
+    if not os.path.isdir(source):
+      try:
+        zip=zipfile.ZipFile(source)
+        zipDir=zip.namelist()[0]
         zip.extractall(tmpDir)
         zip.close()
       except Exception as _e:
-        logger.exception("Error extracting %s", self.Target)
+        self.ModuleInfo = xlt("Error extracting\n%s") % self.Source
+        logger.exception("Error extracting %s", self.Source)
         return False
-      if self.modname == "Core":
-        copytree(os.path.join(tmpDir, self.modnameSlash), adm.loaddir )
-        shutil.rmtree(tmpDir)
+
+      source = os.path.join(tmpDir, zipDir)
+
+    if self.modname == "Core":
+      destination=adm.loaddir
+    else:
+      destination=os.path.join(adm.loaddir, self.modid)
+      
+    copytree(source, destination)
+    try: shutil.rmtree(tmpDir)
+    except: pass
     
     dlg=wx.MessageDialog(self, xlt("New program files require restart.\nExit now?"), 
                          xlt("Installed new module %s") % self.modname,
@@ -329,15 +458,23 @@ class Preferences(adm.NotebookPanel):
   
   def Go(self):
     self.ConfirmDeletes=adm.confirmDeletes
+    self.MonthlyChecks=adm.monthlyChecks
+    self.Proxy=adm.proxy
 
   def Save(self):
     adm.confirmDeletes=self.ConfirmDeletes
+    adm.monthyChecks=self.MonthlyChecks
+    adm.proxy=self.Proxy
     adm.config.Write("ConfirmDeletes", adm.confirmDeletes)
+    adm.config.Write("MonthlyChecks", adm.monthlyChecks)
+    adm.config.Write("Proxy", adm.proxy)
     return True
 
   @staticmethod
   def Init():
     adm.confirmDeletes=adm.config.Read("ConfirmDeletes", True)
+    adm.monthlyChecks=adm.config.Read("MonthlyChecks", True)
+    adm.proxy=adm.config.Read("Proxy")
 
 
   
