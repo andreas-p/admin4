@@ -15,7 +15,7 @@ appEntry='admin4.py'
 packages=['wx']
 includes=[]
 addModules=[]
-excludes=['lib2to3', 'hotshot', 'distutils', 'ctypes', 'unittest']
+excludes=['lib2to3', 'hotshot', 'distutils', 'ctypes', 'unittest', 'Crypto']
 buildDir=".build"
 appName="Admin4"
 versionTag=None
@@ -23,9 +23,9 @@ requiredAdmVersion="2.1.2"
 checkGit=True
 
 if __name__ == '__main__':
-  import sys, os
-  import platform
-  import shutil
+  import sys, os, platform
+  import shutil, zipfile
+  import Crypto.Hash.SHA
   import version
   
   platform=platform.system()
@@ -293,4 +293,31 @@ if __name__ == '__main__':
       if not '-A' in sys.argv:
         cleanWxDir(libdir)
         shutil.rmtree('%s/%s.app/Contents/Resources/mpl-data' % (distDir, appName))
-  print "done."
+  
+  def zipwrite(path, stripLen):
+    zip.write(path, path[stripLen:])
+    if os.path.isdir(path):
+      for f in os.listdir(path):
+        if f in ['.', '..']:
+          continue
+        zipwrite(os.path.join(path, f), stripLen)
+
+  print "\nWriting zip."
+  zipOut=distDir+".zip"
+  zip=zipfile.ZipFile(zipOut, 'w')
+  zipwrite(distDir, len(os.path.dirname(distDir))+1)
+
+  f=open(zipOut, 'rb')
+  txt=f.read(102400)
+  hash=Crypto.Hash.SHA.new()
+  while txt != "":
+    hash.update(txt)
+    txt=f.read(102400)
+  f.close()
+  digest=hash.hexdigest()
+  
+  f=open(distDir+".sha1", 'w')
+  f.write(digest)
+  f.close()
+  print "Hash for %s: %s" % (zipOut, digest)
+  print "\ndone."
