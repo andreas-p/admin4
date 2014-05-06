@@ -9,7 +9,10 @@ import logger
 import sys, os, zipfile, shutil
 import wx
 import requests
-import Crypto.PublicKey.RSA, Crypto.Hash.SHA, Crypto.Signature.PKCS1_v1_5
+try:
+  import Crypto.PublicKey.RSA, Crypto.Hash.SHA, Crypto.Signature.PKCS1_v1_5
+except:
+  Crypto=None
 from wh import xlt, copytree
 from xmlhelp import Document as XmlDocument
 import version as admVersion
@@ -145,8 +148,11 @@ class UpdateDlg(adm.Dialog):
 
     self.Bind("Source")
     self.Bind("Search", self.OnSearch)
-    self.Bind("CheckUpdate", self.OnCheckUpdate)
     self.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.OnCheck)
+    if Crypto:
+      self.Bind("CheckUpdate", self.OnCheckUpdate)
+    else:
+      self['CheckUpdate'].Disable()
     
   def Go(self):
     if not os.access(adm.loaddir, os.W_OK):
@@ -335,6 +341,10 @@ class UpdateDlg(adm.Dialog):
   
       return False
     else: # Notebook.GetSelection=0, online update
+      if not Crypto:
+        self.ModuleInfo("No crypto functions available;\no online update possible.")
+        return False
+      
       if self.onlineUpdateInfo:
         msg=[]
         canUpdate=True

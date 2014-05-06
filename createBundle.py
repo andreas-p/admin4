@@ -319,5 +319,5 @@ if __name__ == '__main__':
   f=open(distDir+".sha1", 'w')
   f.write(digest)
   f.close()
-  print "Hash for %s: %s" % (zipOut, digest)
+  print "SHA1 Hash for %s: %s" % (zipOut, digest)
   print "\ndone."
