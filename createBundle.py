@@ -294,19 +294,24 @@ if __name__ == '__main__':
         cleanWxDir(libdir)
         shutil.rmtree('%s/%s.app/Contents/Resources/mpl-data' % (distDir, appName))
   
-  def zipwrite(path, stripLen):
-    zip.write(path, path[stripLen:])
-    if os.path.isdir(path):
-      for f in os.listdir(path):
-        if f in ['.', '..']:
-          continue
-        zipwrite(os.path.join(path, f), stripLen)
-
-  print "\nWriting zip."
-  zipOut=distDir+".zip"
-  zip=zipfile.ZipFile(zipOut, 'w')
-  zipwrite(distDir, len(os.path.dirname(distDir))+1)
-
+  if installer == 'py2app':
+    print "\nWriting dmg."
+    zipOut=distDir+".dmg"
+    os.system("hdiutil create -format UDBZ -volname %s -noanyowners -nospotlight -srcfolder %s %s" % (appName, distDir, zipOut))
+  else:
+    def zipwrite(path, stripLen):
+      zip.write(path, path[stripLen:])
+      if os.path.isdir(path):
+        for f in os.listdir(path):
+          if f in ['.', '..']:
+            continue
+          zipwrite(os.path.join(path, f), stripLen)
+  
+    print "\nWriting zip."
+    zipOut=distDir+".zip"
+    zip=zipfile.ZipFile(zipOut, 'w')
+    zipwrite(distDir, len(os.path.dirname(distDir))+1)
+  
   f=open(zipOut, 'rb')
   txt=f.read(102400)
   hash=Crypto.Hash.SHA.new()
