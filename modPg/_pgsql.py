@@ -23,14 +23,14 @@ class SqlException(adm.ServerException):
     return self.error
 
 class pgCursorResult:
-  def __init__(self, cur, colNames=None):
-    self.cur=cur
+  def __init__(self, cursor, colNames=None):
+    self.cursor=cursor
     if colNames:
       self.colNames=colNames
     else:
       self.colNames=[]
-      if cur.description: 
-        for d in cur.description:
+      if cursor.description: 
+        for d in cursor.description:
           self.colNames.append(d[0])
       
       
@@ -76,21 +76,20 @@ class pgRow(pgCursorResult):
 
 
 class pgRowset(pgCursorResult):
-  def __init__(self, cur, autocommit=True):
-    pgCursorResult.__init__(self, cur)
-    self.autocommit=autocommit
+  def __init__(self, cursor):
+    pgCursorResult.__init__(self, cursor)
     self.__fetchone()
     
   def GetRowcount(self):
-    return self.cur.rowcount
+    return self.cursor.rowcount
   
   def __fetchone(self):
-    if self.cur.rowcount > 0:
-      row = self.cur.fetchone()
+    if self.cursor.rowcount > 0:
+      row = self.cursor.fetchone()
     else:
       row=None
     if row:
-      self.curRow = pgRow(self.cur, row, self.colNames)
+      self.curRow = pgRow(self.cursor, row, self.colNames)
     else:
       self.curRow=None
 
@@ -101,15 +100,6 @@ class pgRowset(pgCursorResult):
     row=self.curRow
     if row:
       self.__fetchone()
-    else:
-      if self.autocommit:
-        conn=self.cur.connection
-        if conn.async:
-          self.cur.execute("COMMIT")
-          while conn.isexecuting():
-            _state = conn.poll()
-        else:  
-          conn.commit()
     return row 
   
   def getDict(self):
@@ -149,31 +139,32 @@ class pgRowset(pgCursorResult):
   
   
 class pgConnection:
-  def __init__(self, node, dbname, async=True, application=None):
+  def __init__(self, node, dbname, async, application):
     self.node=node
     self.lastError=None
     passwd=node.GetServer().password
-    self.conn=self.cur=None  
+    self.conn=None  
+    self.cursor=None
 
     if not application:
-      application="Admin4 browser"
+      application="%s browser" % adm.appTitle
     try:
       self.conn=psycopg2.connect(host=node.GetServer().address, port=node.GetServer().port,
                                  application_name=application, connect_timeout=3,
                                  database=dbname, user=node.GetServer().user, password=passwd, async=async)
       self.wait("Connect")
-      self.cur=self.conn.cursor()
+      self.cursor=self.conn.cursor()
     except Exception as e:
       self.lastError = str(e)
-      self.conn=self.cur=None  
+      self.conn=None  
       raise adm.ConnectionException(self.node, xlt("Connect"), self.lastError)   
 
     
   def disconnect(self):
+    self.cursor=None
     if self.conn:
       self.conn.close()
       self.conn=None
-      self.cur=None
 
   def execute(self, cmd, args=None):
     if args:
@@ -185,14 +176,14 @@ class pgConnection:
         args=(args,)
         
     try:
-      self.cur.execute(cmd, args)
+      self.cursor.execute(cmd, args)
     except Exception as e:
       self._handleException(e)
-    return True
+
 
   def _handleException(self, e):
-    if self.cur and self.cur.query:
-      cmd=self.cur.query
+    if self.cursor and self.cursor.query:
+      cmd=self.cursor.query
     else:
       cmd=None
     errlines=str(e)
@@ -234,33 +225,33 @@ class pgConnection:
     return self.conn.get_backend_pid()
   
   def Rollback(self):
-    self.cur.execute("ROLLBACK")
+    self.cursor.execute("ROLLBACK")
     self.wait("ROLLBACK")
   
   def Commit(self):
-    self.cur.execute("COMMIT")
+    self.cursor.execute("COMMIT")
     self.wait("COMMIT")
   
   
-  def ExecuteList(self, cmd, args=None, autocommit=True):
-    rowset=self.ExecuteSet(cmd, args, autocommit)
+  def ExecuteList(self, cmd, args=None):
+    rowset=self.ExecuteSet(cmd, args)
     if rowset:
       return rowset.getList()
     return None
   
-  def ExecuteDictList(self, cmd, args=None, autocommit=True):
-    rowset=self.ExecuteSet(cmd, args, autocommit)
+  def ExecuteDictList(self, cmd, args=None):
+    rowset=self.ExecuteSet(cmd, args)
     if rowset:
       return rowset.getDictList()
     return None
   
-  def ExecuteSet(self, cmd, args=None, autocommit=True):
+  def ExecuteSet(self, cmd, args=None):
     frame=adm.StartWaiting()
     try:
       self.execute(cmd, args)
       self.wait("ExecuteSet")
-      rowset=pgRowset(self.cur, autocommit)
-      logger.querylog(self.cur.query, result="%d rows" % rowset.GetRowcount())
+      rowset=pgRowset(self.cursor)
+      logger.querylog(self.cursor.query, result="%d rows" % rowset.GetRowcount())
       adm.StopWaiting(frame)
       return rowset
     except Exception as e:
@@ -273,15 +264,15 @@ class pgConnection:
     try:
       self.execute(cmd, args)
       self.wait("ExecuteRow")
-      row=self.cur.fetchone()
+      row=self.cursor.fetchone()
       adm.StopWaiting(frame)
     except Exception as e:
       adm.StopWaiting(frame, e)
       raise e
     
     if row:
-      row=pgRow(self.cur, row)
-      logger.querylog(self.cur.query, result=str(row))
+      row=pgRow(self.cursor, row)
+      logger.querylog(self.cursor.query, result=str(row))
       return row
     return None
     
@@ -293,7 +284,7 @@ class pgConnection:
       self.execute(cmd, args)
       self.wait("ExecuteSingle")
       try:
-        row=self.cur.fetchone()
+        row=self.cursor.fetchone()
       except:
         row=None
       adm.StopWaiting(frame)
@@ -302,7 +293,7 @@ class pgConnection:
       raise e
     if row:
       result=row[0]
-      logger.querylog(self.cur.query, result="%s" % result)
+      logger.querylog(self.cursor.query, result="%s" % result)
       return result
     return None
   
@@ -343,9 +334,14 @@ class QueryWorker(threading.Thread):
       self.running=False
       self.conn.conn.cancel()
 
+  def GetRowcount(self):
+    return self.conn.cursor.rowcount
 
-  def GetResult(self, autocommit=True):
-    return pgRowset(self.conn.cur, autocommit)
+  def GetResult(self):
+    try:
+      return pgRowset(self.conn.cursor)
+    except:
+      return None
   
   def IsRunning(self):
     return self.running   

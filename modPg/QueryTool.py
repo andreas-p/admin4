@@ -45,6 +45,8 @@ class SqlResultGrid(wx.grid.Grid):
     rowcount=rowset.GetRowcount()
     colcount=len(rowset.colNames)
     
+    if rowcount<0:
+      rowcount=0
     self.SetTable(wx.grid.GridStringTable(rowcount, colcount))
     w,h=self.GetTextExtent('Colname')
     self.SetColLabelSize(h+self.HMARGIN)
@@ -180,9 +182,7 @@ class SqlFrame(adm.Frame):
     self.toolbar.DoAddTool(self.GetMenuId(self.OnCancelQuery), xlt("Execute Query"), GetBitmap("query_cancel", self))
     self.toolbar.Realize()
 
-
     menubar=wx.MenuBar()
-
     self.filemenu=menu=Menu()
 
     self.AddMenu(menu, xlt("&Open"), xlt("Open query file"), self.OnFileOpen)
@@ -192,7 +192,7 @@ class SqlFrame(adm.Frame):
     if wx.Platform != "__WXMAC__":
       menu.AppendSeparator()
     #self.AddMenu(menu, xlt("Preferences"), xlt("Preferences"), self.OnPreferences, wx.ID_PREFERENCES, adm.app.SetMacPreferencesMenuItemId)
-    #self.AddMenu(menu, xlt("Quit"), xlt("Quit Admin3"), self.OnQuit, wx.ID_EXIT, adm.app.SetMacExitMenuItemId)
+    #self.AddMenu(menu, xlt("Quit"), xlt("Quit Admin4"), self.OnQuit, wx.ID_EXIT, adm.app.SetMacExitMenuItemId)
 
     menubar.Append(menu, xlt("&File"))
 
@@ -221,7 +221,7 @@ class SqlFrame(adm.Frame):
     ah.Add(wx.ACCEL_NORMAL,wx.WXK_F7, self.OnExplainQuery)
     ah.Add(wx.ACCEL_ALT,wx.WXK_PAUSE, self.OnCancelQuery)
     ah.Realize()
-    
+
     self.manager=wx.aui.AuiManager(self)
     self.manager.SetFlags(wx.aui.AUI_MGR_ALLOW_FLOATING|wx.aui.AUI_MGR_TRANSPARENT_HINT | \
          wx.aui.AUI_MGR_HINT_FADE| wx.aui.AUI_MGR_TRANSPARENT_DRAG)
@@ -310,7 +310,7 @@ class SqlFrame(adm.Frame):
     self.EnableMenu(self.editmenu, self.OnRedo, canRedo)
     
     
-  def executeSql(self, target, sql, _queryOffset=0, resultToMsg=False):
+  def executeSql(self, targetPage, sql, _queryOffset=0, resultToMsg=False):
     self.EnableMenu(self.querymenu, self.OnCancelQuery, True)
     self.EnableMenu(self.querymenu, self.OnExecuteQuery, False)
     self.EnableMenu(self.querymenu, self.OnExplainQuery, False)
@@ -324,7 +324,7 @@ class SqlFrame(adm.Frame):
     self.SetStatusText(xlt("Query is running."), STATUSPOS_MSGS);
     self.SetStatusText("", STATUSPOS_ROWS);     
     self.msgHistory.AppendText(xlt("-- Executing query:\n"));
-    self.msgHistory.AppendText(sql);
+    self.msgHistory.AppendText(sql.strip());
     self.msgHistory.AppendText("\n");
     self.input.MarkerDeleteAll(0)    
     self.messages.Clear()
@@ -375,48 +375,48 @@ class SqlFrame(adm.Frame):
     else:
       self.SetStatusText(xlt("OK."), STATUSPOS_MSGS);
       
-      rowset=worker.GetResult(autocommit=False)
-      rowcount=rowset.GetRowcount()
+      rowcount=worker.GetRowcount()
+      rowset=worker.GetResult()
 
 
-    if rowcount == 1:
-      rowsMsg=xlt("1 row affected")
-    elif rowcount < 0:
-      rowsMsg=xlt("Executed")
+    if worker.error:
+      self.SetStatusText("", STATUSPOS_ROWS)
     else:
-      rowsMsg= xlt("%d rows affected") % rowcount
-    self.SetStatusText(rowsMsg, STATUSPOS_ROWS)
-    self.msgHistory.AppendText("-- %s\n" % rowsMsg)
+      if rowcount == 1:
+        rowsMsg=xlt("1 row affected")
+      elif rowcount < 0:
+        rowsMsg=xlt("Executed")
+      else:
+        rowsMsg= xlt("%d rows affected") % rowcount
+      self.SetStatusText(rowsMsg, STATUSPOS_ROWS)
+      self.msgHistory.AppendText("-- %s\n" % rowsMsg)
     
       
     self.msgHistory.AppendText("\n")
     currentPage=self.output.GetPage(0)
-    if currentPage != target:
+    if currentPage != targetPage:
       self.output.RemovePage(0)
       currentPage.Hide()
-      target.Show()
-      self.output.InsertPage(0, target, xlt("Data output"), True)
+      targetPage.Show()
+      self.output.InsertPage(0, targetPage, xlt("Data output"), True)
 
-
-    if rowcount>0:
-      target.SetData(rowset)
+    if rowset:
+      self.output.SetSelection(0)
+      targetPage.SetData(rowset)
     else:
-      target.SetEmpty()
+      self.output.SetSelection(1)
+      targetPage.SetEmpty()
 
     for notice in self.conn.conn.notices:
       self.messages.AppendText(notice);
       self.messages.AppendText("\n")
 
-    if worker.error:
-      self.conn.Rollback()
-      self.output.SetSelection(1)
-    else:
-      self.conn.Commit()
+    if not worker.error:
       if resultToMsg:
-        self.messages.SetValue("\n".join(target.GetResult()))
+        self.messages.SetValue("\n".join(targetPage.GetResult()))
       else:
         self.messages.SetValue(rowsMsg)
-      self.output.SetSelection(0)
+
     self.input.SetFocus()
 
 
@@ -504,6 +504,7 @@ class QueryTool:
   def OnExecute(parentWin, node):
     frame=SqlFrame(parentWin, node)
     frame.Show()
+#    wx.SafeYield()
     return None
 
 nodeinfo=[]
