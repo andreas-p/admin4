@@ -190,8 +190,15 @@ class DetailFrame(Frame):
     self.OnToggleStatusBar(None)
     self.manager.Update()
     self.manager.Bind(wx.aui.EVT_AUI_PANE_CLOSE, self.OnAuiCloseEvent)
-    self.BindMenuId(self.AutoConnect)
 
+    self.Bind(wx.EVT_ACTIVATE, self.OnActivate)
+    self.activated=False
+    
+  def OnActivate(self, evt):
+    if not self.activated:
+      self.activated=True
+      self.AutoConnect(evt)
+    
   def AutoConnect(self, evt):
     haveOne=False
     if self.appArgs:

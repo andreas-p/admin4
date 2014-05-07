@@ -35,6 +35,7 @@ except:
   revLocalChange=True
   revDirty=True
   revOriginChange=True
+  requiredAdmVersion="2.0"
 
 libVersion="2.1.0"
 
