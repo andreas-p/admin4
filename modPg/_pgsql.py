@@ -72,6 +72,8 @@ class pgRow(pgCursorResult):
     except Exception as _e:
       logger.debug("Column %s not found" % colName)
       return None
+    if isinstance(val, str):
+      return val.decode('utf8')
     return val
 
 
@@ -139,7 +141,7 @@ class pgRowset(pgCursorResult):
   
   
 class pgConnection:
-  def __init__(self, node, dbname, async, application):
+  def __init__(self, node, dbname, application):
     self.node=node
     self.lastError=None
     passwd=node.GetServer().password
@@ -151,7 +153,7 @@ class pgConnection:
     try:
       self.conn=psycopg2.connect(host=node.GetServer().address, port=node.GetServer().port,
                                  application_name=application, connect_timeout=3,
-                                 database=dbname, user=node.GetServer().user, password=passwd, async=async)
+                                 database=dbname, user=node.GetServer().user, password=passwd, async=True)
       self.wait("Connect")
       self.cursor=self.conn.cursor()
     except Exception as e:

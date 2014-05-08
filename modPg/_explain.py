@@ -18,6 +18,20 @@ wxOgl.OGLInitialize()
 def round(n):
   return int(n+.5)
 
+class ExplainText(wx.TextCtrl):
+  def __init__(self, parent):
+    wx.TextCtrl.__init__(self, parent, style=wx.TE_MULTILINE|wx.TE_READONLY|wx.TE_DONTWRAP)
+  
+  def SetData(self, rowset):
+    lst=[]
+    for row in rowset:
+      lst.append(str(row[0]))
+    self.SetValue("\n".join(lst))
+  
+  def SetEmpty(self):
+    self.SetValue("")
+   
+   
 class ExplainShape(wxOgl.BitmapShape):
   def __init__(self, bmpname, str, tokenNo=-1, detailNo=-1):
     wxOgl.BitmapShape.__init__(self)

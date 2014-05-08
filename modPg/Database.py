@@ -62,8 +62,8 @@ class Database(ServerObject):
       return self.GetServer().IsConnected()
     return self.connection != None
   
-  def DoConnect(self, async=True, application=None):
-    return self.GetServer().DoConnect(self.name, async, application)
+  def DoConnect(self, application=None):
+    return self.GetServer().DoConnect(self.name, application)
   
   
   def GetConnection(self, detached=False):

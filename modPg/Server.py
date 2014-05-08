@@ -6,13 +6,10 @@
 
 
 import adm
-import wx
 from wh import xlt, YesNo
 import re
 from _pgsql import pgConnection
 from _pgsqlKeywords import keywords
-
-from psycopg2.extensions import QuotedString
 
 class Server(adm.ServerNode):
   shortname=xlt("pgsql Server")
@@ -47,12 +44,12 @@ class Server(adm.ServerNode):
   def IsConnected(self, _deep=False):
     return self.connection != None
 
-  def DoConnect(self, db=None, async=True, application=None):
+  def DoConnect(self, db=None, application=None):
     if db:
       dbname=db
     else: # called from adm.py
       dbname=self.maintDb
-    conn=pgConnection(self, dbname, async, application)
+    conn=pgConnection(self, dbname, application)
     
     if not db and not self.connection:
       self.connection = conn
@@ -71,10 +68,14 @@ class Server(adm.ServerNode):
         SELECT 'adminspace', nspname FROM pg_namespace WHERE nspname=%(adminspace)s
         UNION
         SELECT 'fav_table', relname FROM pg_class JOIN pg_namespace nsp ON nsp.oid=relnamespace 
-         WHERE nspname=%(adminspace)s AND relname=%(fav_table)s""" %
+         WHERE nspname=%(adminspace)s AND relname=%(fav_table)s
+        UNION
+        SELECT 'snippet_table', relname FROM pg_class JOIN pg_namespace nsp ON nsp.oid=relnamespace 
+         WHERE nspname=%(adminspace)s AND relname=%(snippet_table)s""" %
         {'datname': self.quoteString(dbname), 
          'adminspace': self.quoteString(self.GetPreference("AdminNamespace")),
-         'fav_table': self.quoteString("Admin_Fav_%s" % self.user)})
+         'fav_table': self.quoteString("Admin_Fav_%s" % self.user),
+         'snippet_table': self.quoteString("Admin_Snippet_%s" % self.user)})
 
       v=self.info['version'].split(' ')[1]
       self.version=float(v[0:v.rfind('.')])
@@ -84,6 +85,11 @@ class Server(adm.ServerNode):
         self.fav_table="%s.%s" % (self.quoteIdent(self.adminspace), self.quoteIdent(fav_table))
       else:
         self.fav_table=None
+      snippet_table=self.info.get('snippet_table')
+      if snippet_table:
+        self.snippet_table="%s.%s" % (self.quoteIdent(self.adminspace), self.quoteIdent(snippet_table))
+      else:
+        self.snippet_table=None
     
     return conn
   
@@ -222,7 +228,7 @@ class Server(adm.ServerNode):
   def quoteString(string):
     if string == None:
       return "NULL"
-    return QuotedString(string)
+    return "'%s'" % string.replace('\\', '\\\\').replace("'", "''")
   
   @staticmethod
   def Register(parentWin):
@@ -248,14 +254,22 @@ class ServerInstrument:
     if not adminspace:
       adminspace=server.GetPreference("AdminNamespace")
       server.GetConnection().ExecuteSingle("CREATE SCHEMA %s AUTHORIZATION postgres" % server.quoteIdent(adminspace))
-    fav_table="Admin_Fav_%s" % server.user
+
+    adsQuoted=server.quoteIdent(adminspace)
+    fav_table=server.quoteIdent("Admin_Fav_%s" % server.user)
+    snippet_table=server.quoteIdent("Admin_Snippet_%s" % server.user)
+
     server.GetConnection().ExecuteSingle("""
 CREATE TABLE %(adminspace)s.%(fav_table)s 
-  (dboid OID, favoid OID, favtype CHAR, favgroup TEXT, PRIMARY KEY(dboid, favoid))""" % 
-    {'adminspace': server.quoteIdent(adminspace),
-       'fav_table': server.quoteIdent(fav_table)})
+  (dboid OID, favoid OID, favtype CHAR, favgroup TEXT, PRIMARY KEY(dboid, favoid));
+CREATE TABLE %(adminspace)s.%(snippet_table)s 
+  (id SERIAL PRIMARY KEY, parent INT4 NOT NULL DEFAULT 0, sort FLOAT NOT NULL DEFAULT 0.0, name TEXT, snippet TEXT);""" % 
+        {'adminspace': adsQuoted,
+        'fav_table': fav_table,
+        'snippet_table': snippet_table })
     server.adminspace=adminspace
-    server.fav_table="%s.%s" % (server.quoteIdent(adminspace), server.quoteIdent(fav_table))
+    server.fav_table="%s.%s" % (adsQuoted, fav_table)
+    server.snippet_table="%s.%s" % (adsQuoted, snippet_table)
     return True
     
     

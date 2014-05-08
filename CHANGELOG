@@ -7,7 +7,11 @@ modLdap 0.95.3:
 - fix multi-value octet attribs
 
 modBind 0.98.3:
-- check status connection 
+- check status connection
+
+modPg 0.3.2:
+- improved QueryTool
+- SQL Snippets
 
 
 
