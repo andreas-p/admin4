@@ -29,18 +29,16 @@ class SnippetTree(DragTreeCtrl):
     self.editor=editor
     self.server=server
     self.snippets={}
-    self.maxSort=1
 
     self.Bind(wx.EVT_RIGHT_DOWN, self.OnTreeRightClick)
     self.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnTreeActivate)
     
-    set=self.server.GetConnection().ExecuteSet("SELECT * FROM %s ORDER BY sort" % server.snippet_table)
+    set=self.server.GetConnection().ExecuteSet("""
+SELECT * FROM %s
+ ORDER BY CASE WHEN snippet IS NULL THEN 0 ELSE 1 END, sort""" % server.snippet_table)
     for row in set:
       snippet=Snippet(row['id'], row['parent'], row['name'], row['snippet'], row['sort'])
       
-      if snippet.sort > self.maxSort:
-        self.maxSort=snippet.sort
-        
       group=self.snippets.get(snippet.parent)
       if group:
         parentItem=group.treeitem
@@ -105,12 +103,12 @@ INSERT INTO %(table)s(name, parent, sort, snippet)
         p=self.GetNode(parentItem)
         if p:
           parent=p.id
-      self.maxSort += 1
-      if text:
-        sort=self.maxSort
-      else:
-        sort=self.maxSort-100000
-      snippet=Snippet(None, parent, snippet, text, sort)
+      maxSort=1
+      for s in self.snippets.values():
+        if s.parent == parent and s.sort > maxSort:
+          maxSort=s.sort
+          
+      snippet=Snippet(None, parent, snippet, text, maxSort+1)
       self.insertSnippet(snippet)
 
     if snippet.IsGroup():
@@ -209,12 +207,19 @@ INSERT INTO %(table)s(name, parent, sort, snippet)
               snippet.sort=(nextSnippet.sort + targetSnippet.sort)/2
           item=self.InsertItem(parentItem, targetItem, self.getSnippetName(snippet), image=image, data=TreeItemData(snippet))
           snippet.treeitem = item
-          self.updateSnippet(snippet)
-          return
-          
-      self.AppendSnippet(snippet, None, parentItem)
-      self.updateSnippet(snippet)
-      
+          targetSnippet=None
+
+      if targetSnippet:
+        self.AppendSnippet(snippet, None, parentItem)
+
+      def checkChildren(snippet):
+        for child in self.snippets.values():
+          if child.parent == snippet.id:
+            self.AppendSnippet(child, None, snippet.treeitem)
+            checkChildren(child)     
+      checkChildren(snippet)
+
+
   def OnTreeActivate(self, evt):
     snippet= self.GetNode()
     if snippet:

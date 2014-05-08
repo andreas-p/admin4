@@ -378,7 +378,7 @@ class SqlFrame(adm.Frame):
     elif worker.error:
       self.SetStatus(errlines[0]);
     else:
-      self.etStatus(xlt("OK."));
+      self.SetStatus(xlt("OK."));
       
       rowcount=worker.GetRowcount()
       rowset=worker.GetResult()
