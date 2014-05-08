@@ -10,6 +10,8 @@ import wx
 import logger
 from wh import StringType
 
+ignoreStoredPositions=False
+
 class Config(wx.Config):
   """
   OSX: ~/Library/Preferences/<name> Preferences
@@ -90,11 +92,16 @@ class Config(wx.Config):
       self.Write("%sPerspective" % name, str)
 
   def GetPerspective(self, win):
+    if ignoreStoredPositions:
+      return ""
     name=self.getName("Frame", win.__module__, win.__class__.__name__)
     return self.Read("%sPerspective" % name, "")
 
 
   def getWindowPositions(self, win):
+    if ignoreStoredPositions:
+      return None, None
+    
     if isinstance(win, wx.Frame):
       cls="Frame"
     else:
@@ -125,6 +132,8 @@ class Config(wx.Config):
     return size, pos
 
   def restoreListviewPositions(self, listview, module, name=None):
+    if ignoreStoredPositions:
+      return
     colcount=listview.GetColumnCount()
     if colcount > 1:
       colWidths=self.Read(self.getName("ColumnWidths", module, name), None)
