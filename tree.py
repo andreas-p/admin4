@@ -46,6 +46,20 @@ class TreeCtrl(wx.TreeCtrl):
       i,cookie=self.GetNextChild(item, cookie)
     return itemlist
   
+class DragTreeCtrl(TreeCtrl):
+  def __init__(self, parentWin, name, size=wx.DefaultSize, style=wx.TR_HAS_BUTTONS | wx.TR_HIDE_ROOT | wx.TR_LINES_AT_ROOT):
+    TreeCtrl.__init__(self, parentWin, name, size, style)
+    self.Bind(wx.EVT_TREE_BEGIN_DRAG, self.OnBeginDrag)
+    self.Bind(wx.EVT_TREE_END_DRAG, self.OnEndDrag)
+
+
+  def OnBeginDrag(self, evt):
+    self.currentItem = evt.GetItem()
+    evt.Allow()
+  
+  def OnEndDrag(self, evt):
+    targetItem=evt.GetItem()
+    self.ExecuteDrag(targetItem)
 
 ####################################################################################
 
@@ -242,15 +256,13 @@ class NodeTreeCtrl(TreeCtrl):
 ###########################################################################
 
 
-class ServerTreeCtrl(TreeCtrl):
+class ServerTreeCtrl(DragTreeCtrl):
   def __init__(self, parentWin, size=wx.DefaultSize, style=wx.TR_HAS_BUTTONS | wx.TR_HIDE_ROOT | wx.TR_LINES_AT_ROOT):
-    TreeCtrl.__init__(self, parentWin, "Server", size=size, style=style)
+    DragTreeCtrl.__init__(self, parentWin, "Server", size=size, style=style)
     self.groups={}
     self.nodes=[]
     self.Bind(wx.EVT_RIGHT_DOWN, self.OnTreeRightClick)
     self.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnTreeActivate)
-    self.Bind(wx.EVT_TREE_BEGIN_DRAG, self.OnBeginDrag)
-    self.Bind(wx.EVT_TREE_END_DRAG, self.OnEndDrag)
     self.currentNode=None
     
     for groupName in adm.config.Read("ServerGroups", []):
@@ -265,12 +277,7 @@ class ServerTreeCtrl(TreeCtrl):
         logger.debug("Registration for %s missing", server)
 
 
-  def OnBeginDrag(self, evt):
-    self.currentItem = evt.GetItem()
-    evt.Allow()
-  
-  def OnEndDrag(self, evt):
-    targetItem=evt.GetItem()
+  def ExecuteDrag(self, targetItem):
     targetNode=self.GetNode(targetItem)
     node=self.GetNode(self.currentItem)
     
