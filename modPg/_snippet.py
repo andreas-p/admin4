@@ -33,19 +33,18 @@ class SnippetTree(DragTreeCtrl):
     self.Bind(wx.EVT_RIGHT_DOWN, self.OnTreeRightClick)
     self.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnTreeActivate)
     
-    set=self.server.GetConnection().ExecuteSet("""
-SELECT * FROM %s
- ORDER BY CASE WHEN snippet IS NULL THEN 0 ELSE 1 END, sort""" % server.snippet_table)
+    rootSnippets=[]
+    set=self.server.GetConnection().ExecuteSet("SELECT * FROM %s ORDER BY parent, sort" % server.snippet_table)
     for row in set:
       snippet=Snippet(row['id'], row['parent'], row['name'], row['snippet'], row['sort'])
-      
-      group=self.snippets.get(snippet.parent)
-      if group:
-        parentItem=group.treeitem
-      else:
-        parentItem=self.GetRootItem()
-      self.AppendSnippet(snippet, None, parentItem)
-
+      self.snippets[snippet.id]=snippet
+      if not snippet.parent:
+        rootSnippets.append(snippet)
+        
+    for snippet in rootSnippets:
+      if not snippet.parent:
+        self.AppendSnippet(snippet, None, self.GetRootItem())      
+        self.checkChildren(snippet)
 
   def getSnippetDict(self, snippet):
     dict= { 'table': self.server.snippet_table,
@@ -211,13 +210,14 @@ INSERT INTO %(table)s(name, parent, sort, snippet)
 
       if targetSnippet:
         self.AppendSnippet(snippet, None, parentItem)
+      self.checkChildren(snippet)
 
-      def checkChildren(snippet):
-        for child in self.snippets.values():
-          if child.parent == snippet.id:
-            self.AppendSnippet(child, None, snippet.treeitem)
-            checkChildren(child)     
-      checkChildren(snippet)
+
+  def checkChildren(self, snippet):
+    for child in self.snippets.values():
+      if child.parent == snippet.id:
+        self.AppendSnippet(child, None, snippet.treeitem)
+        self.checkChildren(child)     
 
 
   def OnTreeActivate(self, evt):
