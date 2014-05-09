@@ -5,138 +5,33 @@
 # see LICENSE.TXT for conditions of usage
 
 
-import wx.aui, wx.stc, wx.grid
+import wx.aui
 import adm
 import xmlres
 from wh import xlt, GetBitmap, Menu, modPath, floatToTime, AcceleratorHelper, FileManager
-from _explain import ExplainCanvas, ExplainText
+from _explain import ExplainCanvas
 from _snippet import SnippetTree
+from _sqlgrid import SqlResultGrid
+from _sqledit import SqlEditor
 
 
-NULLSTRING="(NULL)"
-
-STATUSPOS_MSGS=1
-STATUSPOS_POS=2
-STATUSPOS_ROWS=3
-STATUSPOS_SECS=4
-
-class SqlEditor(wx.stc.StyledTextCtrl):
-  pass
-
-
-class SqlResultGrid(wx.grid.Grid):
-  HMARGIN=5
-  VMARGIN=5
-  
-  def __init__(self, parent):
-    wx.grid.Grid.__init__(self, parent)
-    self.CreateGrid(0,0)
-    self.SetColLabelSize(0)
-    self.SetRowLabelSize(0)
-    self.AutoSize()
-    
-  def SetEmpty(self):
-    self.SetTable(wx.grid.GridStringTable(0,0))
-    self.SetColLabelSize(0)
-    self.SetRowLabelSize(0)
-    self.SendSizeEventToParent()
-
-  
-  def SetData(self, rowset):
-    rowcount=rowset.GetRowcount()
-    colcount=len(rowset.colNames)
-    
-    if rowcount<0:
-      rowcount=0
-    self.SetTable(wx.grid.GridStringTable(rowcount, colcount))
-    w,h=self.GetTextExtent('Colname')
-    self.SetColLabelSize(h+self.HMARGIN)
-    self.SetRowLabelSize(w+self.VMARGIN)
-    self.SetDefaultRowSize(h+self.HMARGIN)
-    
-    self.previousCols=rowset.colNames
-    self.Freeze()
-    self.BeginBatch()
-    for x in range(colcount):
-      colname=rowset.colNames[x]
-      if colname == '?column?':
-        colname="Col #%d" % (x+1)
-      self.SetColLabelValue(x, colname)
-    y=0  
-    for row in rowset:
-      self.SetRowLabelValue(y, "%d" % (y+1))
-      for x in range(colcount):
-        val=row[x]
-        if val == None:
-          val=NULLSTRING
-        else:
-          val=unicode(val)
-        self.SetCellValue(y, x, val)
-        self.SetReadOnly(y,x) 
-      y = y+1
-    self.EndBatch()
-    self.AutoSizeColumns()
-    self.Thaw()
-    self.SendSizeEventToParent()
-    
-  def Paste(self):
-    pass
-  
-  def Cut(self):
-    self.Copy()
-  
-  def Copy(self):
-    vals=self.getCells()
-    if vals:
-      adm.SetClipboard(vals)
-
-
-  def getCells(self, quoteChar="'", commaChar=', ', lfChar='\n', null='NULL'):
-    def quoted(v):
-      if v == NULLSTRING:
-        return null
-      try:
-        _=float(v)
-        return v
-      except:
-        return "%s%s%s" % (quoteChar, v, quoteChar) 
-    
-    vals=[]
-    cells=self.GetSelectedCells()
-    if cells:
-      for row,col in cells:
-        vals.append(quoted(self.GetCellValue(row, col)))
-        return commaChar.join(vals)
-    else:
-      rows=self.GetSelectedRows()
-      if rows:
-        cols=range(self.GetTable().GetColsCount())
-      else:
-        cols=self.GetSelectedCols()
-        if cols:
-          rows=range(self.GetTable().GetRowsCount())
-        else:
-          return None
-      for row in rows:
-        v=[]
-        for col in cols:
-          v.append(quoted(self.GetCellValue(row, col)))
-        vals.append(commaChar.join(v))
-      return lfChar.join(vals)
-    
-    
 class SqlFrame(adm.Frame):
+  STATUSPOS_MSGS=1
+  STATUSPOS_POS=2
+  STATUSPOS_ROWS=3
+  STATUSPOS_SECS=4
   filePatterns=[(xlt("SQL files"), '*.sql'),
                 (xlt("Text files"), '*.txt'),
                 (xlt("All files"), '*.*')
                 ]
+  
   def __init__(self, _parentWin, node):
     style=wx.MAXIMIZE_BOX|wx.RESIZE_BORDER|wx.SYSTEM_MENU|wx.CAPTION|wx.CLOSE_BOX
     adm.Frame.__init__(self, None, xlt("Query Tool"), style, (600,400), None)
     self.SetIcon(wx.Icon(modPath("SqlQuery.ico", self)))
 
     self.server=node.GetServer()
-    self.application="Admin4 Query Tool"
+    self.application="%s Query Tool" % adm.appTitle
     
     if hasattr(node, "GetDatabase"):
       dbName=node.GetDatabase().name
@@ -155,10 +50,14 @@ class SqlFrame(adm.Frame):
     self.toolbar.DoAddTool(self.GetMenuId(self.OnFileSave), xlt("Save to file"), GetBitmap("file_save", self))
     self.toolbar.DoAddTool(self.GetMenuId(self.OnShowSnippets), xlt("Show snippets browser"), GetBitmap("snippets", self))
     self.toolbar.AddSeparator()
+    self.toolbar.DoAddTool(self.GetMenuId(self.OnCopy), xlt("Copy"), GetBitmap("clip_copy", self))
+    self.toolbar.DoAddTool(self.GetMenuId(self.OnCut), xlt("Cut"), GetBitmap("clip_cut", self))
+    self.toolbar.DoAddTool(self.GetMenuId(self.OnPaste), xlt("Paste"), GetBitmap("clip_paste", self))
+    self.toolbar.DoAddTool(self.GetMenuId(self.OnClear), xlt("Clear"), GetBitmap("edit_clear", self))
+    self.toolbar.AddSeparator()
     self.toolbar.DoAddTool(self.GetMenuId(self.OnUndo), xlt("Undo"), GetBitmap("edit_undo", self))
     self.toolbar.DoAddTool(self.GetMenuId(self.OnRedo), xlt("Redo"), GetBitmap("edit_redo", self))
-    self.toolbar.DoAddTool(self.GetMenuId(self.OnClear), xlt("Clear"), GetBitmap("edit_clear", self))
-    self.toolbar.DoAddTool(self.GetMenuId(self.OnClear), xlt("Find"), GetBitmap("edit_find", self))
+#    self.toolbar.DoAddTool(self.GetMenuId(self.OnFind), xlt("Find"), GetBitmap("edit_find", self))
     self.toolbar.AddSeparator()
     self.toolbar.DoAddTool(self.GetMenuId(self.OnAddSnippet), xlt("Add snippet"), GetBitmap("snippet_add", self))
     self.toolbar.DoAddTool(self.GetMenuId(self.OnReplaceSnippet), xlt("Replace snippet"), GetBitmap("snippet_replace", self))
@@ -192,22 +91,21 @@ class SqlFrame(adm.Frame):
     menu.AppendSeparator()
     self.AddMenu(menu, xlt("Show snippets"), xlt("Show snippet browser"), self.OnShowSnippets)
     
-    if wx.Platform != "__WXMAC__":
-      menu.AppendSeparator()
-    #self.AddMenu(menu, xlt("Preferences"), xlt("Preferences"), self.OnPreferences, wx.ID_PREFERENCES, adm.app.SetMacPreferencesMenuItemId)
-    #self.AddMenu(menu, xlt("Quit"), xlt("Quit Admin4"), self.OnQuit, wx.ID_EXIT, adm.app.SetMacExitMenuItemId)
+    menu.AppendSeparator()
+#    self.AddMenu(menu, xlt("Preferences"), xlt("Preferences"), self.OnPreferences)
+    self.AddMenu(menu, xlt("Quit SQL"), xlt("Quit Sql"), self.OnClose)
 
     menubar.Append(menu, xlt("&File"))
 
     self.editmenu=menu=Menu()
     self.AddMenu(menu, xlt("&Undo"), xlt("Undo last action"), self.OnUndo)
     self.AddMenu(menu, xlt("&Redo"), xlt("Redo last action"), self.OnRedo)
-    self.AddMenu(menu, xlt("C&lear"), xlt("Clear editor"), self.OnClear)
-    self.AddMenu(menu, xlt("&Find"), xlt("Find string"), self.OnFind)
+#    self.AddMenu(menu, xlt("&Find"), xlt("Find string"), self.OnFind)
     menu.AppendSeparator()
     self.AddMenu(menu, xlt("Cu&t"), xlt("Cut selected text to clipboard"), self.OnCut)
     self.AddMenu(menu, xlt("&Copy"), xlt("Copy selected text to clipboard"), self.OnCopy)
     self.AddMenu(menu, xlt("&Paste"), xlt("Paste text from clipboard"), self.OnPaste)
+    self.AddMenu(menu, xlt("C&lear"), xlt("Clear editor"), self.OnClear)
     menu.AppendSeparator()
     self.AddMenu(menu, xlt("Add snippet"), xlt("Add selected text to snippets"), self.OnAddSnippet)
     self.AddMenu(menu, xlt("Modify snippet"), xlt("Replace snippet with selected text"), self.OnReplaceSnippet)
@@ -238,12 +136,11 @@ class SqlFrame(adm.Frame):
     pt=self.GetFont().GetPointSize()
     font=wx.Font(pt, wx.TELETYPE, wx.NORMAL, wx.NORMAL)
 
-    self.input=SqlEditor(self)
-    self.input.StyleSetFont(0, font)
-    self.input.MarkerDefineBitmap(0, GetBitmap("badline", self))
+    self.input=SqlEditor(self, font)
+    self.input.SetFont(font)
     self.input.SetAcceleratorTable(ah.GetTable())
-    self.input.Bind(wx.stc.EVT_STC_UPDATEUI, self.OnStatusPos)
-    self.input.Bind(wx.stc.EVT_STC_CHANGE, self.OnChangeStc)
+    
+    self.input.BindProcs(self.OnChangeStc, self.OnStatusPos)
     self.manager.AddPane(self.input, wx.aui.AuiPaneInfo().Top().PaneBorder().Resizable().MinSize((200,100)).BestSize((400,200)).CloseButton(False) \
                           .Name("sqlQuery").Caption(xlt("SQL Query")))
     
@@ -331,7 +228,7 @@ class SqlFrame(adm.Frame):
     self.EnableMenu(self.editmenu, self.OnUndo, canUndo)
     self.EnableMenu(self.editmenu, self.OnRedo, canRedo)
     self.EnableMenu(self.editmenu, self.OnClear, canQuery)
-    self.EnableMenu(self.editmenu, self.OnFind, canQuery)
+#    self.EnableMenu(self.editmenu, self.OnFind, canQuery)
     
     self.EnableMenu(self.filemenu, self.OnFileSave, self.sqlChanged)
     
@@ -350,19 +247,19 @@ class SqlFrame(adm.Frame):
     worker.start()
     
     self.SetStatus(xlt("Query is running."));
-    self.SetStatusText("", STATUSPOS_SECS);
-    self.SetStatusText("", STATUSPOS_ROWS);     
+    self.SetStatusText("", self.STATUSPOS_SECS);
+    self.SetStatusText("", self.STATUSPOS_ROWS);     
     self.msgHistory.AppendText(xlt("-- Executing query:\n"));
     self.msgHistory.AppendText(sql);
     self.msgHistory.AppendText("\n");
-    self.input.MarkerDeleteAll(0)    
+    self.input.MarkerDelete()   
     self.messages.Clear()
     
     startTime=wx.GetLocalTimeMillis();
     
     while worker.IsRunning():
       elapsed=wx.GetLocalTimeMillis() - startTime
-      self.SetStatusText(floatToTime(elapsed/1000.), STATUSPOS_SECS)
+      self.SetStatusText(floatToTime(elapsed/1000.), self.STATUSPOS_SECS)
       wx.Yield()
       if elapsed < 200:
         wx.MilliSleep(10);
@@ -378,7 +275,7 @@ class SqlFrame(adm.Frame):
       txt=floatToTime(elapsed/1000.)
     else:
       txt="0 ms"
-    self.SetStatusText(txt, STATUSPOS_SECS)
+    self.SetStatusText(txt, self.STATUSPOS_SECS)
     self.EnableMenu(self.querymenu, self.OnCancelQuery, False)
     self.EnableMenu(self.querymenu, self.OnExecuteQuery, True)
     self.EnableMenu(self.querymenu, self.OnExplainQuery, True)
@@ -389,12 +286,12 @@ class SqlFrame(adm.Frame):
 
       self.messages.SetValue(errmsg)
       self.msgHistory.AppendText(errmsg)
-      for i in range(1, len(errlines)-2):
+      for i in range(1, len(errlines)):
         if errlines[i].startswith("LINE "):
           lineinfo=errlines[i].split(':')[0][5:]
           colinfo=errlines[i+1].find('^')
           dummy=colinfo
-          self.input.MarkerAdd(0, int(lineinfo))
+          self.input.MarkerSet(int(lineinfo)-1 + self.input.GetSelectOffset())
           break
 
     if worker.cancelled:
@@ -409,7 +306,7 @@ class SqlFrame(adm.Frame):
 
 
     if worker.error:
-      self.SetStatusText("", STATUSPOS_ROWS)
+      self.SetStatusText("", self.STATUSPOS_ROWS)
     else:
       if rowcount == 1:
         rowsMsg=xlt("1 row affected")
@@ -417,7 +314,7 @@ class SqlFrame(adm.Frame):
         rowsMsg=xlt("Executed")
       else:
         rowsMsg= xlt("%d rows affected") % rowcount
-      self.SetStatusText(rowsMsg, STATUSPOS_ROWS)
+      self.SetStatusText(rowsMsg, self.STATUSPOS_ROWS)
       self.msgHistory.AppendText("-- %s\n" % rowsMsg)
     
       
@@ -450,7 +347,7 @@ class SqlFrame(adm.Frame):
 
 
   def SetStatus(self, status):
-    self.SetStatusText(status, STATUSPOS_MSGS)
+    self.SetStatusText(status, self.STATUSPOS_MSGS)
   
   def getSql(self):  
     sql=self.input.GetSelectedText()
@@ -584,10 +481,9 @@ class SqlFrame(adm.Frame):
     self.updateMenu()
     
   def OnStatusPos(self, evt):
-
     row=self.input.LineFromPosition(self.input.GetCurrentPos())+1
     col=self.input.GetColumn(self.input.GetCurrentPos())+1
-    self.SetStatusText(xlt("Ln %d Col %d") % (row, col), STATUSPOS_POS)
+    self.SetStatusText(xlt("Ln %d Col %d") % (row, col), self.STATUSPOS_POS)
     
     
     

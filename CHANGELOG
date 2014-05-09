@@ -10,11 +10,13 @@ modLdap 0.95.3:
 modBind 0.98.3:
 - check status connection
 
-modPg 0.3.2:
-- improved QueryTool
-- SQL Snippets
-- QueryTool menu fix
-- QueryTool file functions
+modPg 0.4.0:
+- improved QueryTool:
+  - SQL Snippets
+  - menu fix
+  - QueryTool file functions
+  - syntax highlighting
+  - error marking
 
 
 

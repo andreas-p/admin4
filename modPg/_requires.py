@@ -20,3 +20,5 @@ def GetPrerequisites(info=False):
       print "psycopg2 missing"
     pass
   return None
+
+moreFiles=['kwlist.h']
