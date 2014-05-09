@@ -1,6 +1,7 @@
 Changes in 2.1.4
 Core:
 - Online update
+- fix in Frame.OnCall
 
 modLdap 0.95.3:
 - fix connect to non-instrumented Active Directory
@@ -12,6 +13,8 @@ modBind 0.98.3:
 modPg 0.3.2:
 - improved QueryTool
 - SQL Snippets
+- QueryTool menu fix
+- QueryTool file functions
 
 
 
