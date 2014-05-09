@@ -41,6 +41,8 @@ class MenuOwner:
 
 
   def EnableMenu(self, menu, item, how):
+    if how: how=True
+    else:   how=False
     if not isinstance(item, int):
       item=self.GetMenuId(item)
     tb=self.GetToolBar()
