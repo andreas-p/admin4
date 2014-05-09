@@ -42,13 +42,13 @@ class Frame(wx.Frame, adm.MenuOwner):
     return False
 
 
-  def OnCall(self, e):
+  def OnCall(self, evt):
     """
     OnCall(wx.Event)
 
     calls registered procedures from an event using appropriate arguments
     """
-    id=e.GetId()
+    id=evt.GetId()
     if id in self.calls:
       proc=self.calls[id]
 
@@ -67,7 +67,7 @@ class Frame(wx.Frame, adm.MenuOwner):
         if proc(self, node) and node:
           node.DoRefresh()
       else:
-        proc(self)
+        proc(evt)
     
 
   def OnClose(self, evt):
