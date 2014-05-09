@@ -76,12 +76,16 @@ class Config(wx.Config):
     name="%s/%s:%s" % (module, name, aspect)
     return name.replace('.', '/')
 
-  def storeWindowPositions(self, win):
+  def getWinName(self, win):
     if isinstance(win, wx.Frame):
       cls="Frame"
     else:
       cls="Dialog"
-    name=self.getName(cls, win.__module__, win.__class__.__name__)
+    return self.getName(cls, win.__module__, win.__class__.__name__)
+
+
+  def storeWindowPositions(self, win):
+    name=self.getWinName(win)
     size=win.GetSize()
     pos=win.GetPosition()
     if win.GetParent():
@@ -94,7 +98,7 @@ class Config(wx.Config):
   def GetPerspective(self, win):
     if ignoreStoredPositions:
       return ""
-    name=self.getName("Frame", win.__module__, win.__class__.__name__)
+    name=self.getWinName(win)
     return self.Read("%sPerspective" % name, "")
 
 
@@ -102,12 +106,8 @@ class Config(wx.Config):
     if ignoreStoredPositions:
       return None, None
     
-    if isinstance(win, wx.Frame):
-      cls="Frame"
-    else:
-      cls="Dialog"
-    name=self.getName("%sPosition" % cls, win.__module__, win.__class__.__name__)
-    size, pos=self.Read(name, (None, None))
+    name=self.getWinName(win)
+    size, pos=self.Read("%sPosition" % name, (None, None))
 
     xmax = wx.SystemSettings.GetMetric(wx.SYS_SCREEN_X)
     ymax = wx.SystemSettings.GetMetric(wx.SYS_SCREEN_Y)
