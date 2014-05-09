@@ -8,7 +8,7 @@
 import wx.aui, wx.stc, wx.grid
 import adm
 import xmlres
-from wh import xlt, GetBitmap, Menu, modPath, floatToTime, AcceleratorHelper
+from wh import xlt, GetBitmap, Menu, modPath, floatToTime, AcceleratorHelper, FileManager
 from _explain import ExplainCanvas, ExplainText
 from _snippet import SnippetTree
 
@@ -126,6 +126,10 @@ class SqlResultGrid(wx.grid.Grid):
     
     
 class SqlFrame(adm.Frame):
+  filePatterns=[(xlt("SQL files"), '*.sql'),
+                (xlt("Text files"), '*.txt'),
+                (xlt("All files"), '*.*')
+                ]
   def __init__(self, _parentWin, node):
     style=wx.MAXIMIZE_BOX|wx.RESIZE_BORDER|wx.SYSTEM_MENU|wx.CAPTION|wx.CLOSE_BOX
     adm.Frame.__init__(self, None, xlt("Query Tool"), style, (600,400), None)
@@ -140,9 +144,9 @@ class SqlFrame(adm.Frame):
       dbName=self.server.maintDb
     self.worker=None
     self.sqlChanged=False
-    self.currentFile=None
     self.previousCols=[]
 
+    self.fileManager=FileManager(self, adm.config)
 
     self.toolbar=self.CreateToolBar(wx.TB_FLAT|wx.TB_NODIVIDER)
     self.toolbar.SetToolBitmapSize(wx.Size(16, 16));
@@ -181,6 +185,7 @@ class SqlFrame(adm.Frame):
     self.filemenu=menu=Menu()
 
     self.AddMenu(menu, xlt("&Open"), xlt("Open query file"), self.OnFileOpen)
+    menu.AppendMenu(-1, xlt("Open recent..."), self.fileManager.GetRecentFilesMenu())
     self.AddMenu(menu, xlt("&Insert"), xlt("Insert query file"), self.OnFileInsert)
     self.AddMenu(menu, xlt("&Save"), xlt("Save current file"), self.OnFileSave)
     self.AddMenu(menu, xlt("Save &as.."), xlt("Save file under new name"), self.OnFileSaveAs)
@@ -491,34 +496,60 @@ class SqlFrame(adm.Frame):
     self.executeSql(self.explain, "EXPLAIN %s" % sql, 8, True)
 
   
-  def getFile(self):
-    return ""
-  
-  def OnFileOpen(self, evt):
-    sql=self.readFile()
+  def readFile(self, message, filename=None):
+    if not filename:
+      filename=self.fileManager.OpenFile(self, self.filePatterns, message)
+    if filename:
+      try:
+        f=open(filename, 'r')
+        sql=f.read()
+        f.close()
+        return sql
+      except:
+        self.SetStatus(xlt("Failed to read %s") % filename)
+        return None
+        
+  def fileOpen(self, header, filename=None):
+    sql=self.readFile(header, filename)
     if sql:
-      self.editor.ClearAll()
-      self.editor.ReplaceSelection(sql)
+      self.input.ClearAll()
+      self.input.ReplaceSelection(sql)
+      self.SetStatus(xlt("%d characters read from %s") % (len(sql), self.fileManager.currentFile))
       self.updateMenu()
+
+  def OnRecentFileOpened(self, filename):
+    self.fileOpen(None, filename)
+    
+  def OnFileOpen(self, evt):
+    self.fileOpen(xlt("Open SQL file"))
       
   
   def OnFileInsert(self, evt):
-    sql=self.getFile()
+    sql=self.readFile(xlt("Insert SQL from file"))
     if sql:
-      self.editor.ReplaceSelection(sql)
+      self.input.ReplaceSelection(sql)
+      self.SetStatus(xlt("%d characters inserted from %s") % (len(sql), self.fileManager.currentFile))
       self.updateMenu()
   
-  def writeFile(self, fn):
-    if self.currentFile != fn:
-      self.currentFile = fn
+  
+  def saveFile(self, proc):    
+    try:
+      ok=proc(self, self.input.GetText(), self.filePatterns, xlt("Save SQL Query"))
+      if ok:
+        self.SetStatus(xlt("Saved SQL query to %s") % self.fileManager.filename)
+        self.sqlChanged=False
+        self.updateMenu() 
+      else:
+        self.StatusText(xlt("Nothing saved"))
+    except:
+      self.SetStatus(xlt("Failed to save to %s") % self.fileManager.filename)
       
   def OnFileSave(self, evt):
-    if not self.currentFile:
-      return self.OnFileSaveAs(evt)
-    self.writeFile(self.currentFile)
-  
+    self.saveFile(self.fileManager.SaveFile)
+    
   def OnFileSaveAs(self, evt):
-    pass
+    self.saveFile(self.fileManager.SaveFileAs)
+  
   
   def OnUndo(self, evt):
     self.input.Undo()
