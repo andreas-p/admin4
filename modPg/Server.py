@@ -6,16 +6,17 @@
 
 
 import adm
-from wh import xlt, YesNo
+from wh import xlt, YesNo, modPath
 import re
 from _pgsql import pgConnection
-from _pgsqlKeywords import keywords
 
 adminProcs=['pg_terminate_backend', 'pg_rotate_logfile', 'pg_reload_conf']
 
 class Server(adm.ServerNode):
   shortname=xlt("pgsql Server")
   typename=xlt("PostgreSQL Server")
+  keywords=[]
+  
 #  wantIconUpdate=True
 
   def __init__(self, settings):
@@ -24,9 +25,24 @@ class Server(adm.ServerNode):
     self.version=None
     self.detachedConn=None
     self.connectableDbs=None
-
- 
 #    self.timeout=settings.get('querytimeout', standardTimeout)
+
+    if not self.keywords:
+      self.fillKeywords()
+      
+  def fillKeywords(self):
+    f=open(modPath("kwlist.h", self))
+    lines=f.read()
+    f.close()
+    
+    self.keywords=[]
+    for line in lines.splitlines():
+      if line.startswith("PG_KEYWORD("):
+        tokens=line.split(',')
+        keyword=tokens[0][12:-1].lower()
+        self.keywords.append(keyword)
+        # if tokens[2].lstrip().startswith("RESERVED")
+        # RESERVED, UNRESERVED, TYPE_FUNC_NAME, COL_NAME
 
   def GetConnection(self, detached=False):
     if detached:
@@ -231,7 +247,7 @@ class Server(adm.ServerNode):
   
   @staticmethod
   def quoteIdent(ident):
-    if re.compile("^[a-z][a-z0-9_]+$").match(ident) and ident not in keywords:
+    if re.compile("^[a-z][a-z0-9_]+$").match(ident) and ident not in Server.keywords:
       return ident
     return '"%s"' % ident.replace('"', '""')
   

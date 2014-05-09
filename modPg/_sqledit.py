@@ -8,12 +8,9 @@
 # http://www.scintilla.org/
 import wx
 import wx.stc as stc
-from wh import modPath
 
 
 class SqlEditor(stc.StyledTextCtrl):
-  keywords=[]
-  
   def __init__(self, parent, font):
     stc.StyledTextCtrl.__init__(self, parent)
     self.MarkerDefine(0, stc.STC_MARK_ARROW)
@@ -34,23 +31,16 @@ class SqlEditor(stc.StyledTextCtrl):
     # STC_SQL_COMMENTLINEDOC STC_SQL_COMMENTDOCKEYWORD STC_SQL_COMMENTDOCKEYWORDERROR
     # STC_SQL_WORD2 
     # STC_SQL_QUOTEDIDENTIFIER STC_SQL_IDENTIFIER
-
-    if not self.keywords:
-      self.fillKeywords()
-      if not self.keywords:
-        return
       
     commentColor=wx.Colour(128,128,128)
     keywordColor=wx.Colour(0, 0, 128)
     constColor=wx.Colour(0,128,0)
 
     self.SetLexer(stc.STC_LEX_SQL)
-
     self.StyleSetForeground(stc.STC_SQL_DEFAULT, wx.BLACK)
 
     self.StyleSetForeground(stc.STC_SQL_WORD, keywordColor)
     self.StyleSetBold(stc.STC_SQL_WORD, True)
-    self.SetKeyWords(0, self.keywords)
     
     self.StyleSetForeground(stc.STC_SQL_COMMENT, commentColor)
     self.StyleSetForeground(stc.STC_SQL_COMMENTLINE, commentColor)
@@ -59,22 +49,9 @@ class SqlEditor(stc.StyledTextCtrl):
     self.StyleSetForeground(stc.STC_SQL_NUMBER, constColor)
     self.StyleSetForeground(stc.STC_SQL_CHARACTER, constColor)
     
-
-  def fillKeywords(self):
-    f=open(modPath("kwlist.h", self))
-    lines=f.read()
-    f.close()
+  def SetKeywords(self, keywords):
+    self.SetKeyWords(0, keywords)
     
-    keywords=[]
-    for line in lines.splitlines():
-      if line.startswith("PG_KEYWORD("):
-        tokens=line.split(',')
-        keyword=tokens[0][12:-1].lower()
-        keywords.append(keyword)
-        # if tokens[2].lstrip().startswith("RESERVED")
-        # RESERVED, UNRESERVED, TYPE_FUNC_NAME, COL_NAME
-    self.keywords=" ".join(keywords)
-        
   def BindProcs(self, changeProc, updateUiProc):
     if changeProc:
       self.Bind(stc.EVT_STC_CHANGE, changeProc)

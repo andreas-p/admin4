@@ -139,6 +139,7 @@ class SqlFrame(adm.Frame):
     self.input=SqlEditor(self, font)
     self.input.SetFont(font)
     self.input.SetAcceleratorTable(ah.GetTable())
+    self.input.SetKeywords(' '.join(self.server.keywords))
     
     self.input.BindProcs(self.OnChangeStc, self.OnStatusPos)
     self.manager.AddPane(self.input, wx.aui.AuiPaneInfo().Top().PaneBorder().Resizable().MinSize((200,100)).BestSize((400,200)).CloseButton(False) \
