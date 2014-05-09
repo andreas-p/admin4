@@ -3,4 +3,4 @@
 - Edit Table:
   - Table, Column
   
-- SqlTool commit?
+- pgConnection pooling

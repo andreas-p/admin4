@@ -11,6 +11,8 @@ import re
 from _pgsql import pgConnection
 from _pgsqlKeywords import keywords
 
+adminProcs=['pg_terminate_backend', 'pg_rotate_logfile', 'pg_reload_conf']
+
 class Server(adm.ServerNode):
   shortname=xlt("pgsql Server")
   typename=xlt("PostgreSQL Server")
@@ -53,6 +55,7 @@ class Server(adm.ServerNode):
     
     if not db and not self.connection:
       self.connection = conn
+      
       self.info=conn.ExecuteDict("""
         SELECT name, setting FROM pg_settings
          WHERE name in ('autovacuum', 'log_line_prefix', 'log_destination')
@@ -63,7 +66,7 @@ class Server(adm.ServerNode):
          WHERE datname=%(datname)s
         UNION
         SELECT proname, proname from pg_proc
-         WHERE proname in ('pg_terminate_backend', 'pg_rotate_logfile()', 'pg_reload_conf') 
+         WHERE proname in ( %(adminprocs)s ) 
         UNION
         SELECT 'adminspace', nspname FROM pg_namespace WHERE nspname=%(adminspace)s
         UNION
@@ -75,6 +78,7 @@ class Server(adm.ServerNode):
         {'datname': self.quoteString(dbname), 
          'adminspace': self.quoteString(self.GetPreference("AdminNamespace")),
          'fav_table': self.quoteString("Admin_Fav_%s" % self.user),
+         'adminprocs': ", ".join(map(lambda p: "'%s'" % p, adminProcs)),
          'snippet_table': self.quoteString("Admin_Snippet_%s" % self.user)})
 
       v=self.info['version'].split(' ')[1]
@@ -112,6 +116,13 @@ class Server(adm.ServerNode):
   def IsMinimumVersion(self, ver):
     return ver >= self.version
   
+  def NeedsInstrumentation(self):
+    for name in adminProcs:
+      if not self.GetValue(name):
+        return True
+    return not self.fav_table or not self.snippet_table     
+
+
   def ExpandColDefs(self, cols):
     return ", ".join( [ "%s as %s" % (c[0], self.quoteIdent(c[1])) for c in cols])
 
@@ -246,7 +257,8 @@ class ServerInstrument:
   
   @staticmethod
   def CheckAvailableOn(node):
-    return isinstance(node, Server) and not node.fav_table
+    return isinstance(node, Server) and node.NeedsInstrumentation()
+  
   
   @staticmethod
   def OnExecute(_parentWin, server):
@@ -254,22 +266,27 @@ class ServerInstrument:
     if not adminspace:
       adminspace=server.GetPreference("AdminNamespace")
       server.GetConnection().ExecuteSingle("CREATE SCHEMA %s AUTHORIZATION postgres" % server.quoteIdent(adminspace))
+      server.adminspace=adminspace
 
     adsQuoted=server.quoteIdent(adminspace)
-    fav_table=server.quoteIdent("Admin_Fav_%s" % server.user)
-    snippet_table=server.quoteIdent("Admin_Snippet_%s" % server.user)
 
-    server.GetConnection().ExecuteSingle("""
+    if not server.fav_table:
+      fav_table=server.quoteIdent("Admin_Fav_%s" % server.user)
+      server.GetConnection().ExecuteSingle("""
 CREATE TABLE %(adminspace)s.%(fav_table)s 
-  (dboid OID, favoid OID, favtype CHAR, favgroup TEXT, PRIMARY KEY(dboid, favoid));
+  (dboid OID, favoid OID, favtype CHAR, favgroup TEXT, PRIMARY KEY(dboid, favoid))""" % 
+        {'adminspace': adsQuoted,
+        'fav_table': fav_table })
+      server.fav_table="%s.%s" % (adsQuoted, fav_table)
+
+    if not server.snippet_table:
+      snippet_table=server.quoteIdent("Admin_Snippet_%s" % server.user)
+      server.GetConnection().ExecuteSingle("""
 CREATE TABLE %(adminspace)s.%(snippet_table)s 
   (id SERIAL PRIMARY KEY, parent INT4 NOT NULL DEFAULT 0, sort FLOAT NOT NULL DEFAULT 0.0, name TEXT, snippet TEXT);""" % 
         {'adminspace': adsQuoted,
-        'fav_table': fav_table,
         'snippet_table': snippet_table })
-    server.adminspace=adminspace
-    server.fav_table="%s.%s" % (adsQuoted, fav_table)
-    server.snippet_table="%s.%s" % (adsQuoted, snippet_table)
+      server.snippet_table="%s.%s" % (adsQuoted, snippet_table)
     return True
     
     
