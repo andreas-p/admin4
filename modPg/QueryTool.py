@@ -140,6 +140,7 @@ class SqlFrame(adm.Frame):
       dbName=self.server.maintDb
     self.worker=None
     self.sqlChanged=False
+    self.currentFile=None
     self.previousCols=[]
 
 
@@ -152,10 +153,11 @@ class SqlFrame(adm.Frame):
     self.toolbar.AddSeparator()
     self.toolbar.DoAddTool(self.GetMenuId(self.OnUndo), xlt("Undo"), GetBitmap("edit_undo", self))
     self.toolbar.DoAddTool(self.GetMenuId(self.OnRedo), xlt("Redo"), GetBitmap("edit_redo", self))
+    self.toolbar.DoAddTool(self.GetMenuId(self.OnClear), xlt("Clear"), GetBitmap("edit_clear", self))
+    self.toolbar.DoAddTool(self.GetMenuId(self.OnClear), xlt("Find"), GetBitmap("edit_find", self))
     self.toolbar.AddSeparator()
     self.toolbar.DoAddTool(self.GetMenuId(self.OnAddSnippet), xlt("Add snippet"), GetBitmap("snippet_add", self))
     self.toolbar.DoAddTool(self.GetMenuId(self.OnReplaceSnippet), xlt("Replace snippet"), GetBitmap("snippet_replace", self))
-    self.toolbar.DoAddTool(self.GetMenuId(self.OnDelSnippet), xlt("Remove snippet"), GetBitmap("snippet_del", self))
     self.toolbar.AddSeparator()
     
     cbClass=xmlres.getControlClass("whComboBox")
@@ -179,6 +181,7 @@ class SqlFrame(adm.Frame):
     self.filemenu=menu=Menu()
 
     self.AddMenu(menu, xlt("&Open"), xlt("Open query file"), self.OnFileOpen)
+    self.AddMenu(menu, xlt("&Insert"), xlt("Insert query file"), self.OnFileInsert)
     self.AddMenu(menu, xlt("&Save"), xlt("Save current file"), self.OnFileSave)
     self.AddMenu(menu, xlt("Save &as.."), xlt("Save file under new name"), self.OnFileSaveAs)
     menu.AppendSeparator()
@@ -194,6 +197,8 @@ class SqlFrame(adm.Frame):
     self.editmenu=menu=Menu()
     self.AddMenu(menu, xlt("&Undo"), xlt("Undo last action"), self.OnUndo)
     self.AddMenu(menu, xlt("&Redo"), xlt("Redo last action"), self.OnRedo)
+    self.AddMenu(menu, xlt("C&lear"), xlt("Clear editor"), self.OnClear)
+    self.AddMenu(menu, xlt("&Find"), xlt("Find string"), self.OnFind)
     menu.AppendSeparator()
     self.AddMenu(menu, xlt("Cu&t"), xlt("Cut selected text to clipboard"), self.OnCut)
     self.AddMenu(menu, xlt("&Copy"), xlt("Copy selected text to clipboard"), self.OnCopy)
@@ -201,7 +206,6 @@ class SqlFrame(adm.Frame):
     menu.AppendSeparator()
     self.AddMenu(menu, xlt("Add snippet"), xlt("Add selected text to snippets"), self.OnAddSnippet)
     self.AddMenu(menu, xlt("Modify snippet"), xlt("Replace snippet with selected text"), self.OnReplaceSnippet)
-    self.AddMenu(menu, xlt("Delele snippet"), xlt("delete snippet"), self.OnDelSnippet)
     menubar.Append(menu, xlt("&Edit"))
     
     self.querymenu=menu=Menu()
@@ -211,6 +215,7 @@ class SqlFrame(adm.Frame):
     menubar.Append(menu, xlt("&Query"))
     
     self.EnableMenu(self.querymenu, self.OnCancelQuery, False)
+    self.SetMenuBar(menubar)
     
     ah=AcceleratorHelper(self)
     ah.Add(wx.ACCEL_CTRL, 'X', self.OnCut)
@@ -309,10 +314,24 @@ class SqlFrame(adm.Frame):
       canRedo=self.input.CanRedo();
       canPaste=self.input.CanPaste();
       canCut = True;
+    
+    a,e=self.input.GetSelection()
+    canQuery = ( a!=e or self.input.GetLineCount() >1 or self.getSql() )
+
+
+    self.EnableMenu(self.editmenu, self.OnAddSnippet, self.server.GetValue('snippet_table'))
+    self.EnableMenu(self.editmenu, self.OnReplaceSnippet, self.snippets.CanReplace())
     self.EnableMenu(self.editmenu, self.OnCut, canCut)
     self.EnableMenu(self.editmenu, self.OnPaste, canPaste)
     self.EnableMenu(self.editmenu, self.OnUndo, canUndo)
     self.EnableMenu(self.editmenu, self.OnRedo, canRedo)
+    self.EnableMenu(self.editmenu, self.OnClear, canQuery)
+    self.EnableMenu(self.editmenu, self.OnFind, canQuery)
+    
+    self.EnableMenu(self.filemenu, self.OnFileSave, self.sqlChanged)
+    
+    self.EnableMenu(self.querymenu, self.OnExecuteQuery, canQuery)
+    self.EnableMenu(self.querymenu, self.OnExplainQuery, canQuery)
     
     
   def executeSql(self, targetPage, sql, _queryOffset=0, resultToMsg=False):
@@ -453,8 +472,6 @@ class SqlFrame(adm.Frame):
     if sql:
       self.snippets.ReplaceSnippet(sql)
 
-  def OnDelSnippet(self, evt):
-    pass
 
   def OnCancelQuery(self, evt):
     self.EnableMenu(self.querymenu, self.OnCancelQuery, False)
@@ -474,17 +491,44 @@ class SqlFrame(adm.Frame):
     self.executeSql(self.explain, "EXPLAIN %s" % sql, 8, True)
 
   
-  def OnFileOpen(self, evt):
-    pass
+  def getFile(self):
+    return ""
   
+  def OnFileOpen(self, evt):
+    sql=self.readFile()
+    if sql:
+      self.editor.ClearAll()
+      self.editor.ReplaceSelection(sql)
+      self.updateMenu()
+      
+  
+  def OnFileInsert(self, evt):
+    sql=self.getFile()
+    if sql:
+      self.editor.ReplaceSelection(sql)
+      self.updateMenu()
+  
+  def writeFile(self, fn):
+    if self.currentFile != fn:
+      self.currentFile = fn
+      
   def OnFileSave(self, evt):
-    pass
+    if not self.currentFile:
+      return self.OnFileSaveAs(evt)
+    self.writeFile(self.currentFile)
   
   def OnFileSaveAs(self, evt):
     pass
   
   def OnUndo(self, evt):
     self.input.Undo()
+  
+  def OnClear(self, evt):
+    self.input.ClearAll()
+    self.updateMenu()
+    
+  def OnFind(self, evt):
+    pass
   
   def OnRedo(self, evt):
     self.input.Redo()

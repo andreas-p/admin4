@@ -31,6 +31,7 @@ class SnippetTree(DragTreeCtrl):
     self.snippets={}
 
     self.Bind(wx.EVT_RIGHT_DOWN, self.OnTreeRightClick)
+    self.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnTreeSelChanged)
     self.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnTreeActivate)
     
     rootSnippets=[]
@@ -120,6 +121,16 @@ INSERT INTO %(table)s(name, parent, sort, snippet)
     return True
       
 
+  def CanReplace(self):
+    if not self.server.GetValue('snippet_table'):
+      return False
+    a,e=self.editor.GetSelection()
+    if a==e and self.editor.GetLineCount() < 2 and not self.GetParent().getSql():
+      return False
+
+    snippet=self.GetNode()
+    return snippet and snippet.text
+  
   def ReplaceSnippet(self, text):
     snippet=self.GetNode()
     if snippet:
@@ -128,7 +139,7 @@ INSERT INTO %(table)s(name, parent, sort, snippet)
       self.GetParent().SetStatus(xlt("Snipped updated."))
     return False
 
-  def OnUpdateSnippet(self, evt):
+  def OnReplaceSnippet(self, evt):
     sql=self.GetParent().getSql()
     if sql:
       self.ReplaceSnippet(sql)
@@ -158,6 +169,9 @@ INSERT INTO %(table)s(name, parent, sort, snippet)
       if name:
         self.AppendSnippet(name)
       
+  def OnTreeSelChanged(self, evt):
+    self.GetParent().updateMenu()
+
   def OnTreeRightClick(self, evt):
     item, _flags=self.HitTest(evt.GetPosition())
     if item and item != self.GetSelection():
@@ -175,7 +189,7 @@ INSERT INTO %(table)s(name, parent, sort, snippet)
             cm.Enable(id, False)
             break;
       else:
-        cm.Append(self.GetParent().BindMenuId(self.OnUpdateSnippet), xlt("Update"), xlt(("Update snippet")))
+        cm.Append(self.GetParent().BindMenuId(self.OnReplaceSnippet), xlt("Replace"), xlt(("Replace snippet")))
         cm.Append(self.GetParent().BindMenuId(self.OnRenameSnippet), xlt("Rename"), xlt(("Rename snippet")))
         cm.Append(self.GetParent().BindMenuId(self.OnDelSnippet), xlt("Delete"), xlt(("Delete snippet")))
       cm.AppendSeparator()
@@ -224,5 +238,6 @@ INSERT INTO %(table)s(name, parent, sort, snippet)
     snippet= self.GetNode()
     if snippet:
       self.editor.ReplaceSelection(snippet.text)
+      self.GetParent().updateMenu()
     self.editor.SetFocus()
       
