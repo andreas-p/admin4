@@ -204,6 +204,8 @@ if __name__ == '__main__':
               rq=rq.split(' ')
             requiredMods.extend(rq)
             packages.extend(rq)
+          if hasattr(requires, 'moreFiles'):
+            moreFiles.extend(map(lambda x: os.path.join(fn, x), requires.moreFiles))
         except:
           pass
         
