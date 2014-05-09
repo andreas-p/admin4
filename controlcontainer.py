@@ -25,11 +25,12 @@ class MenuOwner:
     args,_1,_2,_3 = inspect.getargspec(proc)
     return args
 
-  def GetMenuId(self, proc, doBind=False):
-    if proc in self.calls.values():
-      for k in self.calls.keys():
-        if self.calls[k] == proc:
-          return k
+  def GetMenuId(self, proc, doBind=False, registerNew=False):
+    if not registerNew:
+      if proc in self.calls.values():
+        for k in self.calls.keys():
+          if self.calls[k] == proc:
+            return k
     MenuOwner.lastid += 1
     self.calls[MenuOwner.lastid] = proc
     if doBind:
