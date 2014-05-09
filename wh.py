@@ -35,7 +35,141 @@ class AcceleratorHelper:
     self.frame.SetAcceleratorTable(self.GetTable())
   
   
+  
+class FileManager:
+  maxLastFiles=10
+  def __init__(self, frame, config=None):
+    self.frame=frame
+    self.configName="%sRecentFiles" % config.getWinName(frame)
+    self.config=config
+    self.currentFile=None
+    self.filename=None
+    self.recentMenu=None
     
+    if config:
+      self.lastFiles=config.Read(self.configName, [])
+    else:
+      self.lastFiles=[]
+    self.firstId=self.frame.GetMenuId(self.OnSelectFile, True, True)
+    for _ in range(self.maxLastFiles-1):
+      id=self.frame.GetMenuId(self.OnSelectFile, True, True)
+      
+    self._handleConfig() # fill lastFiles array
+    
+
+  def _currentDirectory(self):
+    return ""
+  
+  def _makePatterns(self, filePatterns):
+    pattern=[]
+    for txt, ext in filePatterns:
+      pattern.append("%s (%s)" % (xlt(txt), ext))
+      pattern.append(ext)
+    return "|".join(pattern)
+  
+  
+  def _saveFile(self, wnd, contents, filePatterns, message, filename):
+    if filename:
+      self.filename=filename
+    else:
+      if self.currentFile: defaultFile=self.currentFile
+      else:                defaultFile=""
+      if not message:
+        message=xlt("Save File")
+      dlg=wx.FileDialog(wnd, message, 
+                        self._currentDirectory(), defaultFile, 
+                        wildcard=self._makePatterns(filePatterns), 
+                        style=wx.FD_SAVE|wx.FD_OVERWRITE_PROMPT)
+      if dlg.ShowModal() == wx.ID_CANCEL:
+        return False
+      self.filename=dlg.GetPath()
+      
+    f=open(self.filename, 'w')
+    f.write(contents)
+    f.close()
+    self._handleConfig()
+    return True
+  
+  def OpenFile(self, wnd, filePatterns, message=None, filename=None):
+    """
+    OpenFile(self, wnd, filePatterns, message=None, filename=None):
+    
+    returns: filename or NONE
+    """
+    if filename:
+      self.filename=filename
+    else:
+      if not message:
+        message=xlt("Save File")
+      if self.currentFile: defaultFile=self.currentFile
+      else:                defaultFile=""
+      dlg=wx.FileDialog(wnd, message,
+                        self._currentDirectory(), defaultFile, 
+                        wildcard=self._makePatterns(filePatterns) )
+      if dlg.ShowModal() == wx.ID_CANCEL:
+        return None
+      self.filename = dlg.GetPath()
+    self._handleConfig()
+    return self.filename
+        
+
+  def SaveFile(self, wnd, content, filePatterns, message=None):
+    """
+    SaveFile(self, wnd, content, filePatterns, message=None):
+    returns True if written, 
+            False if FileDialog was aborted
+    throws FileException
+    """
+    return self._saveFile(wnd, content, filePatterns, message, self.currentFile)
+
+  def SaveFileAs(self, wnd, content, filePatterns, message=None):
+    return self._saveFile(wnd, content, filePatterns, message, None)
+  
+  
+  def OnSelectFile(self, evt):
+    id=evt.GetId() 
+    id -= self.firstId
+    self.filename=self.lastFiles[id]
+    self.frame.OnRecentFileOpened(self.filename)
+    self._handleConfig()
+
+  def GetRecentFilesMenu(self):
+    """
+    GetRecentFileMenu()
+    
+    If used, the frame.OnRecentFileOpened(filename) called when a recent file is selected
+    """
+    if not self.recentMenu:
+      self.recentMenu = Menu()
+    self._handleMenu()
+    return self.recentMenu
+  
+  def _handleMenu(self):
+    if self.recentMenu:
+      for item in self.recentMenu.GetMenuItems():
+        self.recentMenu.DeleteItem(item)
+      id=self.firstId
+      for file in self.lastFiles:
+        self.recentMenu.Append(id, file)
+        id +=1
+        
+  def _handleConfig(self):
+    if self.filename:
+      self.currentFile=self.filename
+      if self.filename in self.lastFiles:
+        if self.filename == self.lastFiles[0]:
+          return # skip writing config and menu
+        else:
+          self.lastFiles.remove(self.filename)
+      self.lastFiles.insert(0, self.filename)
+    while len(self.lastFiles) > self.maxLastFiles:
+      del self.lastFiles[self.maxLastFiles]
+    if self.filename:
+      if self.config:
+        self.config.Write(self.configName, self.lastFiles)
+      self._handleMenu()
+    
+        
 def modPath(name, mod):
   """
   str modPath(filename, module)
