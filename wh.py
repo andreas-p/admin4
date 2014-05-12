@@ -35,7 +35,20 @@ class AcceleratorHelper:
     self.frame.SetAcceleratorTable(self.GetTable())
   
   
+class ToolBar(wx.ToolBar):
+  def __init__(self, frame, size=16, style=wx.TB_FLAT|wx.TB_NODIVIDER):
+    wx.ToolBar.__init__(self, frame, -1, style=style)
+    self.frame=frame
+    if not isinstance(size, wx.Size):
+      size=wx.Size(size, size)
+    self.SetToolBitmapSize(size);
+    frame.SetToolBar(self)
+
+  def Add(self, proc, text, bitmap):
+    id=self.frame.GetMenuId(proc)
+    self.DoAddTool(id, text, GetBitmap(bitmap, self.frame))
   
+
 class FileManager:
   maxLastFiles=10
   def __init__(self, frame, config=None):
