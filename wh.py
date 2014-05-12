@@ -44,10 +44,30 @@ class ToolBar(wx.ToolBar):
     self.SetToolBitmapSize(size);
     frame.SetToolBar(self)
 
-  def Add(self, proc, text, bitmap):
-    id=self.frame.GetMenuId(proc)
-    self.DoAddTool(id, text, GetBitmap(bitmap, self.frame))
-  
+  def Enable(self, procOrId, how=None):
+    if how != None:
+      if not isinstance(procOrId, int):
+        procOrId=self.frame.GetMenuId(procOrId)
+      self.EnableTool(procOrId, how)
+    else:
+      wx.ToolBar.Enable(self, procOrId)
+
+  def Add(self, procOrCls, text=None, bitmap=None):
+    """
+    Add(self, procOrCls, text=None, bitmap=None)
+    
+    Adds a tool to the toolbar.
+    If text==None, proc is assumed to be an class with an OnExecute method, name and toolbitmap statics 
+    """
+    if text:
+      id=self.frame.GetMenuId(procOrCls)
+      bmp=GetBitmap(bitmap, self.frame)
+    else:
+      id=self.frame.BindMenuId(procOrCls.OnExecute)
+      text=procOrCls.name
+      bmp=GetBitmap(procOrCls.toolbitmap, procOrCls)
+    self.DoAddTool(id, text, bmp)
+    return id
 
 class FileManager:
   maxLastFiles=10
@@ -197,6 +217,19 @@ def modPath(name, mod):
     return path
   return name
     
+
+def GetIcon(name, module=None):
+  """
+  wx.Icon GetIcon(iconName, module=None)
+  
+  Get an icon from a file, possibly prepending the module's path
+  """
+  if module:
+    name=modPath(name, module)
+  else:
+    name=os.path.join(loaddir, name)
+  return wx.Icon(name + ".ico")
+
 
 def GetBitmap(name, module=None):
   """

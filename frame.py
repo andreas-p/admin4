@@ -8,7 +8,7 @@
 import wx.aui
 import adm
 import logger
-from wh import xlt, StringType, GetBitmap, Menu, restoreSize
+from wh import xlt, StringType, GetBitmap, GetIcon, Menu, ToolBar, restoreSize
 from tree import NodeTreeCtrl, ServerTreeCtrl
 from notebook import Notebook
 from LoggingDialog import LoggingDialog
@@ -29,11 +29,11 @@ class Frame(wx.Frame, adm.MenuOwner):
       self.SetSize(size)
 
 
-  def SetIcon(self, icon):
+  def SetIcon(self, icon, mod=None):
     if isinstance(icon, int):
       icon=adm.images.GetBitmap(icon)
     elif isinstance(icon, StringType):
-      icon=GetBitmap(icon)
+      icon=GetIcon(icon, mod)
     if isinstance(icon, wx.Bitmap):
       icon=wx.IconFromBitmap(icon)
     if icon:      
@@ -110,16 +110,15 @@ class DetailFrame(Frame):
     self.manager.SetFlags(wx.aui.AUI_MGR_ALLOW_FLOATING|wx.aui.AUI_MGR_TRANSPARENT_HINT | \
          wx.aui.AUI_MGR_HINT_FADE| wx.aui.AUI_MGR_TRANSPARENT_DRAG)
 
-    self.toolbar=self.CreateToolBar(wx.TB_FLAT|wx.TB_NODIVIDER)
-    self.toolbar.SetToolBitmapSize(wx.Size(32, 32));
+    self.toolbar=ToolBar(self, 32);
 
-    self.toolbar.DoAddTool(self.BindMenuId(self.OnShowServers), xlt("Show registered servers"), GetBitmap("connect"))
-    self.toolbar.DoAddTool(self.BindMenuId(self.OnDetach), xlt("Detach view"), GetBitmap("detach"))
-    self.toolbar.DoAddTool(self.BindMenuId(self.OnRefresh), xlt("Refresh"), GetBitmap("refresh"))
+    self.toolbar.Add(self.OnShowServers, xlt("Show registered servers"), "connect")
+    self.toolbar.Add(self.OnDetach, xlt("Detach view"), "detach")
+    self.toolbar.Add(self.OnRefresh, xlt("Refresh"), "refresh")
     self.toolbar.AddSeparator()
-    self.toolbar.DoAddTool(self.BindMenuId(self.OnEdit), xlt("Edit"), GetBitmap("edit"))
-    self.toolbar.DoAddTool(self.BindMenuId(self.OnNew), xlt("New"), GetBitmap("new"))
-    self.toolbar.DoAddTool(self.BindMenuId(self.OnDelete), xlt("Delete"), GetBitmap("delete"))
+    self.toolbar.Add(self.OnEdit, xlt("Edit"), "edit")
+    self.toolbar.Add(self.OnNew, xlt("New"), "new")
+    self.toolbar.Add(self.OnDelete, xlt("Delete"), "delete")
     self.toolbar.AddSeparator()
     self.standardToolsCount=self.toolbar.GetToolsCount()
     self.toolbar.Realize()
@@ -343,21 +342,21 @@ class DetailFrame(Frame):
       if node:
           for mi in node.moduleinfo()['tools']:
             cls=mi['class']
-            self.toolbar.DoAddTool(self.BindMenuId(cls.OnExecute), cls.name, GetBitmap(cls.toolbitmap, cls))
+            self.toolbar.Add(cls)
       self.toolbar.Realize()
     self.lastNode=node
     
     if node:
-      self.toolbar.EnableTool(self.GetMenuId(self.OnEdit), hasattr(node, "Edit"))
-      self.toolbar.EnableTool(self.GetMenuId(self.OnDelete), hasattr(node, "Delete"))
-      self.toolbar.EnableTool(self.GetMenuId(self.OnNew), self.getNewClass(node) != None)
+      self.toolbar.Enable(self.OnEdit, hasattr(node, "Edit"))
+      self.toolbar.Enable(self.OnDelete, hasattr(node, "Delete"))
+      self.toolbar.Enable(self.OnNew, self.getNewClass(node) != None)
       for mi in node.moduleinfo()['tools']:
         en=self.menuAvailableOnNode(mi, node)
+        cls=mi['class']
         if en:
-          cls=mi['class']
           if hasattr(cls, 'CheckEnabled'):
             en=cls.CheckEnabled(node)
-        self.toolbar.EnableTool(self.GetMenuId(cls.OnExecute), en)
+        self.toolbar.Enable(cls.OnExecute, en)
 
     if not node:
       self.SetStatus("")
