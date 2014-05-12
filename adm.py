@@ -4,7 +4,7 @@
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
 
-import os
+import sys, os
 
 import wx
 import wh
@@ -48,6 +48,15 @@ def getModule(instance):
       return instance.__module__[:dot]
     else:
       return ""
+
+
+def IsPackaged():
+  if hasattr(sys, 'frozen'):
+    return True
+  import version
+  if hasattr(version, 'standardInstallDir'):
+    return version.standardInstallDir == loaddir 
+  return False
 
 
 def GetProxies():

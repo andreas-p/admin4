@@ -40,7 +40,7 @@ class AboutDlg(adm.Dialog):
     self.Admin="Admin4"
     self.Version=xlt("Version %s") % admVersion.version
 
-    if not hasattr(sys, "frozen"):
+    if not adm.IsPackaged():
         self.Revision = xlt("(%s)\nunknown changes") % admVersion.revDate 
         rev=xlt("unknown")
     elif admVersion.revLocalChange:
@@ -370,7 +370,7 @@ class UpdateDlg(adm.Dialog):
             elif name == "Lib":
               if admVersion.libVersion < version:
                 msg=[msg[0], "There is a newer %(app)s Core version %(new)s available.\nHowever, the current version %(old)s can't update online.\nPlease download and install a full package manually." % info]
-                if not hasattr(sys, 'frozen'):
+                if not adm.IsPackaged():
                   msg.append(xlt("In addition, the library requirements have changed;\ncheck the new documentation."))
                 self.ModuleInfo = "\n".join(msg)
                 return False

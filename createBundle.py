@@ -21,6 +21,7 @@ appName="Admin4"
 versionTag=None
 requiredAdmVersion="2.1.2"
 checkGit=True
+standardInstallDir="/usr/share/%s" % appName
 
 if __name__ == '__main__':
   import sys, os, platform
@@ -164,6 +165,7 @@ if __name__ == '__main__':
           f.write("revDirty=True\n")
         else:
           f.write("revDirty=False\n")
+        f.write("standardInstallDir='%s'" % standardInstallDir)
         f.close()
         
         return repo.is_dirty()
