@@ -192,12 +192,12 @@ class Node(object):
       return self.parentNode.GetServer()
     return None
 
-  def GetConnection(self, detached=False):
+  def GetConnection(self):
     if self.connection:
       self.CheckConnection(self.connection)
       return self.connection
     if self.parentNode:
-      return self.parentNode.GetConnection(detached)
+      return self.parentNode.GetConnection()
     return None
 
   def appendChild(self, child):
