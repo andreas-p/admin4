@@ -48,10 +48,10 @@ class View(DatabaseObject):
     return self.GetImageId(icons)
 
 
-  def GetSql(self, detached):
+  def GetSql(self):
     definition=self.info.get('definition')
     if not definition:
-      definition=self.GetConnection(detached).ExecuteSingle("SELECT pg_get_viewdef(%d, true)" % self.GetOid())
+      definition=self.GetCursor().ExecuteSingle("SELECT pg_get_viewdef(%d, true)" % self.GetOid())
       self.info['definition']=definition
     return "CREATE %(object)s %(tablespace)s AS\n%(def)s\n%(grant)s" % {
                'object': self.ObjectSql(),

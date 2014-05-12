@@ -111,9 +111,9 @@ class Table(DatabaseObject):
               'cols': self.GetServer().ExpandColDefs(cols)} 
  
  
-  def populateColumns(self, detached=False):
+  def populateColumns(self):
       if not self.columns:
-        self.columns = self.GetConnection(detached).ExecuteDictList("""
+        self.columns = self.GetCursor().ExecuteDictList("""
           SELECT attname, format_type(atttypid, atttypmod) as typename, attnotnull, def.*, 
               att.attstattarget, description, cs.relname AS sername, ns.nspname AS serschema,
               attacl
@@ -129,9 +129,9 @@ class Table(DatabaseObject):
            ORDER BY attnum""" % { 'attrelid': self.GetOid()})
  
  
-  def populateConstraints(self, detached=False):
+  def populateConstraints(self):
     if self.constraints == None:
-      self.constraints=self.GetConnection(detached).ExecuteDictList("""
+      self.constraints=self.GetCursor().ExecuteDictList("""
         SELECT 1, CASE WHEN indisprimary THEN 'primarykey' ELSE 'index' END as type, indexrelid as oid, CASE WHEN nspname='%(defaultNamespace)s' THEN '' else nspname||'.' END || relname AS fullname,
                array_agg(attname) as colnames, description,
                indisprimary, indisunique, null::bool as condeferrable, null::bool as condeferred,
@@ -166,7 +166,7 @@ class ColumnsPage(adm.NotebookPage):
   order=1
 
     
-  def Display(self, node, detached):
+  def Display(self, node, _detached):
     if node != self.lastNode:
       def _typename(row):
         n= [row['typename'], ['NULL', 'NOT NULL'][row['attnotnull']] ]
@@ -194,7 +194,7 @@ class ColumnsPage(adm.NotebookPage):
       add(xlt("Type"), -1,         proc=_typename)
       self.RestoreListcols()
 
-      node.populateColumns(detached)
+      node.populateColumns()
       icon=node.GetImageId('column')
       values=[]
       for col in node.columns:
@@ -207,7 +207,7 @@ class ConstraintPage(adm.NotebookPage):
   name=xlt("Constraints")
   order=2
   
-  def Display(self, node, detached):
+  def Display(self, node, _detached):
     if node != self.lastNode:
       self.lastNode=node
       
@@ -232,7 +232,7 @@ class ConstraintPage(adm.NotebookPage):
       add(xlt("Description"), -1,  colname='description')
       self.RestoreListcols()
 
-      node.populateConstraints(detached)
+      node.populateConstraints()
       
       values=[]
       for con in node.constraints:

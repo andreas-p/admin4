@@ -53,9 +53,9 @@ if not hasattr(sys, 'skipSetupInit'):
     def GetControl(self):
       return self.control
   
-    def Display(self, node, detached):
+    def Display(self, node, _detached):
       if hasattr(node, "GetSql"):
-        self.control.SetValue(node.GetSql(detached))
+        self.control.SetValue(node.GetSql())
       else:
         self.control.SetValue("not implemented")
         
@@ -123,9 +123,9 @@ if not hasattr(sys, 'skipSetupInit'):
     @staticmethod
     def OnExecute(_parentWin, page):
       pids=_getSelectedPids(page)
-      conn=page.lastNode.GetConnection()
+      cursor=page.lastNode.GetCursor()
       for pid in pids:
-        conn.ExecuteSingle("SELECT pg_cancel_backend(%d)" % int(pid))
+        cursor.ExecuteSingle("SELECT pg_cancel_backend(%d)" % int(pid))
       return False
 
 
@@ -145,9 +145,9 @@ if not hasattr(sys, 'skipSetupInit'):
     @staticmethod
     def OnExecute(_parentWin, page):
       pids=_getSelectedPids(page)
-      conn=page.lastNode.GetConnection()
+      cursor=page.lastNode.GetCursor()
       for pid in pids:
-        conn.ExecuteSingle("SELECT pg_terminate_backend(%d)" % int(pid))
+        cursor.ExecuteSingle("SELECT pg_terminate_backend(%d)" % int(pid))
       return False
 
   class HideBackend:
@@ -208,7 +208,7 @@ if not hasattr(sys, 'skipSetupInit'):
     def GetSelected(self):
       return self['Listview'].GetSelectionKeys()
       
-    def Display(self, node, detached):
+    def Display(self, node, _detached):
       if node != self.lastNode:
         add=self.control.AddColumnInfo
         add(xlt("PID"), "65535",                      colname='procpid')
@@ -222,13 +222,13 @@ if not hasattr(sys, 'skipSetupInit'):
         add(xlt("Query"), 50,                         colname='current_query')
         self.RestoreListcols()
 
-        self.pid=node.GetConnection(detached).GetPid()
+        self.pid=node.GetCursor().GetPid()
         self.ignorePids=[self.pid]
         self.lastNode=node
         self.control.DeleteAllItems()
         self.TriggerTimer()
 
-      rowset=node.GetConnection(detached).ExecuteSet("SELECT *, client_addr || ':' || client_port::text AS clientaddr, now()-query_start AS query_runtime FROM pg_stat_activity ORDER BY procpid")
+      rowset=node.GetCursor().ExecuteSet("SELECT *, client_addr || ':' || client_port::text AS clientaddr, now()-query_start AS query_runtime FROM pg_stat_activity ORDER BY procpid")
       dbIcon=node.GetImageId('Database')
       ownDbIcon=node.GetImageId('Database-conn')
       rows=[]

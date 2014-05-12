@@ -44,10 +44,10 @@ class Function(DatabaseObject):
     return self.GetImageId(icons)
 
 
-  def GetSql(self, detached):
+  def GetSql(self):
     definition=self.info.get('definition')
     if not definition:
-      definition=self.GetConnection(detached).ExecuteSingle("SELECT pg_get_functiondef(%d)" % self.GetOid())
+      definition=self.GetCursor().ExecuteSingle("SELECT pg_get_functiondef(%d)" % self.GetOid())
       self.info['definition']=definition
     return "%(def)s\n%(grant)s" % {
                'object': self.ObjectSql(),

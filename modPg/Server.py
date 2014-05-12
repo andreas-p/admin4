@@ -8,7 +8,7 @@
 import adm
 from wh import xlt, YesNo, modPath
 import re
-from _pgsql import pgConnection
+from _pgsql import pgConnectionPool, psycopg2
 
 adminProcs=['pg_terminate_backend', 'pg_rotate_logfile', 'pg_reload_conf']
 
@@ -23,7 +23,6 @@ class Server(adm.ServerNode):
     adm.ServerNode.__init__(self, settings)
     self.maintDb=settings['maintdb']
     self.version=None
-    self.detachedConn=None
     self.connectableDbs=None
 #    self.timeout=settings.get('querytimeout', standardTimeout)
 
@@ -44,35 +43,47 @@ class Server(adm.ServerNode):
         # if tokens[2].lstrip().startswith("RESERVED")
         # RESERVED, UNRESERVED, TYPE_FUNC_NAME, COL_NAME
 
-  def GetConnection(self, detached=False):
-    if detached:
-      if not self.detachedConn:
-        self.detachedConn=self.DoConnect()
-      else:
-        self.CheckConnection(self.detachedConn)
-      return self.detachedConn
+  def GetConnection(self):
+    if not self.connection:
+      return None
     self.CheckConnection(self.connection)
     return self.connection
- 
-  def CleanupDetached(self):
-    if self.detachedConn:
-      self.detachedConn.disconnect()
-      self.detachedConn=None
 
+  def GetCursor(self):
+    conn=self.GetConnection()
+    if conn:
+      return conn.GetCursor()
+    return None
+  
+  
   def IsConnected(self, _deep=False):
     return self.connection != None
 
-  def DoConnect(self, db=None, application=None):
+  def GetDsn(self, dbname, application):
+    params= [('host', self.address),
+            ('port', self.port),
+            ('dbname', dbname),
+            ('user', self.user),
+            ('password', self.password),
+            ('connect_timeout', 3),
+            ('application_name', application)
+            ]
+    return ' '.join(["%s=%s" % (key, psycopg2._param_escape(str(val))) for (key, val) in params])
+    
+
+  def DoConnect(self, db=None):
     if db:
       dbname=db
     else: # called from adm.py
       dbname=self.maintDb
-    conn=pgConnection(self, dbname, application)
+
+    application="%s browser" % adm.appTitle
+    conn=pgConnectionPool(self, self.GetDsn(dbname, application))
     
     if not db and not self.connection:
       self.connection = conn
       
-      self.info=conn.ExecuteDict("""
+      self.info=conn.GetCursor().ExecuteDict("""
         SELECT name, setting FROM pg_settings
          WHERE name in ('autovacuum', 'log_line_prefix', 'log_destination')
         UNION  
@@ -113,9 +124,11 @@ class Server(adm.ServerNode):
     
     return conn
   
+
+  
   def GetConnectableDbs(self):
     if not self.connectableDbs:
-      self.connectableDbs=self.connection.ExecuteList("SELECT datname FROM pg_database WHERE datallowconn ORDER BY oid")
+      self.connectableDbs=self.GetCursor().ExecuteList("SELECT datname FROM pg_database WHERE datallowconn ORDER BY oid")
     return self.connectableDbs
   
   def GetValue(self, name):
@@ -144,7 +157,7 @@ class Server(adm.ServerNode):
 
   def GetFavourites(self, db):
     if self.fav_table:
-      return self.GetConnection().ExecuteList(
+      return self.GetCursor().ExecuteList(
           "SELECT favoid FROM %(fav_table)s WHERE dboid=%(dboid)d" % 
           { 'fav_table': self.GetServer().fav_table,
             'dboid': db.GetOid() } )
@@ -152,7 +165,7 @@ class Server(adm.ServerNode):
       return []
     
   def AddFavourite(self, node, favgroup=None):
-    self.GetConnection().ExecuteSingle(
+    self.GetCursor().ExecuteSingle(
         "INSERT INTO %(favtable)s (dboid, favoid, favtype, favgroup) VALUES (%(dboid)d, %(favoid)d, '%(favtype)s', %(favgroup)s)" %
         { 'favtable': self.fav_table,
           'dboid': node.GetDatabase().GetOid(), 
@@ -168,7 +181,7 @@ class Server(adm.ServerNode):
       node.GetDatabase().favourites.remove(node.GetOid())
     except:
       pass
-    self.GetConnection().ExecuteSingle(
+    self.GetCursor().ExecuteSingle(
         "DELETE FROM %(favtable)s WHERE dboid=%(dboid)s AND favoid=%(favoid)s" %
         { 'favtable': self.fav_table,
           'dboid': node.GetDatabase().GetOid(), 
@@ -202,7 +215,7 @@ class Server(adm.ServerNode):
            ( 'blks_hit',      xlt("Blocks Written") ),
            ( 'pg_size_pretty(pg_database_size(datid))', xlt("Size"))
           ]
-    rowset=self.GetConnection().ExecuteSet("""
+    rowset=self.GetCursor().ExecuteSet("""
     SELECT %(cols)s
     FROM pg_stat_database db ORDER BY datname""" % {'cols': self.ExpandColDefs(cols)})
     return rowset
@@ -281,14 +294,14 @@ class ServerInstrument:
     adminspace=server.adminspace
     if not adminspace:
       adminspace=server.GetPreference("AdminNamespace")
-      server.GetConnection().ExecuteSingle("CREATE SCHEMA %s AUTHORIZATION postgres" % server.quoteIdent(adminspace))
+      server.GetCursor().ExecuteSingle("CREATE SCHEMA %s AUTHORIZATION postgres" % server.quoteIdent(adminspace))
       server.adminspace=adminspace
 
     adsQuoted=server.quoteIdent(adminspace)
 
     if not server.fav_table:
       fav_table=server.quoteIdent("Admin_Fav_%s" % server.user)
-      server.GetConnection().ExecuteSingle("""
+      server.GetCursor().ExecuteSingle("""
 CREATE TABLE %(adminspace)s.%(fav_table)s 
   (dboid OID, favoid OID, favtype CHAR, favgroup TEXT, PRIMARY KEY(dboid, favoid))""" % 
         {'adminspace': adsQuoted,
@@ -297,7 +310,7 @@ CREATE TABLE %(adminspace)s.%(fav_table)s
 
     if not server.snippet_table:
       snippet_table=server.quoteIdent("Admin_Snippet_%s" % server.user)
-      server.GetConnection().ExecuteSingle("""
+      server.GetCursor().ExecuteSingle("""
 CREATE TABLE %(adminspace)s.%(snippet_table)s 
   (id SERIAL PRIMARY KEY, parent INT4 NOT NULL DEFAULT 0, sort FLOAT NOT NULL DEFAULT 0.0, name TEXT, snippet TEXT);""" % 
         {'adminspace': adsQuoted,

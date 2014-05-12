@@ -3,4 +3,6 @@
 - Edit Table:
   - Table, Column
 
-pgConnection pooling
+instrumentation hint
+
+EditGrid

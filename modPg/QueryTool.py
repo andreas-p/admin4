@@ -9,6 +9,7 @@ import wx.aui
 import adm
 import xmlres
 from wh import xlt, GetBitmap, Menu, modPath, floatToTime, AcceleratorHelper, FileManager
+from _pgsql import pgConnection
 from _explain import ExplainCanvas
 from _snippet import SnippetTree
 from _sqlgrid import SqlResultGrid
@@ -203,7 +204,10 @@ class SqlFrame(adm.Frame):
       dbName=self.databases.GetString(i)
       self.conn = self.databases.GetClientData(i)
       if not self.conn:
-        self.conn = self.server.DoConnect(dbName, application=self.application)
+        try:
+          self.conn = pgConnection(self.server.GetDsn(dbName, self.application))
+        except Exception as e:
+          print str(e)
         self.databases.SetClientData(i, self.conn)
       self.SetTitle(dbName)
         
@@ -242,7 +246,7 @@ class SqlFrame(adm.Frame):
     self.EnableMenu(self.querymenu, self.OnExecuteQuery, False)
     self.EnableMenu(self.querymenu, self.OnExplainQuery, False)
     
-    self.worker=worker=self.conn.ExecuteAsync(sql)
+    self.worker=worker=self.conn.GetCursor().ExecuteAsync(sql)
     rowcount=0
     rowset=None
     worker.start()

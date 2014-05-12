@@ -16,7 +16,7 @@ class Database(ServerObject):
   def GetInstances(parentNode):
     instances=[]
     params={'sysrestr': " WHERE d.oid > %s" % parentNode.GetServer().GetLastSysOid() }
-    set=parentNode.GetConnection().ExecuteSet("""
+    set=parentNode.GetCursor().ExecuteSet("""
       SELECT d.*, pg_encoding_to_char(encoding) AS pgencoding, pg_get_userbyid(datdba) AS dbowner, spcname, d.oid, description
         FROM pg_database d
         JOIN pg_tablespace t ON t.oid=dattablespace
@@ -62,16 +62,13 @@ class Database(ServerObject):
       return self.GetServer().IsConnected()
     return self.connection != None
   
-  def DoConnect(self, application=None):
-    return self.GetServer().DoConnect(self.name, application)
+  def DoConnect(self):
+    return self.GetServer().DoConnect(self.name)
   
   
-  def GetConnection(self, detached=False):
-    if detached:
-      return super(Database, self).GetConnection(detached)
-    
+  def GetConnection(self):
     if self.IsMaintenanceConnection():
-      return self.GetServer().GetConnection()
+      return self.GetServer()
     if not self.connection:
       self.connection = self.DoConnect()
       self.IconUpdate(True)
@@ -80,6 +77,11 @@ class Database(ServerObject):
       self.CheckConnection(self.connection)
     return self.connection
 
+  def GetCursor(self):
+    conn=self.GetConnection()
+    if conn:
+      return conn.GetCursor()
+    return None
 
   def Disconnect(self):
     self.connection.disconnect()
@@ -91,12 +93,12 @@ class Database(ServerObject):
      
   def GetProperties(self):
     if not len(self.properties):
-      dict=self.GetConnection().ExecuteDict("""
+      dict=self.GetCursor().ExecuteDict("""
           SELECT 'languages', array_agg(lanname) as lannames 
             FROM (SELECT lanname FROM pg_language ORDER BY lanispl desc, lanname) AS langlist""")
       self.info.update(dict)
       if self.GetServer().version >= 9.1:
-        dict=self.GetConnection().ExecuteDict("""
+        dict=self.GetCursor().ExecuteDict("""
           SELECT 'extensions', array_agg(name) as extnames
             FROM (SELECT extname || ' V' || extversion AS name FROM pg_extension ORDER BY extname) AS extlist
           UNION
@@ -116,7 +118,7 @@ class Database(ServerObject):
         (xlt("Connected"),      YesNo(self.IsConnected())),
       ]
 
-      self.AddProperty(xlt("Backend PID"), self.GetConnection().conn.get_backend_pid())
+      self.AddProperty(xlt("Backend PID"), self.GetCursor().GetPid())
       if self.info['datistemplate']:
         self.AddYesNoProperty(xlt("Template"), True)
       if 'datctype' in self.info:

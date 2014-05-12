@@ -10,7 +10,6 @@ from node import Node, Collection, NodeId
 class ServerObject(Node):
   def __init__(self, parentNode, name):
     super(ServerObject, self).__init__(parentNode, name)
-    self.detachedConn = None
 
   def GetComment(self):
     return self.info.get('description', "")
@@ -18,42 +17,27 @@ class ServerObject(Node):
   def GetOid(self):
     return self.info['oid']
 
-  def GetConnection(self, detached=False):
-    if detached:
-      if not self.detachedConn:
-        server=self.GetServer()
-        self.detachedConn=server.DoConnect(server.maintDb)
-      else:
-        self.CheckConnection(self.detachedConn)
-      return self.detachedConn
-
+  def GetCursor(self):
     if self.connection:
       self.CheckConnection(self.connection)
-      return self.connection
+      return self.connection.GetCursor()
     if self.parentNode:
-      return self.parentNode.GetConnection()
+      return self.parentNode.GetCursor()
     return None
-
-  
-  def CleanupDetached(self):
-    if self.detachedConn:
-      self.detachedConn.disconnect()
-      self.detachedConn=None
-  
       
   def ExecuteSet(self, cmd, args=None):
-    conn=self.GetConnection()
-    rs=conn.ExecuteSet(cmd, args)
+    cursor=self.GetCursor()
+    rs=cursor.ExecuteSet(cmd, args)
     return rs
     
   def ExecuteRow(self, cmd, args=None):
-    conn=self.GetConnection()
-    row=conn.ExecuteRow(cmd, args)
+    cursor=self.GetCursor()
+    row=cursor.ExecuteRow(cmd, args)
     return row
   
   def ExecuteSingle(self, cmd, args=None):
-    conn=self.GetConnection()
-    val=conn.ExecuteSingle(cmd, args)
+    cursor=self.GetCursor()
+    val=cursor.ExecuteSingle(cmd, args)
     return val
   
   def GrantSql(self):
@@ -103,7 +87,7 @@ class DatabaseObject(ServerObject):
   def GetInstancesFromClass(cls, parentNode):
     instances=[]
     sql=cls.InstancesQuery(parentNode)
-    set=parentNode.GetConnection().ExecuteSet(sql.Select())
+    set=parentNode.GetConnection().GetCursor().ExecuteSet(sql.Select())
 
     if set:
       for row in set:
@@ -116,7 +100,7 @@ class DatabaseObject(ServerObject):
   def Refresh(self):
     sql=self.InstancesQuery(self.parentNode)
     sql.AddWhere("%s=%d" % (self.refreshOid, self.GetOid()))
-    set=self.parentNode.GetConnection().ExecuteSet(sql.Select())
+    set=self.parentNode.GetCursor().ExecuteSet(sql.Select())
     self.info = set.Next().getDict()
     self.DoRefresh()
     

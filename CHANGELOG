@@ -11,6 +11,7 @@ modBind 0.98.3:
 - check status connection
 
 modPg 0.4.0:
+- pgConnectionPool/pgCursor
 - improved QueryTool:
   - SQL Snippets
   - menu fix

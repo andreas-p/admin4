@@ -35,7 +35,7 @@ class SnippetTree(DragTreeCtrl):
     self.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnTreeActivate)
     
     rootSnippets=[]
-    set=self.server.GetConnection().ExecuteSet("SELECT * FROM %s ORDER BY parent, sort" % server.snippet_table)
+    set=self.server.GetCursor().ExecuteSet("SELECT * FROM %s ORDER BY parent, sort" % server.snippet_table)
     for row in set:
       snippet=Snippet(row['id'], row['parent'], row['name'], row['snippet'], row['sort'])
       self.snippets[snippet.id]=snippet
@@ -57,7 +57,7 @@ class SnippetTree(DragTreeCtrl):
   
     
   def updateSnippet(self, snippet):
-    self.server.GetConnection().ExecuteSingle("""
+    self.server.GetCursor().ExecuteSingle("""
 UPDATE %(table)s
    SET name=%(name)s, sort=%(sort)f, parent=%(parent)d, snippet=%(text)s
  WHERE id=%(id)d""" % self.getSnippetDict(snippet))
@@ -69,7 +69,7 @@ INSERT INTO %(table)s(name, parent, sort, snippet)
  VALUES ( %(name)s, %(parent)d, %(sort)f, %(text)s )
  RETURNING id""" % self.getSnippetDict(snippet)
 
-    id=self.server.GetConnection().ExecuteSingle(sql)
+    id=self.server.GetCursor().ExecuteSingle(sql)
     snippet.id=id
     return id
   
@@ -157,7 +157,7 @@ INSERT INTO %(table)s(name, parent, sort, snippet)
   def OnDelSnippet(self, evt):
     snippet=self.GetNode()
     if snippet:
-      self.server.GetConnection().ExecuteSingle("DELETE FROM %(table)s WHERE id=%(id)d" % self.getSnippetDict(snippet))
+      self.server.GetCursor().ExecuteSingle("DELETE FROM %(table)s WHERE id=%(id)d" % self.getSnippetDict(snippet))
       self.Delete(snippet.treeitem)
       del self.snippets[snippet.id]
       self.GetParent().SetStatus(xlt("Snippet deleted."))

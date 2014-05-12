@@ -15,7 +15,7 @@ class Role(adm.Node):
   @staticmethod
   def GetInstances(parentNode):
     instances=[]
-    set=parentNode.GetConnection().ExecuteSet("""
+    set=parentNode.GetCursor().ExecuteSet("""
       SELECT rolname as name, *,
         (SELECT array_agg(rolname) FROM pg_roles r JOIN pg_auth_members m on r.oid=m.member WHERE m.roleid=u.oid) AS members,
         (SELECT array_agg(rolname) FROM pg_roles r JOIN pg_auth_members m on r.oid=m.roleid WHERE m.member=u.oid) AS memberof
