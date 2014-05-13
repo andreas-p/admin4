@@ -142,6 +142,20 @@ def loadModule(modid, path, modlist=None):
           nodeinfo=[nodeinfo]
         for ni in nodeinfo:
           nodename=ni['class'].__name__
+          pages=ni.get('pages')
+          if pages:
+            if isinstance(pages, StringType):
+              ni['pages']=pages.split(' ')
+            elif isinstance(pages, list):
+              l=[]
+              for p in pages:
+                if isinstance(p, StringType):
+                  l.append(p)
+                else:
+                  l.append(p.__name__)
+              ni['pages']=l
+            else:
+              ni['pages'] = [pages.__name__]
           nodelist[nodename]=ni
           ni['children']=[]
           logger.debug("Loading node %s.%s", modid, nodename)
@@ -208,7 +222,19 @@ def loadModule(modid, path, modlist=None):
       pages=mod.moduleinfo.get('pages')
       if pages:
         mod.moduleinfo['pages'] = sorted(pages, key=lambda pageClass: pageClass.order)
-    
+        for page in mod.moduleinfo['pages']:
+          if hasattr(page, 'availableOn'):
+            classes=page.availableOn
+            if isinstance(classes, StringType):
+              classes=classes.split(' ')
+            for cls in classes:
+              ni=mod.moduleinfo['nodes'].get(cls)
+              nodePages=ni.get('pages')
+              if nodePages:
+                if not cls in nodePages:
+                  nodePages.append(page.__name__)
+              else:
+                ni['pages'] = [page.__name__]
       mod.moduleinfo['revision']=modRevision
       mod.moduleinfo['date']=modDate
       logger.debug("Module %s revision %s, date %s", modid, modRevision, modDate)

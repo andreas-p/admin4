@@ -2,6 +2,7 @@ Changes in 2.1.4
 Core:
 - Online update
 - fix in Frame.OnCall
+- support NotebookPage.availableOn
 
 modLdap 0.95.3:
 - fix connect to non-instrumented Active Directory

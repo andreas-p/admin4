@@ -127,13 +127,13 @@ class Node(object):
       return False
     if not isinstance(pageClass, StringType):
       pageClass=pageClass.__name__
-    if isinstance(classes, StringType):
-      classes=classes.split(' ')
-    elif not isinstance(classes, list):
-      classes = [classes]
+#    if isinstance(classes, StringType):
+#      classes=classes.split(' ')
+#    elif not isinstance(classes, list):
+#      classes = [classes]
     for cls in classes:
-      if not isinstance(cls, StringType):
-        cls=cls.__name__
+#      if not isinstance(cls, StringType):
+#        cls=cls.__name__
       if cls == pageClass:
         return True
     return False
