@@ -326,16 +326,29 @@ class DetailFrame(Frame):
       node.RemoveFromTree()
       self.SetStatus(xlt("%s \"%s\" disconnected.") % (node.typename, node.name))
       
-      
-  def OnTreeSelChange(self, ev):
-    if ev.GetItem() != self.tree.GetSelection():
-      self.tree.SelectItem(ev.GetItem())
-      self.tree.EnsureVisible(ev.GetItem())
+  def GetNodePath(self, item):
+    node=self.tree.GetNode(item)
+    if not node:
+      return None
+    parentItem=self.tree.GetItemParent(item)
+    if parentItem:
+      pp=self.GetNodePath(parentItem)
+      if pp:
+        return "%s/%s" % (pp, node.id.path())
+      return node.id.path()
+    
+          
+  def OnTreeSelChange(self, evt):
+    item=evt.GetItem()
+    if item != self.tree.GetSelection():
+      self.tree.SelectItem(item)
+      self.tree.EnsureVisible(item)
       return
-    node=self.tree.GetNode(ev.GetItem())
+    node=self.tree.GetNode(item)
     self.details.Set(node)
     self.manager.Update()
 
+      
     if not self.lastNode or not node or self.lastNode.moduleClass() != node.moduleClass():
       for _i in range(self.standardToolsCount, self.toolbar.GetToolsCount()):
         self.toolbar.DeleteToolByPos(self.standardToolsCount)
@@ -357,6 +370,12 @@ class DetailFrame(Frame):
           if hasattr(cls, 'CheckEnabled'):
             en=cls.CheckEnabled(node)
         self.toolbar.Enable(cls.OnExecute, en)
+
+      nodePath=self.GetNodePath(item)
+      if nodePath:
+        server=node.GetServer()
+        server.settings['nodePath'] = nodePath
+        adm.config.storeServerSettings(server, server.settings)
 
     if not node:
       self.SetStatus("")

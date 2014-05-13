@@ -45,6 +45,9 @@ class NodeId:
     else:
       self.name=name.name
 
+  def path(self):
+    return  "%s:%s" % (self.type.name, self.name)
+
   def __str__(self):
     return  "<%s.%s>" % (self.type.name, self.name)
 
@@ -109,7 +112,7 @@ class Node(object):
         frame.SetStatus(xlt("disconnected: %s") % err)
       raise adm.NoConnectionException(self, None)
 
-  
+
   def GetIcon(self):
     return self.GetImageId(self.__class__.__name__)
 

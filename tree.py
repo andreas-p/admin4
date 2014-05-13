@@ -458,9 +458,28 @@ class ServerTreeCtrl(DragTreeCtrl):
       tree=adm.trees[treename]
       item=tree.Append(None, server)
 
+    if server.settings.get('rememberLastNode', True):
+      nodePath=server.settings.get('nodePath')
+      if nodePath:
+        for nodeId in nodePath.split('/'):
+          type,name=nodeId.split(':')
+          id=adm.NodeId(type, name)
+          if id == server.id:
+            continue
+          tree.Expand(item)
+          found=False
+          for item in tree.GetChildItems(item):
+            node=tree.GetNode(item)
+            if node.id == id:
+              found=True
+              break
+          if not found:
+            break
+
     tree.SelectItem(item)
     tree.EnsureVisible(item)
     tree.SetFocus()
+
     return True
 
 
