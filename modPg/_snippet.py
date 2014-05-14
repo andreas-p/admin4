@@ -18,6 +18,7 @@ class Snippet:
     self.parent=parent
     self.text=text
     self.treeitem=None
+    self.prevText=None
     
   def IsGroup(self):
     return not self.text
@@ -35,17 +36,22 @@ class SnippetTree(DragTreeCtrl):
     self.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnTreeActivate)
     
     rootSnippets=[]
-    set=self.server.GetCursor().ExecuteSet("SELECT * FROM %s ORDER BY parent, sort" % server.snippet_table)
-    for row in set:
-      snippet=Snippet(row['id'], row['parent'], row['name'], row['snippet'], row['sort'])
-      self.snippets[snippet.id]=snippet
-      if not snippet.parent:
-        rootSnippets.append(snippet)
-        
-    for snippet in rootSnippets:
-      if not snippet.parent:
-        self.AppendSnippet(snippet, None, self.GetRootItem())      
-        self.checkChildren(snippet)
+    if server.snippet_table:
+      set=self.server.GetCursor().ExecuteSet("SELECT * FROM %s ORDER BY parent, sort" % server.snippet_table)
+      for row in set:
+        snippet=Snippet(row['id'], row['parent'], row['name'], row['snippet'], row['sort'])
+        self.snippets[snippet.id]=snippet
+        if not snippet.parent:
+          rootSnippets.append(snippet)
+          
+      for snippet in rootSnippets:
+        if not snippet.parent:
+          self.AppendSnippet(snippet, None, self.GetRootItem())      
+          self.checkChildren(snippet)
+    else:
+      item=self.AppendItem(self.GetRootItem(), xlt("Snippets not available:"))
+      item=self.AppendItem(item, xlt("Server not instrumented."))
+      self.ExpandAll()
 
   def getSnippetDict(self, snippet):
     dict= { 'table': self.server.snippet_table,
@@ -122,7 +128,7 @@ INSERT INTO %(table)s(name, parent, sort, snippet)
       
 
   def CanReplace(self):
-    if not self.server.GetValue('snippet_table'):
+    if not self.server.snippet_table:
       return False
     a,e=self.editor.GetSelection()
     if a==e and self.editor.GetLineCount() < 2 and not self.GetParent().getSql():
@@ -134,9 +140,10 @@ INSERT INTO %(table)s(name, parent, sort, snippet)
   def ReplaceSnippet(self, text):
     snippet=self.GetNode()
     if snippet:
+      snippet.prevText=snippet.text
       snippet.text=text
       self.updateSnippet(snippet)
-      self.GetParent().SetStatus(xlt("Snipped updated."))
+      self.GetParent().SetStatus(xlt("Snippet updated."))
     return False
 
   def OnReplaceSnippet(self, evt):
@@ -153,6 +160,15 @@ INSERT INTO %(table)s(name, parent, sort, snippet)
         self.updateSnippet(snippet)
         self.SetItemText(snippet.treeitem, self.getSnippetName(snippet))
         self.GetParent().SetStatus(xlt("Snippet renamed."))
+
+  def OnRevertSnippet(self, evt):
+    snippet=self.GetNode()
+    if snippet and snippet.prevText:
+      snippet.text=snippet.prevText
+      snippet.prevText=None
+      self.updateSnippet(snippet)
+      self.GetParent().SetStatus(xlt("Snippet reverted."))
+    return False
 
   def OnDelSnippet(self, evt):
     snippet=self.GetNode()
@@ -189,8 +205,11 @@ INSERT INTO %(table)s(name, parent, sort, snippet)
             cm.Enable(id, False)
             break;
       else:
-        cm.Append(self.GetParent().BindMenuId(self.OnReplaceSnippet), xlt("Replace"), xlt(("Replace snippet")))
+        cm.Append(self.GetParent().BindMenuId(self.OnReplaceSnippet), xlt("Replace"), xlt(("Replace snippet text")))
         cm.Append(self.GetParent().BindMenuId(self.OnRenameSnippet), xlt("Rename"), xlt(("Rename snippet")))
+        rv=self.GetParent().BindMenuId(self.OnRevertSnippet)
+        cm.Append(rv, xlt("Revert"), xlt(("Revert snippet to previous text")))
+        cm.Enable(rv, snippet.prevText != None)
         cm.Append(self.GetParent().BindMenuId(self.OnDelSnippet), xlt("Delete"), xlt(("Delete snippet")))
       cm.AppendSeparator()
     cm.Append(self.GetParent().BindMenuId(self.OnAddGroup), xlt("Add group"), xlt(("Add group")))
