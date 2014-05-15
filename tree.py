@@ -22,6 +22,12 @@ class TreeCtrl(wx.TreeCtrl):
     wx.TreeCtrl.__init__(self, parentWin, size=size, style=style)
     self.SetImageList(adm.images)
     self.AddRoot(name)
+    if wx.Platform != "__WXMSW__":
+      pt=parentWin.GetFont().GetPointSize() * 0.95  # a little smaller
+      font=wx.Font(pt, wx.FONTFAMILY_DEFAULT, wx.NORMAL, wx.NORMAL)
+
+      self.SetFont(font)
+    
 
   def GetNode(self, item=None):
     if not item:

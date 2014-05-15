@@ -8,7 +8,7 @@
 import wx.aui
 import adm
 import logger
-from wh import xlt, StringType, GetBitmap, GetIcon, Menu, ToolBar, restoreSize
+from wh import xlt, StringType, GetIcon, Menu, ToolBar, restoreSize
 from tree import NodeTreeCtrl, ServerTreeCtrl
 from notebook import Notebook
 from LoggingDialog import LoggingDialog
