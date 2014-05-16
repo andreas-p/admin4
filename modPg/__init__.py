@@ -46,7 +46,9 @@ if not hasattr(sys, 'skipSetupInit'):
     order=800
     
     def __init__(self, notebook):
-      self.control=wx.TextCtrl(notebook, style=wx.TE_MULTILINE|wx.TE_READONLY|wx.TE_DONTWRAP)
+      from _sqledit import SqlEditor
+      self.control=SqlEditor(notebook)
+      self.control.SetMarginWidth(1, 2)
       self.notebook=notebook
       self.lastNode=None
     
@@ -55,9 +57,13 @@ if not hasattr(sys, 'skipSetupInit'):
   
     def Display(self, node, _detached):
       if hasattr(node, "GetSql"):
-        self.control.SetValue(node.GetSql())
+        sql=node.GetSql().strip().replace("\n\r", "\n").replace("\r\n", "\n")
       else:
-        self.control.SetValue("not implemented")
+        sql=xlt("No SQL query available.")
+      self.control.SetReadOnly(False)
+      self.control.SetValue(sql)
+      self.control.SetReadOnly(True)
+      self.control.SetSelection(0,0)
         
   
   

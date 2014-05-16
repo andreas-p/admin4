@@ -5,7 +5,8 @@
 # see LICENSE.TXT for conditions of usage
 
 
-from _objects import DatabaseObject, Query
+from _objects import DatabaseObject
+from _pgsql import pgQuery
 from wh import xlt
 
 
@@ -16,8 +17,8 @@ class Schema(DatabaseObject):
   
   @staticmethod
   def InstancesQuery(parentNode):
-    sql=Query("pg_namespace nsp")
-    sql.AddCol("nsp.oid, *, nspname as name, pg_get_userbyid(nspowner) AS owner, description")
+    sql=pgQuery("pg_namespace nsp")
+    sql.AddCol("nsp.oid, nspacl, nspname as name, pg_get_userbyid(nspowner) AS owner, description")
     sql.AddLeft("pg_description des ON des.objoid=nsp.oid")
     sql.AddWhere("(nsp.oid=2200 OR nsp.oid > %d)" % parentNode.GetServer().GetLastSysOid())
     sql.AddOrder("nspname")

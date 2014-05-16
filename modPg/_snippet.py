@@ -9,6 +9,7 @@ import wx
 from tree import DragTreeCtrl, TreeItemData
 from wh import xlt, Menu
 from adm import images
+from _pgsql import pgQuery
  
 class Snippet:
   def __init__(self, id, parent, name, text, sort):
@@ -53,32 +54,38 @@ class SnippetTree(DragTreeCtrl):
       item=self.AppendItem(item, xlt("Server not instrumented."))
       self.ExpandAll()
 
-  def getSnippetDict(self, snippet):
-    dict= { 'table': self.server.snippet_table,
-             'id': snippet.id, 'parent': snippet.parent, 'sort': snippet.sort,
-             'name': self.server.quoteString(snippet.name),
-             'text': self.server.quoteString(snippet.text)
-           }
-    return dict
-  
     
   def updateSnippet(self, snippet):
-    self.server.GetCursor().ExecuteSingle("""
-UPDATE %(table)s
-   SET name=%(name)s, sort=%(sort)f, parent=%(parent)d, snippet=%(text)s
- WHERE id=%(id)d""" % self.getSnippetDict(snippet))
+    query=pgQuery(self.server.snippet_table, self.server.GetCursor())
+    query.AddColVal('parent', snippet.parent)
+    query.AddColVal('sort', snippet.sort)
+    query.AddColVal('name', snippet.name)
+    query.AddColVal('snippet', snippet.text)
+    query.AddWhere('id', snippet.id)
+    query.Update()
+
 
   def insertSnippet(self, snippet):
-                                                 
-    sql="""
-INSERT INTO %(table)s(name, parent, sort, snippet)
- VALUES ( %(name)s, %(parent)d, %(sort)f, %(text)s )
- RETURNING id""" % self.getSnippetDict(snippet)
-
-    id=self.server.GetCursor().ExecuteSingle(sql)
+    query=pgQuery(self.server.snippet_table, self.server.GetCursor())
+    query.AddColVal('parent', snippet.parent)
+    query.AddColVal('sort', snippet.sort)
+    query.AddColVal('name', snippet.name)
+    query.AddColVal('snippet', snippet.text)
+    id=query.Insert("id")
     snippet.id=id
     return id
   
+  def OnDelSnippet(self, evt):
+    snippet=self.GetNode()
+    if snippet:
+      query=pgQuery(self.server.snippet_table, self.server.GetCursor())
+      query.AddWhere('id', snippet.id)
+      query.Delete()
+      self.Delete(snippet.treeitem)
+      del self.snippets[snippet.id]
+      self.GetParent().SetStatus(xlt("Snippet deleted."))
+
+
   def getSnippetName(self, snippet):
     if snippet.name:
       return snippet.name
@@ -170,14 +177,7 @@ INSERT INTO %(table)s(name, parent, sort, snippet)
       self.GetParent().SetStatus(xlt("Snippet reverted."))
     return False
 
-  def OnDelSnippet(self, evt):
-    snippet=self.GetNode()
-    if snippet:
-      self.server.GetCursor().ExecuteSingle("DELETE FROM %(table)s WHERE id=%(id)d" % self.getSnippetDict(snippet))
-      self.Delete(snippet.treeitem)
-      del self.snippets[snippet.id]
-      self.GetParent().SetStatus(xlt("Snippet deleted."))
-      
+     
   def OnAddGroup(self, evt):
     dlg=wx.TextEntryDialog(self, xlt("Group name"), xlt("Add group"))
     if dlg.ShowModal() == wx.ID_OK:

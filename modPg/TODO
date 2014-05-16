@@ -3,6 +3,7 @@
 - Edit Table:
   - Table, Column
 
-instrumentation hint
-
 EditGrid
+- @insert: returned key col values
+
+Roles as Server page

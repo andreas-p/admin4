@@ -5,12 +5,13 @@
 # see LICENSE.TXT for conditions of usage
 
 
-from _objects import DatabaseObject, Query
+from _objects import SchemaObject
+from _pgsql import pgQuery
 from wh import xlt, YesNo
 import logger
 
 
-class Function(DatabaseObject):
+class Function(SchemaObject):
   typename=xlt("Function")
   shortname=xlt("Function")
   refreshOid="pro.oid"
@@ -19,7 +20,7 @@ class Function(DatabaseObject):
 
   @staticmethod
   def InstancesQuery(parentNode):
-    sql=Query("pg_proc pro")
+    sql=pgQuery("pg_proc pro")
     sql.AddCol("pro.oid, pg_get_userbyid(proowner) AS owner, proacl as acl, proname as name, pro.*, nspname, lanname, description")
     if parentNode.GetServer().version >= 8.4:
       sql.AddCol("pg_get_function_arguments(pro.oid) as arguments, pg_get_function_result(pro.oid) as result")

@@ -6,16 +6,14 @@
 
 
 import adm
-from wh import xlt, YesNo, modPath
-import re
-from _pgsql import pgConnectionPool, psycopg2
+from wh import xlt, YesNo
+from _pgsql import pgConnectionPool, pgQuery, pgTypeCache, psycopg2, quoteIdent, quoteValue
 
 adminProcs=['pg_terminate_backend', 'pg_rotate_logfile', 'pg_reload_conf']
 
 class Server(adm.ServerNode):
   shortname=xlt("pgsql Server")
   typename=xlt("PostgreSQL Server")
-  keywords=[]
   
 #  wantIconUpdate=True
 
@@ -24,25 +22,10 @@ class Server(adm.ServerNode):
     self.maintDb=settings['maintdb']
     self.version=None
     self.connectableDbs=None
+    self.typeCache=None
 #    self.timeout=settings.get('querytimeout', standardTimeout)
 
-    if not self.keywords:
-      self.fillKeywords()
       
-  def fillKeywords(self):
-    f=open(modPath("kwlist.h", self))
-    lines=f.read()
-    f.close()
-    
-    self.keywords=[]
-    for line in lines.splitlines():
-      if line.startswith("PG_KEYWORD("):
-        tokens=line.split(',')
-        keyword=tokens[0][12:-1].lower()
-        self.keywords.append(keyword)
-        # if tokens[2].lstrip().startswith("RESERVED")
-        # RESERVED, UNRESERVED, TYPE_FUNC_NAME, COL_NAME
-
   def GetConnection(self):
     if not self.connection:
       return None
@@ -71,6 +54,22 @@ class Server(adm.ServerNode):
     return ' '.join(["%s=%s" % (key, psycopg2._param_escape(str(val))) for (key, val) in params])
     
 
+  def GetType(self, oid):
+    if self.version < 8.4:    category="' '::char as typcategory"
+    else:                     category="typcategory"
+    sql="""
+        SELECT t.oid, typname, nspname, %s
+          FROM pg_type t JOIN pg_namespace n ON n.oid=typnamespace
+         WHERE typisdefined AND t.oid""" % category
+    if not self.typeCache:
+      rowset=self.GetCursor().ExecuteSet(sql + "<1000")
+      self.typeCache=pgTypeCache(rowset)
+    typ=self.typeCache.Get(oid)
+    if not typ:
+      rowset=self.GetCursor().ExecuteSet(sql + "=%d" % oid)
+      typ=self.typeCache.Add(rowset)
+    return typ
+  
   def DoConnect(self, db=None):
     if db:
       dbname=db
@@ -102,26 +101,25 @@ class Server(adm.ServerNode):
         UNION
         SELECT 'snippet_table', relname FROM pg_class JOIN pg_namespace nsp ON nsp.oid=relnamespace 
          WHERE nspname=%(adminspace)s AND relname=%(snippet_table)s""" %
-        {'datname': self.quoteString(dbname), 
-         'adminspace': self.quoteString(self.GetPreference("AdminNamespace")),
-         'fav_table': self.quoteString("Admin_Fav_%s" % self.user),
+        {'datname': quoteValue(dbname), 
+         'adminspace': quoteValue(self.GetPreference("AdminNamespace")),
+         'fav_table': quoteValue("Admin_Fav_%s" % self.user),
          'adminprocs': ", ".join(map(lambda p: "'%s'" % p, adminProcs)),
-         'snippet_table': self.quoteString("Admin_Snippet_%s" % self.user)})
+         'snippet_table': quoteValue("Admin_Snippet_%s" % self.user)})
 
       v=self.info['version'].split(' ')[1]
       self.version=float(v[0:v.rfind('.')])
       self.adminspace=self.info.get('adminspace')
       fav_table=self.info.get('fav_table')
       if fav_table:
-        self.fav_table="%s.%s" % (self.quoteIdent(self.adminspace), self.quoteIdent(fav_table))
+        self.fav_table="%s.%s" % (quoteIdent(self.adminspace), quoteIdent(fav_table))
       else:
         self.fav_table=None
       snippet_table=self.info.get('snippet_table')
       if snippet_table:
-        self.snippet_table="%s.%s" % (self.quoteIdent(self.adminspace), self.quoteIdent(snippet_table))
+        self.snippet_table="%s.%s" % (quoteIdent(self.adminspace), quoteIdent(snippet_table))
       else:
         self.snippet_table=None
-    
     return conn
   
 
@@ -142,9 +140,6 @@ class Server(adm.ServerNode):
       return self.connection.lastError
     return None
   
-  def IsMinimumVersion(self, ver):
-    return ver >= self.version
-  
   def NeedsInstrumentation(self):
     for name in adminProcs:
       if not self.GetValue(name):
@@ -153,7 +148,7 @@ class Server(adm.ServerNode):
 
 
   def ExpandColDefs(self, cols):
-    return ", ".join( [ "%s as %s" % (c[0], self.quoteIdent(c[1])) for c in cols])
+    return ", ".join( [ "%s as %s" % (c[0], quoteIdent(c[1])) for c in cols])
 
   def GetFavourites(self, db):
     if self.fav_table:
@@ -165,13 +160,22 @@ class Server(adm.ServerNode):
       return []
     
   def AddFavourite(self, node, favgroup=None):
+    query=pgQuery(self.fav_table, self.GetCursor())
+    query.AddColVal('dboid',node.GetDatabase().GetOid())
+    query.AddColVal('favoid', node.GetOid())
+    query.AddColVal('favtype', node.favtype)
+    query.AddColVal('favgroup', favgroup)
+    query.Insert()
+    node.GetDatabase().favourites.append(node.GetOid())
+    return True
+    
     self.GetCursor().ExecuteSingle(
         "INSERT INTO %(favtable)s (dboid, favoid, favtype, favgroup) VALUES (%(dboid)d, %(favoid)d, '%(favtype)s', %(favgroup)s)" %
         { 'favtable': self.fav_table,
           'dboid': node.GetDatabase().GetOid(), 
           'favoid': node.GetOid(), 
           'favtype': node.favtype,
-          'favgroup': self.quoteString(favgroup) } )
+          'favgroup': quoteValue(favgroup) } )
   
     node.GetDatabase().favourites.append(node.GetOid())
     return True
@@ -181,6 +185,11 @@ class Server(adm.ServerNode):
       node.GetDatabase().favourites.remove(node.GetOid())
     except:
       pass
+    query=pgQuery(self.fav_table, self.GetCursor())
+    query.AddWhere('dboid',node.GetDatabase().GetOid())
+    query.AddWhere('favoid', node.GetOid())
+    query.Delete()
+    return True
     self.GetCursor().ExecuteSingle(
         "DELETE FROM %(favtable)s WHERE dboid=%(dboid)s AND favoid=%(favoid)s" %
         { 'favtable': self.fav_table,
@@ -189,8 +198,16 @@ class Server(adm.ServerNode):
     return True
   
     
+  def GetHint(self):
+    if self.NeedsInstrumentation():
+      return ( 'instrument', xlt("Server %s not instrumented") % self.name, [self.name, str(self.version)] )
+            
   def GetProperties(self):
     if not self.properties:
+      if self.NeedsInstrumentation():
+        instr=xlt("incomplete or missing")
+      else:
+        instr=xlt("fully instrumented")
       self.properties= [
          ( xlt("Name"),self.name),
          ( xlt("Version"), self.info['version']),
@@ -202,9 +219,10 @@ class Server(adm.ServerNode):
          ( xlt("Connected"), YesNo(self.IsConnected())),
          ( xlt("Autoconnect"), YesNo(self.settings.get('autoconnect'))),
          ( xlt("Autovacuum"), YesNo(self.info['autovacuum'])),
+         ( xlt("Instrumentation"), instr), 
          ]
-      
     return self.properties
+
 
   def GetStatistics(self):
     cols=[ ( 'datname',       xlt("Database") ),
@@ -259,18 +277,6 @@ class Server(adm.ServerNode):
       return True
   
   @staticmethod
-  def quoteIdent(ident):
-    if re.compile("^[a-z][a-z0-9_]+$").match(ident) and ident not in Server.keywords:
-      return ident
-    return '"%s"' % ident.replace('"', '""')
-  
-  @staticmethod
-  def quoteString(string):
-    if string == None:
-      return "NULL"
-    return "'%s'" % string.replace('\\', '\\\\').replace("'", "''")
-  
-  @staticmethod
   def Register(parentWin):
     adm.DisplayDialog(Server.Dlg, parentWin, None)
 
@@ -294,13 +300,13 @@ class ServerInstrument:
     adminspace=server.adminspace
     if not adminspace:
       adminspace=server.GetPreference("AdminNamespace")
-      server.GetCursor().ExecuteSingle("CREATE SCHEMA %s AUTHORIZATION postgres" % server.quoteIdent(adminspace))
+      server.GetCursor().ExecuteSingle("CREATE SCHEMA %s AUTHORIZATION postgres" % quoteIdent(adminspace))
       server.adminspace=adminspace
 
-    adsQuoted=server.quoteIdent(adminspace)
+    adsQuoted=quoteIdent(adminspace)
 
     if not server.fav_table:
-      fav_table=server.quoteIdent("Admin_Fav_%s" % server.user)
+      fav_table=quoteIdent("Admin_Fav_%s" % server.user)
       server.GetCursor().ExecuteSingle("""
 CREATE TABLE %(adminspace)s.%(fav_table)s 
   (dboid OID, favoid OID, favtype CHAR, favgroup TEXT, PRIMARY KEY(dboid, favoid))""" % 
@@ -309,7 +315,7 @@ CREATE TABLE %(adminspace)s.%(fav_table)s
       server.fav_table="%s.%s" % (adsQuoted, fav_table)
 
     if not server.snippet_table:
-      snippet_table=server.quoteIdent("Admin_Snippet_%s" % server.user)
+      snippet_table=quoteIdent("Admin_Snippet_%s" % server.user)
       server.GetCursor().ExecuteSingle("""
 CREATE TABLE %(adminspace)s.%(snippet_table)s 
   (id SERIAL PRIMARY KEY, parent INT4 NOT NULL DEFAULT 0, sort FLOAT NOT NULL DEFAULT 0.0, name TEXT, snippet TEXT);""" % 

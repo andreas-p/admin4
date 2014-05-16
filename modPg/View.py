@@ -4,11 +4,12 @@
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
 
-from _objects import DatabaseObject, Query
+from _objects import SchemaObject
+from _pgsql import pgQuery
 from wh import xlt
 
 
-class View(DatabaseObject):
+class View(SchemaObject):
   typename=xlt("View")
   shortname=xlt("View")
   refreshOid="rel.oid"
@@ -17,7 +18,7 @@ class View(DatabaseObject):
 
   @staticmethod
   def InstancesQuery(parentNode):
-    sql=Query("pg_class rel")
+    sql=pgQuery("pg_class rel")
     sql.AddCol("rel.oid, relname as name, nspname, spcname, pg_get_userbyid(relowner) AS owner, relacl as acl, relkind")
     sql.AddCol("description")
     sql.AddJoin("pg_namespace ns ON ns.oid=rel.relnamespace")
@@ -53,7 +54,7 @@ class View(DatabaseObject):
     if not definition:
       definition=self.GetCursor().ExecuteSingle("SELECT pg_get_viewdef(%d, true)" % self.GetOid())
       self.info['definition']=definition
-    return "CREATE %(object)s %(tablespace)s AS\n%(def)s\n%(grant)s" % {
+    return "CREATE OR REPLACE %(object)s %(tablespace)s AS\n%(def)s\n%(grant)s" % {
                'object': self.ObjectSql(),
                'tablespace': self.TablespaceSql(), 
                'def': definition, 'grant': self.GrantSql() }

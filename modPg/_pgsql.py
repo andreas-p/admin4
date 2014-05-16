@@ -10,8 +10,56 @@ import psycopg2
 import select
 import logger
 import adm
+import re
 import threading
-from wh import xlt
+from wh import xlt, modPath
+
+
+sqlKeywords=[]
+moreKeywords=['serial', 'bigserial']
+colKeywords=[]
+
+def getSqlKeywords():
+  global colKeywords
+  global sqlKeywords
+  if not sqlKeywords:
+    f=open(modPath("kwlist.h", __name__))
+    lines=f.read()
+    f.close()
+    
+    for line in lines.splitlines():
+      if line.startswith("PG_KEYWORD("):
+        tokens=line.split(',')
+        keyword=tokens[0][12:-1].lower()
+        
+        # RESERVED, UNRESERVED, TYPE_FUNC_NAME, COL_NAME
+        if tokens[2].lstrip().startswith('COL_NAME'):
+          colKeywords.append(keyword)
+        else:
+          sqlKeywords.append(keyword)
+    colKeywords.extend(moreKeywords)
+  return sqlKeywords
+
+
+identMatchPattern=re.compile("^[a-z][a-z0-9_]+$")
+def quoteIdent(ident):
+  if identMatchPattern.match(ident) and ident not in getSqlKeywords():
+    return ident
+  return '"%s"' % ident.replace('"', '""')
+
+
+def quoteValue(val, conn=None):
+  if isinstance(val, unicode):  # psycopg2 quoting has some problems with unicode
+    return "'%s'" % val.replace("'", "''").replace("\\", "\\\\")
+  adapter=psycopg2.extensions.adapt(val)
+  if conn and hasattr(adapter, 'prepare'):
+    if isinstance(conn, pgConnection):
+      conn=conn.conn
+    elif isinstance(conn, pgCursor):
+      conn=conn.conn.conn
+    adapter.prepare(conn)
+  return adapter.getquoted() 
+
 
 class SqlException(adm.ServerException):
   def __init__(self, sql, error):
@@ -24,6 +72,36 @@ class SqlException(adm.ServerException):
 
 
 ######################################################################
+
+class pgType:
+  def __init__(self, row):
+    self.oid=row['oid']
+    self.name=row['typname']
+    self.namespace=row['nspname']
+    self.category=row['typcategory']
+
+  def IsNumeric(self):
+    return self.category == 'N'
+
+class pgTypeCache:
+  def __init__(self, rowset):
+    self.cache={}
+    self.Add(rowset)
+  
+  def Add(self, rowset):
+    if not isinstance(rowset, pgRowset):
+      rowset=[rowset]
+    typ=None
+    for row in rowset:
+      typ=pgType(row)
+      self.cache[typ.oid] = typ
+    return typ
+    
+  def Get(self, oid):
+    return self.cache.get(oid)
+  
+  
+######################################################################
 class pgCursorResult:
   def __init__(self, cursor, colNames=None):
     self.cursor=cursor
@@ -32,7 +110,7 @@ class pgCursorResult:
     else:
       self.colNames=[]
       for d in cursor.GetDescription():
-        self.colNames.append(d[0])
+        self.colNames.append(d.name)
       
       
 class pgRow(pgCursorResult):
@@ -40,17 +118,25 @@ class pgRow(pgCursorResult):
     pgCursorResult.__init__(self, cursor, colNames)
     self.row=row
 
+  def getTuple(self):
+    return tuple(self.getList())
+
+  def getList(self):
+    l=[]
+    for i in range(len(self.colNames)):
+      l.append(self.getItem(i))
+    return l
+    
   def getDict(self):
     d={}
     for i in range(len(self.colNames)):
-      d[self.colNames[i]] = self.row[i]
+      d[self.colNames[i]] = self.getItem(i)
     return d
   
   def __str__(self):
     cols=[]
     for i in range(len(self.colNames)):
-      val=self.row[i]
-      val=str(val)
+      val=str(self.getItem(i))
       cols.append("%s=%s" % (self.colNames[i], val))
       
     return "( %s )" % ",".join(cols)
@@ -62,20 +148,22 @@ class pgRow(pgCursorResult):
     except:
       return False
   
+  def getItem(self, i):
+    val=self.row[i]
+    if isinstance(val, str):
+      return val.decode('utf8')
+    return val
+
   def __getitem__(self, colName):
     try:
       if isinstance(colName, (str, unicode)):
         i=self.colNames.index(colName)
       else:
         i=colName
-        colName="#%d" % i
-      val=self.row[i]
+      return self.getItem(i)
     except Exception as _e:
       logger.debug("Column %s not found" % colName)
       return None
-    if isinstance(val, str):
-      return val.decode('utf8')
-    return val
 
 
 class pgRowset(pgCursorResult):
@@ -154,6 +242,8 @@ class pgConnection:
     if self.conn:
       self.conn.close()
       self.conn=None
+    if self.pool:
+      self.pool.RemoveConnection(self)
 
   def wait(self, spot=""):
     if self.conn.async:
@@ -182,7 +272,7 @@ class pgConnection:
     errlines=str(e)
     self.lastError=errlines
     if self.pool:
-      self.pool.lastError=self.errlines
+      self.pool.lastError=errlines
       
     logger.querylog(cmd, error=errlines)
     adm.StopWaiting(adm.mainframe)
@@ -196,7 +286,7 @@ class pgConnection:
   def GetCursor(self):
     return pgCursor(self)
 
-  ######################################################################
+######################################################################
   
 class pgCursor():
   def __init__(self, conn):
@@ -215,6 +305,8 @@ class pgCursor():
   def GetPid(self):
     return self.conn.conn.get_backend_pid()
 
+  def Quote(self, val):
+    return quoteValue(val, self)
   
   def GetDescription(self):
     if self.cursor.description:
@@ -254,18 +346,6 @@ class pgCursor():
   def wait(self, spot=""):
     return self.conn.wait(spot)
 
-  def ExecuteList(self, cmd, args=None):
-    rowset=self.ExecuteSet(cmd, args)
-    if rowset:
-      return rowset.getList()
-    return None
-  
-  def ExecuteDictList(self, cmd, args=None):
-    rowset=self.ExecuteSet(cmd, args)
-    if rowset:
-      return rowset.getDictList()
-    return None
-  
   def ExecuteSet(self, cmd, args=None):
     frame=adm.StartWaiting()
     try:
@@ -278,8 +358,21 @@ class pgCursor():
     except Exception as e:
       adm.StopWaiting(frame, e)
       raise e
-    
-    
+  
+  
+  def ExecuteList(self, cmd, args=None):
+    rowset=self.ExecuteSet(cmd, args)
+    if rowset:
+      return rowset.getList()
+    return None
+  
+  def ExecuteDictList(self, cmd, args=None):
+    rowset=self.ExecuteSet(cmd, args)
+    if rowset:
+      return rowset.getDictList()
+    return None
+  
+  
   def ExecuteRow(self, cmd, args=None):
     frame=adm.StartWaiting()
     try:
@@ -292,7 +385,7 @@ class pgCursor():
       raise e
     
     if row:
-      row=pgRow(self.cursor, row)
+      row=pgRow(self, row)
       logger.querylog(self.cursor.query, result=str(row))
       return row
     return None
@@ -306,7 +399,8 @@ class pgCursor():
       self.wait("ExecuteSingle")
       try:
         row=self.cursor.fetchone()
-      except:
+      except Exception as _e:
+        #print e
         row=None
       adm.StopWaiting(frame)
     except Exception as e:
@@ -316,9 +410,35 @@ class pgCursor():
       result=row[0]
       logger.querylog(self.cursor.query, result="%s" % result)
       return result
-    return None
+    else:
+      logger.querylog(self.cursor.query, result=xlt("no result"))
+      return None
   
   
+  def Insert(self, cmd, returning=None):
+    if returning:
+      cmd += "\nRETURNING %s" % returning
+      rowset=self.ExecuteSet(cmd)
+      if not self.GetRowcount():
+        return None
+      
+      result=[]
+      for row in rowset:
+        line=row.getTuple()
+        if len(line) > 1:
+          result.append(line)
+        else:
+          result.append(line[0])
+      if len(result) > 1:
+        return result
+      else:
+        return result[0]  
+    else:
+      self.ExecuteSingle(cmd)
+      
+    return self.cursor.lastrowid
+
+
   def ExecuteDict(self, cmd, args=None):
     set=self.ExecuteSet(cmd, args)
     d={}
@@ -377,6 +497,9 @@ class pgConnectionPool:
       raise adm.ConnectionException(self.node, xlt("Connect"), self.lastError)   
 
 
+##########################################################
+
+
 class QueryWorker(threading.Thread):
   def __init__(self, cursor, cmd, args):
     threading.Thread.__init__(self)
@@ -417,3 +540,97 @@ class QueryWorker(threading.Thread):
   def Cancel(self):
     if self.running:
       self.cancel()
+
+
+#######################################################################
+      
+class pgQuery:
+  def __init__(self, tab=None, cursor=None):
+    self.columns=[]
+    self.vals=[]
+    self.tables=[]
+    self.where=[]
+    self.order=[]
+    self.group=[]
+    self.cursor=cursor
+    if tab:
+      self.tables.append(tab)
+
+  def SetCursor(self, cursor):
+    self.cursor=cursor
+    
+  def AddCol(self, name):
+    if name:
+      if isinstance(name, list):
+        map(self.AddCol, name)
+      else:
+        self.columns.append(name)
+  
+  def AddColVal(self, name, val):
+    if name:
+      self.columns.append(name)
+      self.vals.append(val)
+  def AddJoin(self, tab):
+    if tab:
+      self.tables.append("JOIN %s" % tab)
+      
+  def AddLeft(self, tab):
+    if tab:
+      self.tables.append("LEFT OUTER JOIN %s" % tab)
+
+  def AddWhere(self, where, val=None):
+    if where:
+      if val:
+        where="%s=%s" % (where, quoteValue(val))
+      self.where.append(where)
+      
+  def AddOrder(self, order):
+    if order:
+      self.order.append(order)
+    
+    def AddGroup(self, group):
+      if group:
+        self.group.append(group)
+    
+  def SelectQueryString(self):
+    sql=["SELECT %s" % ", ".join(self.columns), 
+         "  FROM %s" % "\n  ".join(self.tables) ]
+    if self.where:
+      sql.append(" WHERE %s" % "\n   AND ".join(self.where))
+    if self.group:
+      sql.append(" GROUP BY %s" % ", ".join(self.group))
+    if self.order:
+      sql.append(" ORDER BY %s" % ", ".join(self.order))
+    return "\n".join(sql)
+  
+  def Select(self):
+    return self.cursor.ExecuteSet(self.SelectQueryString())
+    
+  def Insert(self, returning=None):
+    if len(self.tables) != 1:
+      raise Exception("pgQuery: INSERT with single table only")
+    sql=["INSERT INTO %s (%s)" % (self.tables[0], ",".join(self.columns))]
+    values=[]
+    for col in range(len(self.columns)):
+      values.append("%s" % quoteValue(self.vals[col], self.cursor))
+    sql.append(" VALUES (%s)" % ",".join(values))
+    return self.cursor.Insert("\n".join(sql), returning)
+
+  def Update(self):
+    if len(self.tables) != 1:
+      raise Exception("pgQuery: UPDATE with single table only")
+    sql=["UPDATE %s" % self.tables[0]]
+    cols=[]
+    for col in range(len(self.columns)):
+      val=quoteValue(self.vals[col], self.cursor)
+      cols.append( "%s=%s" % ( self.columns[col], val ))
+    sql.append("  SET %s" % ",".join(cols))
+    sql.append(" WHERE %s" % "\n   AND ".join(self.where))
+    return self.cursor.ExecuteSingle("\n".join(sql))
+
+  def Delete(self):
+    if len(self.tables) != 1:
+      raise Exception("pgQuery: DELETE with single table only")
+    sql=["DELETE FROM %s" % self.tables[0]]
+    sql.append(" WHERE %s" % "\n   AND ".join(self.where))
+    return self.cursor.ExecuteSingle("\n".join(sql))

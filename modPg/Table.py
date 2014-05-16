@@ -5,7 +5,8 @@
 # see LICENSE.TXT for conditions of usage
 
 
-from _objects import DatabaseObject, Query
+from _objects import SchemaObject
+from _pgsql import pgQuery
 import adm
 from wh import xlt
 import logger
@@ -15,7 +16,7 @@ persistenceStr={'p': "persistent", 't': "temporary", 'u': "unlogged" }
 
     
     
-class Table(DatabaseObject):
+class Table(SchemaObject):
   typename=xlt("Table")
   shortname=xlt("Table")
   refreshOid="rel.oid"
@@ -24,7 +25,7 @@ class Table(DatabaseObject):
     
   @staticmethod
   def InstancesQuery(parentNode):
-    sql=Query("pg_class rel")
+    sql=pgQuery("pg_class rel")
     sql.AddCol("rel.oid, relname as name, nspname, spcname, pg_get_userbyid(relowner) AS owner, relacl as acl, rel.*")
     if parentNode.GetServer().version < 8.4:
       sql.AddCol("'t' AS relpersistence")
@@ -129,10 +130,11 @@ class Table(DatabaseObject):
            ORDER BY attnum""" % { 'attrelid': self.GetOid()})
  
  
-  def populateConstraints(self):
-    if self.constraints == None:
-      self.constraints=self.GetCursor().ExecuteDictList("""
-        SELECT 1, CASE WHEN indisprimary THEN 'primarykey' ELSE 'index' END as type, indexrelid as oid, CASE WHEN nspname='%(defaultNamespace)s' THEN '' else nspname||'.' END || relname AS fullname,
+  @staticmethod
+  def getConstraintQuery(oid):
+    return """
+        SELECT 1 AS conclass, CASE WHEN indisprimary THEN 'primarykey' ELSE 'index' END as type, indexrelid as oid, 
+               CASE WHEN nspname='%(defaultNamespace)s' THEN '' else nspname||'.' END || relname AS fullname,
                array_agg(attname) as colnames, description,
                indisprimary, indisunique, null::bool as condeferrable, null::bool as condeferred,
                null::text as reftable, null as refcolnames
@@ -145,10 +147,10 @@ class Table(DatabaseObject):
          GROUP BY indexrelid, nspname, relname, indisprimary, indisunique, description
         UNION
         SELECT 2, 'foreignkey', conrelid, conname,
-               array_agg(a.attname),  description,
+               array_agg(a.attname), description,
                null, null, condeferrable, condeferred,
                CASE WHEN nspname='%(defaultNamespace)s' THEN '' else nspname||'.' END || relname,
-               array_agg(r.attname) 
+               array_agg(r.attname)
           FROM pg_constraint
           LEFT JOIN pg_attribute a ON a.attrelid=conrelid AND a.attnum IN (SELECT unnest(conkey))
           LEFT JOIN pg_description ON objoid=conrelid
@@ -158,7 +160,11 @@ class Table(DatabaseObject):
          WHERE conrelid=%(relid)s
          GROUP BY conrelid, conname, condeferrable, condeferred, relname, nspname, description
         ORDER BY 1, 7 DESC, 4
-              """ % { 'relid': self.GetOid(), 'defaultNamespace': "public" })
+              """ % { 'relid': oid, 'defaultNamespace': "public" }
+  
+  def populateConstraints(self):
+    if self.constraints == None:
+      self.constraints=self.GetCursor().ExecuteDictList(self.getConstraintQuery(self.GetOid()))
       
 
 class ColumnsPage(adm.NotebookPage):
@@ -251,7 +257,7 @@ class RowCount:
 
   @staticmethod
   def OnExecute(_parentWin, node):
-    node.rowcount=node.ExecuteSingle("SELECT COUNT(1) FROM ONLY %s" % node.GetServer().quoteIdent(node.name))
+    node.rowcount=node.ExecuteSingle("SELECT COUNT(1) FROM ONLY %s" % node.NameSql())
     return True
 
 

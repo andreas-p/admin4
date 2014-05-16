@@ -15,7 +15,7 @@ class Role(adm.Node):
   @staticmethod
   def GetInstances(parentNode):
     instances=[]
-    set=parentNode.GetCursor().ExecuteSet("""
+    set=parentNode.GetConnection().GetCursor().ExecuteSet("""
       SELECT rolname as name, *,
         (SELECT array_agg(rolname) FROM pg_roles r JOIN pg_auth_members m on r.oid=m.member WHERE m.roleid=u.oid) AS members,
         (SELECT array_agg(rolname) FROM pg_roles r JOIN pg_auth_members m on r.oid=m.roleid WHERE m.member=u.oid) AS memberof
@@ -66,5 +66,39 @@ class Role(adm.Node):
 
     return self.properties
 
+
+class RolesPage(adm.NotebookPage):
+  name=xlt("Roles")
+  order=50
+  availableOn="Server"
+  
+  def Display(self, node, _detached):
+    if node != self.lastNode:
+      self.lastNode=node
+
+      add=self.control.AddColumnInfo
+      add(xlt("Name"), 20,         colname='name')
+      add(xlt("Members"), 40,         colname='members')
+
+      values=[]
+      
+      self.allRoles=node.GetConnection().GetCursor().ExecuteDictList("""
+        SELECT rolname as name, *,
+          (SELECT array_agg(rolname) FROM pg_roles r JOIN pg_auth_members m on r.oid=m.member WHERE m.roleid=u.oid) AS members,
+          (SELECT array_agg(rolname) FROM pg_roles r JOIN pg_auth_members m on r.oid=m.roleid WHERE m.member=u.oid) AS memberof
+          FROM pg_roles u ORDER BY rolname""")
+      
+      for role in self.allRoles:
+        icons=[]
+        if role['members']:
+          icons.append("Group")
+        else:
+          icons.append("User")
+        icon=self.lastNode.GetImageId(icons)
+
+        values.append( (role, icon))
+      self.control.Fill(values, 'name')
+
+pageinfo=[RolesPage]
 
 nodeinfo= [ { "class" : Role, "parents": ["Server"], "sort": 70, "collection": xlt("Roles") } ]
