@@ -30,6 +30,7 @@ class SnippetTree(DragTreeCtrl):
     DragTreeCtrl.__init__(self, parentWin, "Snippets", style=wx.TR_HAS_BUTTONS | wx.TR_HIDE_ROOT | wx.TR_LINES_AT_ROOT)
     self.editor=editor
     self.server=server
+    self.frame=parentWin
     self.snippets={}
 
     self.Bind(wx.EVT_RIGHT_DOWN, self.OnTreeRightClick)
@@ -83,7 +84,7 @@ class SnippetTree(DragTreeCtrl):
       query.Delete()
       self.Delete(snippet.treeitem)
       del self.snippets[snippet.id]
-      self.GetParent().SetStatus(xlt("Snippet deleted."))
+      self.frame.SetStatus(xlt("Snippet deleted."))
 
 
   def getSnippetName(self, snippet):
@@ -138,7 +139,7 @@ class SnippetTree(DragTreeCtrl):
     if not self.server.snippet_table:
       return False
     a,e=self.editor.GetSelection()
-    if a==e and self.editor.GetLineCount() < 2 and not self.GetParent().getSql():
+    if a==e and self.editor.GetLineCount() < 2 and not self.frame.getSql():
       return False
 
     snippet=self.GetNode()
@@ -150,11 +151,11 @@ class SnippetTree(DragTreeCtrl):
       snippet.prevText=snippet.text
       snippet.text=text
       self.updateSnippet(snippet)
-      self.GetParent().SetStatus(xlt("Snippet updated."))
+      self.frame.SetStatus(xlt("Snippet updated."))
     return False
 
   def OnReplaceSnippet(self, evt):
-    sql=self.GetParent().getSql()
+    sql=self.frame.getSql()
     if sql:
       self.ReplaceSnippet(sql)
       
@@ -166,7 +167,7 @@ class SnippetTree(DragTreeCtrl):
         snippet.name = dlg.GetValue()
         self.updateSnippet(snippet)
         self.SetItemText(snippet.treeitem, self.getSnippetName(snippet))
-        self.GetParent().SetStatus(xlt("Snippet renamed."))
+        self.frame.SetStatus(xlt("Snippet renamed."))
 
   def OnRevertSnippet(self, evt):
     snippet=self.GetNode()
@@ -174,7 +175,7 @@ class SnippetTree(DragTreeCtrl):
       snippet.text=snippet.prevText
       snippet.prevText=None
       self.updateSnippet(snippet)
-      self.GetParent().SetStatus(xlt("Snippet reverted."))
+      self.frame.SetStatus(xlt("Snippet reverted."))
     return False
 
      
@@ -186,7 +187,7 @@ class SnippetTree(DragTreeCtrl):
         self.AppendSnippet(name)
       
   def OnTreeSelChanged(self, evt):
-    self.GetParent().updateMenu()
+    self.frame.updateMenu()
 
   def OnTreeRightClick(self, evt):
     item, _flags=self.HitTest(evt.GetPosition())
@@ -197,22 +198,22 @@ class SnippetTree(DragTreeCtrl):
     if item:
       snippet=self.GetNode(item)
       if snippet.IsGroup():
-        cm.Append(self.GetParent().BindMenuId(self.OnRenameSnippet), xlt("Rename"), xlt(("Rename group")))
-        id=self.GetParent().BindMenuId(self.OnDelSnippet)
+        cm.Append(self.frame.BindMenuId(self.OnRenameSnippet), xlt("Rename"), xlt(("Rename group")))
+        id=self.frame.BindMenuId(self.OnDelSnippet)
         cm.Append(id, xlt("Delete"), xlt(("Delete group")))
         for s in self.snippets.values():
           if s.parent == snippet.id:
             cm.Enable(id, False)
             break;
       else:
-        cm.Append(self.GetParent().BindMenuId(self.OnReplaceSnippet), xlt("Replace"), xlt(("Replace snippet text")))
-        cm.Append(self.GetParent().BindMenuId(self.OnRenameSnippet), xlt("Rename"), xlt(("Rename snippet")))
-        rv=self.GetParent().BindMenuId(self.OnRevertSnippet)
+        cm.Append(self.frame.BindMenuId(self.OnReplaceSnippet), xlt("Replace"), xlt(("Replace snippet text")))
+        cm.Append(self.frame.BindMenuId(self.OnRenameSnippet), xlt("Rename"), xlt(("Rename snippet")))
+        rv=self.frame.BindMenuId(self.OnRevertSnippet)
         cm.Append(rv, xlt("Revert"), xlt(("Revert snippet to previous text")))
         cm.Enable(rv, snippet.prevText != None)
-        cm.Append(self.GetParent().BindMenuId(self.OnDelSnippet), xlt("Delete"), xlt(("Delete snippet")))
+        cm.Append(self.frame.BindMenuId(self.OnDelSnippet), xlt("Delete"), xlt(("Delete snippet")))
       cm.AppendSeparator()
-    cm.Append(self.GetParent().BindMenuId(self.OnAddGroup), xlt("Add group"), xlt(("Add group")))
+    cm.Append(self.frame.BindMenuId(self.OnAddGroup), xlt("Add group"), xlt(("Add group")))
     self.PopupMenu(cm, evt.GetPosition())
   
   def ExecuteDrag(self, targetItem):
@@ -257,6 +258,6 @@ class SnippetTree(DragTreeCtrl):
     snippet= self.GetNode()
     if snippet:
       self.editor.ReplaceSelection(snippet.text)
-      self.GetParent().updateMenu()
+      self.frame.updateMenu()
     self.editor.SetFocus()
       
