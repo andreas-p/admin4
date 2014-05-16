@@ -203,12 +203,28 @@ class FileManager:
       self._handleMenu()
     
         
+def localizePath(path):
+  """
+  str localizePath(path)
+  
+  returns the localized version path of a file if it exists, else the global.
+  """
+  #locale='de_DE'
+  #locPath=os.path.join(os.path.dirname(path), locale, os.path.basename(path))
+  #if os.path.exists(locPath):
+  #  return locPath
+  return path
+
+
 def modPath(name, mod):
   """
   str modPath(filename, module)
   
   prepend module's path to filename
   """
+  if not mod:
+    return os.path.join(loaddir, name)
+  
   if not isinstance(mod, StringType):
     mod=mod.__module__
   ri=mod.rfind('.')
@@ -224,10 +240,7 @@ def GetIcon(name, module=None):
   
   Get an icon from a file, possibly prepending the module's path
   """
-  if module:
-    name=modPath(name, module)
-  else:
-    name=os.path.join(loaddir, name)
+  name=modPath(name, module)
   return wx.Icon(name + ".ico")
 
 
@@ -237,10 +250,7 @@ def GetBitmap(name, module=None):
   
   Get a bitmap from a file, possibly prepending the module's path
   """
-  if module:
-    name=modPath(name, module)
-  else:
-    name=os.path.join(loaddir, name)
+  name=modPath(name, module)
 
   for ext in ["png"]:
     fn="%s.%s" % (name, ext)
