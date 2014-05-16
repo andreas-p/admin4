@@ -346,6 +346,20 @@ class DetailFrame(Frame):
       return
     node=self.tree.GetNode(item)
     self.details.Set(node)
+    if node and hasattr(node, "GetHint"):
+      hint=node.GetHint()
+      if hint:
+        if not hasattr(node, 'hintShown'):
+          node.hintShown=True
+          if isinstance(hint, tuple):
+            title=hint[1]
+            args=hint[2]
+            hint=hint[0]
+          else:
+            title=None
+            args=None
+          adm.ShowHint(self, hint, node, title, args)
+
     self.manager.Update()
 
       

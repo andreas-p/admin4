@@ -162,7 +162,7 @@ class HintDlg(adm.Dialog):
     f.close()
     for i in range(len(self.args)):
       tag="<arg%d/>" % (i+1)
-      html=html.replace(tag, self.args[i])
+      html=html.replace(tag, self.args[i].encode('utf-8'))
       
     self.browser.SetPage(html.decode('utf-8'))
     if not self.title:
