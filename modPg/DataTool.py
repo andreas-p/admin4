@@ -123,26 +123,25 @@ class FilterPanel(adm.NotebookPanel):
     self.Bind("FilterCheck", self.OnFilterCheck)
     self.Bind("FilterValidate", self.OnFilterValidate)
     self.Bind("FilterValue", self.OnFilterValueChanged)
-#    self['SortCols'].Bind(wx.EVT_LISTBOX_DCLICK, self.OnDclickSort)
-#    self['DisplayCols'].Bind(wx.EVT_MOTION, self.OnBeginDrag)
-    self['SortCols'].Bind(wx.EVT_MOTION, self.domove)
-#    self['SortCols'].Bind(wx.EVT_LEFT_DOWN, self.OnBeginDrag)
+    self['SortCols'].Bind(wx.EVT_LISTBOX_DCLICK, self.OnDclickSort)
+    if True: # wx.Platform == "__WXMAC__" and wx.VERSION < (3,0):
+      event=wx.EVT_LEFT_DOWN
+    else:
+      event=wx.EVT_MOTION
+    self['DisplayCols'].Bind(event, self.OnBeginDrag)
+    self['SortCols'].Bind(event, self.OnBeginDrag)
     self.OnLimitCheck()
     self.OnFilterCheck()
     self.valid=True
     self.dialog=dlg
 
 
-  def domove(self, evt):
-    print "MOVE", evt.GetPosition(), evt.EventObject
-    
-
   def OnBeginDrag(self, evt):
-    print "DOWN", evt.GetPosition()
-#    return
-    if evt.GetPosition().x < 30:
+    print evt.GetPosition()
+    if evt.GetPosition().x < 30 or not evt.LeftDown():
       evt.Skip()
       return
+    
     lb=evt.EventObject
     i=lb.HitTest(evt.GetPosition())
     if i >= 0:
@@ -272,7 +271,7 @@ class DataFrame(SqlFrame):
     self.restorePerspective()
     self.updateMenu()
     self.filter.Go(self.tableSpecs)
-    self.editor.SetText("/*\n%s\n*/\n\n%s" % (xlt("Caution: may show unpredicted behaviour.\nDon't mess with table and column names!"), self.filter.GetQuery()))
+    self.editor.SetText("/*\n%s\n*/\n\n%s" % (xlt("Caution: Don't mess with table and column names!\nYou may experience unwanted behaviour."), self.filter.GetQuery()))
 
     
   def OnShowFilter(self, evt):
