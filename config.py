@@ -183,3 +183,13 @@ class Config(wx.Config):
   def getServerSettings(self, sname):
     settings=self.Read("Server-%s" % sname, {})
     return settings
+  
+  def getHintCfg(self, hint, module):
+    h=module.__module__.split('.')
+    return "%s/%s" % ("/".join(h[:-1]), hint)
+  
+  def GetWantHint(self, hint, module):
+    return self.Read("Hints", True, None, self.getHintCfg(hint, module))
+  
+  def SetWantHint(self, hint, module, how):
+    self.Write("Hints", how, None, self.getHintCfg(hint, module))

@@ -1,15 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resource>
-  <object class="wxDialog" name="PreferencesDlg">
-    <title>Preferences</title>
+  <object class="wxDialog" name="HintDlg">
+    <title>Hint</title>
     <size>200,200d</size>
-    <style>wxCAPTION|wxCLOSE_BOX</style>
+    <style>wxCAPTION|wxRESIZE_BORDER|wxCLOSE_BOX</style>
     <object class="wxBoxSizer">
       <orient>wxVERTICAL</orient>
       <object class="sizeritem">
-        <object class="wxNotebook" name="Notebook">
-          <pos>5,5d</pos>
-        </object>
+        <object class="unknown" name="HtmlWindow"/>
+        <option>1</option>
         <flag>wxLEFT|wxRIGHT|wxEXPAND</flag>
         <border>10</border>
         <minsize>150,100d</minsize>
@@ -17,21 +16,21 @@
       <object class="sizeritem">
         <object class="wxBoxSizer">
           <orient>wxHORIZONTAL</orient>
+          <object class="sizeritem">
+            <object class="wxCheckBox" name="NeverShowAgain">
+              <label>Don't show this hint again</label>
+              <checked>1</checked>
+            </object>
+            <flag>wxALIGN_LEFT|wxALIGN_CENTRE_VERTICAL</flag>
+          </object>
           <object class="spacer">
             <option>1</option>
-          </object>
-          <object class="sizeritem">
-            <object class="wxButton" name="Cancel">
-              <label>Cancel</label>
-              <pos>50,180d</pos>
-            </object>
-            <flag>wxLEFT|wxRIGHT|wxALIGN_RIGHT</flag>
-            <border>10</border>
           </object>
           <object class="sizeritem">
             <object class="wxButton" name="OK">
               <label>OK</label>
               <pos>100,180d</pos>
+              <default>1</default>
             </object>
             <flag>wxALIGN_RIGHT</flag>
           </object>

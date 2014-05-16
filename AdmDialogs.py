@@ -7,13 +7,13 @@
 import adm
 import logger
 import sys, os, zipfile, shutil
-import wx
+import wx.html
 import requests
 try:
   import Crypto.PublicKey.RSA, Crypto.Hash.SHA, Crypto.Signature.PKCS1_v1_5
 except:
   Crypto=None
-from wh import xlt, copytree
+from wh import xlt, copytree, modPath, localizePath
 from xmlhelp import Document as XmlDocument
 import version as admVersion
 
@@ -138,6 +138,44 @@ class PreferencesDlg(adm.CheckedDialog):
     return True
 
 
+class HintDlg(adm.Dialog):
+
+  @staticmethod
+  def WantHint(hint, module):
+    return adm.config.GetWantHint(hint, module)
+  
+  def __init__(self, parentWin, hint, hintModule, title, args):
+    adm.Dialog.__init__(self, parentWin)
+    self.hint=hint
+    self.hintModule=hintModule
+    self.title=title
+    self.args=args
+    
+  def AddExtraControls(self, res):
+    self.browser=wx.html.HtmlWindow(self)
+    res.AttachUnknownControl("HtmlWindow", self.browser)
+    
+
+  def Go(self):
+    f=open(localizePath(modPath(os.path.join("hints", "%s.html" % self.hint), self.hintModule)))
+    html=f.read()
+    f.close()
+    for i in range(len(self.args)):
+      tag="<arg%d/>" % (i+1)
+      html=html.replace(tag, self.args[i])
+      
+    self.browser.SetPage(html.decode('utf-8'))
+    if not self.title:
+      self.title=self.browser.GetOpenedPageTitle()
+    if self.title:
+      self.SetTitle(self.title)
+    else:
+      self.SetTitle(xlt("%s hint") % adm.appTitle)
+    
+  def Execute(self):
+    adm.config.SetWantHint(self.hint, self.hintModule, not self.NeverShowAgain)
+    return True
+  
 class UpdateDlg(adm.Dialog):
   def __init__(self, parentWin):
     adm.Dialog.__init__(self, parentWin)

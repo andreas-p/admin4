@@ -17,7 +17,7 @@ from node import NodeId, Node, Collection, Group, ServerNode  # @UnusedImport
 from page import PropertyPage, NotebookPage, NotebookControlsPage, NotebookPanel, PreferencePanel, getAllPreferencePanelClasses  # @UnusedImport
 from controlcontainer import Dialog, CheckedDialog, PropertyDialog, ServerPropertyDialog  # @UnusedImport
 from frame import Frame
-from AdmDialogs import PasswordDlg
+from AdmDialogs import PasswordDlg, HintDlg
 
 
 modules={}
@@ -306,7 +306,23 @@ def ConfirmDelete(msg, hdr, force=False):
   else:
     return True
 
-
+def ShowHint(parentWin, hint, module=None, title=None, args=None):
+  """
+  ShowHint(parentWin, hint, module=None, title=None, args=None):
+  
+  Shows a html loaded from the module's hint directory
+  If title isn't specified, it will be retrieved from html
+  If args are given, <arg1/> ... <argN/> tags will be replaced with that string
+  """
+  if not HintDlg.WantHint(hint, module):
+    return
+  
+  if not parentWin:
+    parentWin=GetCurrentFrame()
+  dlg=HintDlg(parentWin, hint, module, title, args)
+  dlg.GoModal()
+    
+    
 def StartWaiting(txt=None, mayAbort=False):
   frame=GetCurrentFrame()
   if frame:
