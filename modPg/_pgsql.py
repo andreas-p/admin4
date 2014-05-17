@@ -466,7 +466,12 @@ class pgConnectionPool:
     with self.lock:
       self.connections.append(conn)
     
-    
+  def ServerVersion(self):
+    if not self.connections:
+      return None
+    v=self.connections[0].conn.server_version
+    return int(v/10000) + ((v%10000)/100)*0.1
+
   def HasFailed(self):
     return len(self.connections) == 0
 

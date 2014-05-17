@@ -1,3 +1,4 @@
+REFRESH!
 
 - Triggers
 - Edit Table:
@@ -6,5 +7,6 @@
 EditGrid
 - @insert: returned key col values
 - Drag/drop not from MouseDown
+- Save button
 
 Roles as Server page

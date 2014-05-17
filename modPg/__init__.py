@@ -229,7 +229,7 @@ if not hasattr(sys, 'skipSetupInit'):
         self.RestoreListcols()
 
         self.pid=node.GetCursor().GetPid()
-        self.ignorePids=[self.pid]
+        self.ignorePids=[]
         self.lastNode=node
         self.control.DeleteAllItems()
         self.TriggerTimer()

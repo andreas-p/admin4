@@ -27,7 +27,7 @@ class EditTable(wx.grid.PyGridTableBase):
     self.colNames=rowset.colNames
     self.tableSpecs=tableSpecs
     self.rows=rowset.getDictList()
-    self.canUpdate=tableSpecs.hasoids or tableSpecs.keyCols
+    self.canUpdate=len(tableSpecs.keyCols)
     self.readOnly=False
     self.attrs=[]
     self.Revert()
@@ -39,7 +39,7 @@ class EditTable(wx.grid.PyGridTableBase):
 
   def Commit(self):
     if self.currentRowNo >= 0:
-      query=pgQuery(self.tableSpecs.tabName, self.tableSpecs.cursor)
+      query=pgQuery(self.tableSpecs.tabName, self.tableSpecs.GetCursor())
       if self.currentRowNo < len(self.rows):
         # UPDATE case
         for col in self.colsChanged:
@@ -84,6 +84,9 @@ class EditTable(wx.grid.PyGridTableBase):
   def GetColDef(self, col):
     return self.tableSpecs.colSpecs.get(self.colNames[col])
 
+  def AppendRows(self, _rowcount):
+    return 
+  
   def GetNumberRows(self):
     rc=len(self.rows)
     if not self.readOnly:
@@ -171,6 +174,8 @@ class EditTable(wx.grid.PyGridTableBase):
       if cd:
         if cd.IsNumeric():
           alignRight=True
+        if colname == 'oid' and self.tableSpecs.hasoids:
+          ro=True
       else:
         color=wx.Colour(232,232,255)
         ro=True

@@ -9,7 +9,7 @@ from wh import xlt, AcceleratorHelper, Menu
 import wx.aui
 import adm
 
-from _pgsql import pgQuery
+from _pgsql import pgQuery, pgConnectionPool
 from _sqlgrid import SqlFrame, SqlEditGrid
 from _sqledit import SqlEditor
 from Table import Table
@@ -47,12 +47,13 @@ class ColSpec:
 
 
 class TableSpecs:
-  def __init__(self, node):
-    self.tabName=node.NameSql()
-    self.cursor=node.GetCursor()
-    self.serverVersion= node.GetServer().version
+  def __init__(self, connectionPool, name):
+    self.tabName=name
+    self.connectionPool=connectionPool
+    self.serverVersion= connectionPool.ServerVersion()
     
-    row=self.cursor.ExecuteRow("""
+    cursor=connectionPool.GetCursor()
+    row=cursor.ExecuteRow("""
       SELECT c.oid, relhasoids
         FROM pg_class c
        WHERE oid=oid(regclass('%s'))
@@ -62,16 +63,16 @@ class TableSpecs:
     self.oid=row['oid']
     self.hasoids = row['relhasoids']
     
-    self.constraints = self.cursor.ExecuteDictList(Table.getConstraintQuery(self.oid))
+    self.constraints = cursor.ExecuteDictList(Table.getConstraintQuery(self.oid))
 
     self.colSpecs={}
     self.colNames=[]
-    set=self.cursor.ExecuteSet("""
+    set=cursor.ExecuteSet("""
         SELECT attname, attnotnull, atttypid, atttypmod, t.typcategory, CASE WHEN typbasetype >0 THEN format_type(typbasetype,typtypmod) ELSE format_type(atttypid, atttypmod) END as formatted
          FROM pg_attribute a
-         JOIN pg_type t on t.oid=atttypid
+         JOIN pg_type t ON t.oid=atttypid
         WHERE attrelid=%d
-          AND attnum>0 and not attisdropped
+          AND (attnum>0 OR attnum = -2) AND NOT attisdropped
         ORDER BY attnum
     """ % self.oid)
     for row in set:
@@ -81,7 +82,7 @@ class TableSpecs:
 
     self.primaryConstraint=None
     if self.hasoids:
-      self.keyCols=[]
+      self.keyCols=['oid']
     else:
       for c in self.constraints:
         if c.get('indisprimary'):
@@ -94,6 +95,10 @@ class TableSpecs:
             break;
       if self.primaryConstraint:
         self.keyCols=self.primaryConstraint.get('colnames')
+
+
+  def GetCursor(self):
+    return self.connectionPool.GetCursor()
 
 
 class TextDropTarget(wx.TextDropTarget):
@@ -130,12 +135,19 @@ class FilterPanel(adm.NotebookPanel):
       event=wx.EVT_MOTION
     self['DisplayCols'].Bind(event, self.OnBeginDrag)
     self['SortCols'].Bind(event, self.OnBeginDrag)
+    self['DisplayCols'].Bind(wx.EVT_CHECKLISTBOX, self.OnClickCol)
     self.OnLimitCheck()
     self.OnFilterCheck()
     self.valid=True
     self.dialog=dlg
 
 
+  def OnClickCol(self, evt):
+    if evt.String in self.dialog.tableSpecs.keyCols:
+      # don't un-display key colums; we need them
+      evt.EventObject.Check(evt.Selection, True)
+    pass
+  
   def OnBeginDrag(self, evt):
     print evt.GetPosition()
     if evt.GetPosition().x < 30 or not evt.LeftDown():
@@ -175,7 +187,7 @@ class FilterPanel(adm.NotebookPanel):
     self.valid=False
     
     sql="EXPLAIN " + self.GetQuery()
-    self.tableSpecs.cursor.ExecuteSet(sql)  # will throw exception if invalid
+    self.tableSpecs.GetCursor().ExecuteSet(sql)  # will throw exception if invalid
 
     self.dialog.SetStatus(xlt("Filter expression valid"))
     self.valid=True
@@ -208,8 +220,8 @@ class FilterPanel(adm.NotebookPanel):
     return sql
 
 class DataFrame(SqlFrame):
-  def __init__(self, parentWin, node):
-    self.tableSpecs=TableSpecs(node)
+  def __init__(self, parentWin, connection, name):
+    self.tableSpecs=TableSpecs(connection, name)
     self.worker=None
     SqlFrame.__init__(self, parentWin, xlt("Data Tool"), "SqlData")
 
@@ -261,7 +273,7 @@ class DataFrame(SqlFrame):
     self.notebook.AddPage(self.editor, xlt("Manual SQL"))
     
     self.manager.AddPane(self.notebook, wx.aui.AuiPaneInfo().Top().PaneBorder().Resizable().MinSize((200,200)).BestSize((400,200)).CloseButton(True) \
-                          .Name("filter").Caption(xlt("SQL query parameter")))
+                          .Name("filter").Caption(xlt("SQL query parameter")).Hide())
 
 
     self.output = SqlEditGrid(self, self.tableSpecs)
@@ -305,7 +317,7 @@ class DataFrame(SqlFrame):
     self.EnableMenu(self.datamenu, self.OnCancelRefresh, True)
     
     self.startTime=wx.GetLocalTimeMillis();
-    self.worker=worker=self.tableSpecs.cursor.ExecuteAsync(sql)
+    self.worker=worker=self.tableSpecs.GetCursor().ExecuteAsync(sql)
     worker.start()
     
     self.SetStatus(xlt("Query is running."));
@@ -384,9 +396,10 @@ class DataTool:
 
   @staticmethod
   def OnExecute(parentWin, node):
-    frame=DataFrame(parentWin, node)
+    application="%s Data Tool" % adm.appTitle
+    pool=pgConnectionPool(node.GetServer(), node.GetServer().GetDsn(node.GetDatabase().name, application))
+    frame=DataFrame(parentWin, pool, node.NameSql())
     frame.Show()
-    wx.SafeYield()
     frame.OnRefresh()
 
   
