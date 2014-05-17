@@ -200,7 +200,8 @@ class Server(adm.ServerNode):
     
   def GetHint(self):
     if self.NeedsInstrumentation():
-      return ( 'instrument', xlt("Server %s not instrumented") % self.name, [self.name, str(self.version)] )
+      return ( 'instrument', xlt("Server %s not instrumented") % self.name, 
+               { 'servername': self.name, 'version': str(self.version) } )
             
   def GetProperties(self):
     if not self.properties:

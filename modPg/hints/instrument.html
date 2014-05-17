@@ -1,10 +1,22 @@
 <html><body>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-<title>Server is not instrumented</title>
+<title>Server %SERVERNAME% is not instrumented</title>
 </head>
 <h3>Server is not instrumented</h3>
-Some text
-<b class='command'> aber hallo</b>
-<arg1/>wurst käse <arg2/>
+<p>
+$APPNAME implements some advanced features, which require additional procedures and tables in the 
+maintenance database to work. These advanced features are:
+<ul>
+<li>aborting connections on the connection status page
+<li>Favorite objects in the browser tree
+<li>SQL code Snippets in the SQL query tool 
+</ul>
+Both Favorites and Snippets are stored in database tables personal to the user you're using to connect, and are 
+instantly available on every computer you're connecting from via $APPNAME. 
+</p><p>
+To prepare the server for improved handling through $APPNAME, execute the <code><b>instrument</b></code>
+context menu on the server object and close the connection. After re-opening the connection, the instrumentation
+state will be detected and the advanced features are available. 
+</p>
 </body></html>

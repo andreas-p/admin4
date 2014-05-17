@@ -149,7 +149,11 @@ class HintDlg(adm.Dialog):
     self.hint=hint
     self.hintModule=hintModule
     self.title=title
-    self.args=args
+    if args:
+      self.args=args
+    else:
+      self.args={}
+    args['appName'] = adm.appTitle
     
   def AddExtraControls(self, res):
     self.browser=wx.html.HtmlWindow(self)
@@ -160,9 +164,8 @@ class HintDlg(adm.Dialog):
     f=open(localizePath(modPath(os.path.join("hints", "%s.html" % self.hint), self.hintModule)))
     html=f.read()
     f.close()
-    for i in range(len(self.args)):
-      tag="<arg%d/>" % (i+1)
-      html=html.replace(tag, self.args[i].encode('utf-8'))
+    for tag, value in self.args.items():
+      html=html.replace("$%s" % tag.upper(), value.encode('utf-8'))
       
     self.browser.SetPage(html.decode('utf-8'))
     if not self.title:
