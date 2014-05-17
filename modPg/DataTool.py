@@ -149,7 +149,6 @@ class FilterPanel(adm.NotebookPanel):
     pass
   
   def OnBeginDrag(self, evt):
-    print evt.GetPosition()
     if evt.GetPosition().x < 30 or not evt.LeftDown():
       evt.Skip()
       return
