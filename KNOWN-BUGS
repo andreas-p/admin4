@@ -1,0 +1,8 @@
+Windows
+http://trac.wxwidgets.org/ticket/15967  Crash in _propgrid.py
+
+Mac OSX
+http://trac.wxwidgets.org/ticket/10916  SetToolBitmapSize() ignored
+http://trac.wxwidgets.org/ticket/16204  ShowModal regression in 3.0
+http://trac.wxwidgets.org/ticket/16268  no wx.CANCEL_DEFAULT
+http://trac.wxwidgets.org/ticket/14523  Installation needs signing
