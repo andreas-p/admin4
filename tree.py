@@ -112,7 +112,7 @@ class NodeTreeCtrl(TreeCtrl):
       w=self.GetFrame()
       cm=w.GetContextMenu(node)
       node.GetProperties()
-      self.PopupMenu(cm, evt.GetPosition())
+      cm.Popup(evt)
 
   
   def SelectNode(self, node, delayed=False):
@@ -378,7 +378,7 @@ class ServerTreeCtrl(DragTreeCtrl):
         else:
           cm.Add(self.OnAddGroup, xlt("New group"))
       
-    self.PopupMenu(cm, evt.GetPosition())
+    cm.Popup(evt)
     
 
   def getImage(self, name, server):

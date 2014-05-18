@@ -4,6 +4,7 @@ Core:
 - fix in Frame.OnCall
 - support NotebookPage.availableOn
 - remember nodePath
+- refactoring of Menu()
 
 modLdap 0.95.3:
 - fix connect to non-instrumented Active Directory

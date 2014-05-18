@@ -49,9 +49,8 @@ class Frame(wx.Frame, adm.MenuOwner):
     calls registered procedures from an event using appropriate arguments
     """
     id=evt.GetId()
-    if id in self.calls:
-      proc=self.calls[id]
-
+    proc=self.GetMenuProc(id)
+    if proc:
       args = self.GetCallArgs(proc)
       if len(args) and args[0] == "self":
         del args[0]

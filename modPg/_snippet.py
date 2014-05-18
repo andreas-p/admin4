@@ -212,7 +212,7 @@ class SnippetTree(DragTreeCtrl):
         cm.Add(self.OnDelSnippet, xlt("Delete"), xlt(("Delete snippet")))
       cm.AppendSeparator()
     cm.Add(self.OnAddGroup, xlt("Add group"), xlt(("Add group")))
-    cm.Popup(evt.GetPosition())
+    cm.Popup(evt)
   
   def ExecuteDrag(self, targetItem):
     targetSnippet=self.GetNode(targetItem)

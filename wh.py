@@ -82,9 +82,9 @@ class FileManager:
       self.lastFiles=config.Read(self.configName, [])
     else:
       self.lastFiles=[]
-    self.firstId=self.frame.GetMenuId(self.OnSelectFile, True, True)
+    self.firstId=self.frame.BindMenuId(self.OnSelectFile, True)
     for _ in range(self.maxLastFiles-1):
-      id=self.frame.GetMenuId(self.OnSelectFile, True, True)
+      id=self.frame.BindMenuId(self.OnSelectFile, True)
       
     self._handleConfig() # fill lastFiles array
     
@@ -286,8 +286,8 @@ class Menu(wx.Menu):
     wx.Menu.__init__(self)
     self.menuOwner=menuOwner
   
-  def Popup(self, pos):
-    self.menuOwner.PopupMenu(self, pos)
+  def Popup(self, evt):
+    evt.EventObject.PopupMenu(self, evt.GetPosition())
                  
   def Enable(self, idOrItem, how):
     if isinstance(idOrItem, wx.MenuItem):
@@ -295,20 +295,22 @@ class Menu(wx.Menu):
     wx.Menu.Enable(self, idOrItem, how)
     
   def Add(self, onproc, name, desc=None, id=-1, macproc=None):
-    if id==-1: id=self.menuOwner.GetMenuId(onproc)
-
     if desc == None: desc=name
-    item=self.Append(id, name, desc)
-    self.menuOwner.Bind(wx.EVT_MENU, onproc, item)
+    if id==-1:
+      id=self.menuOwner.BindMenuId(onproc)
+      item=self.Append(id, name, desc)
+    else:
+      item=self.Append(id, name, desc)
+      self.menuOwner.Bind(wx.EVT_MENU, onproc, id=id)
+      
     if macproc and wx.Platform == "__WXMAC__":
-      macproc(item.GetId())
+      macproc(id)
     return item
 
   def AddCheck(self, onproc, name, desc, how=True):
     if desc == None: desc=name
-    id=self.menuOwner.GetMenuId(onproc)
+    id=self.menuOwner.BindMenuId(onproc)
     item=self.AppendCheckItem(id, name, desc)
-    self.menuOwner.Bind(wx.EVT_MENU, onproc, item)
     self.Check(id, how)
     return item
   

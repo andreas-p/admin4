@@ -72,9 +72,9 @@ class LogPanel(adm.NotebookPanel, ControlledPage):
      
   def OnItemRightClick(self, evt):
     if hasattr(self, 'OnCopy'):
-      cm=Menu(self)
+      cm=Menu(self.dialot)
       cm.Add(self.OnCopy, xlt("Copy"), xlt("Copy"))
-      cm.Popup(evt.GetPosition())
+      cm.Popup(evt)
      
   
   def OnRefreshRate(self, evt=None):

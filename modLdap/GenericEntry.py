@@ -255,16 +255,15 @@ class GenericEntry(adm.NotebookPanel):
         self.dialog.DelValue(oid, None)
         self.dialog.OnCheck()
 
-  def OnGridRightClick(self, ev):
+  def OnGridRightClick(self, evt):
     property=self.grid.GetSelection()
     if property:
       oid=property.GetName()
       if oid:
         name=self.dialog.attribs[oid].name
-        cm=Menu(self)
+        cm=Menu(self.dialog)
         cm.Add(self.OnDelAttrs, xlt("Remove %s") % name, xlt("Remove attribute \"%s\"") % name)
-        pos=ev.GetPosition() # + (0,20)
-        cm.Popup(pos)
+        cm.Popup(evt)
 
 
   def OnGridChange(self, ev):

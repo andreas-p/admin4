@@ -648,7 +648,7 @@ class MultiValRecords(SingleValRecords):
     self.cmRow=evt.GetRow()
     cm=Menu(self)
     cm.Add(self.OnDelete, xlt("Delete"), xlt("Delete line"))
-    cm.Popup(evt.GetPosition())
+    cm.Popup(evt)
     
     
   def OnDelete(self, evt):

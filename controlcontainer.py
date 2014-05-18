@@ -19,27 +19,38 @@ class MenuOwner:
 
   has menus
   """
-  calls={}
+  _menuIds={}
   lastid=500
+  
   def GetCallArgs(self, proc):
     args,_1,_2,_3 = inspect.getargspec(proc)
     return args
 
-  def GetMenuId(self, proc, doBind=False, registerNew=False):
+  def GetMenuProc(self, id):
+    if not hasattr(self, '_menuProcs'):
+      self._menuProcs={}
+      return None
+    return self._menuProcs.get(id)
+  
+  
+  def GetMenuId(self, proc, registerNew=False):
+    id=None
+    foundId=self._menuIds.get(proc)
     if not registerNew:
-      if proc in self.calls.values():
-        for k in self.calls.keys():
-          if self.calls[k] == proc:
-            return k
-    MenuOwner.lastid += 1
-    self.calls[MenuOwner.lastid] = proc
-    if doBind:
-      wx.Window.Bind(self, wx.EVT_MENU, self.OnCall, id=MenuOwner.lastid)
-    return MenuOwner.lastid
+      id=foundId
+    if not id:
+      MenuOwner.lastid += 1
+      id=MenuOwner.lastid
+      if not foundId:
+        self._menuIds[proc] = id
+    return id
 
-  def BindMenuId(self, proc=None):
-    return self.GetMenuId(proc, True)
-
+  def BindMenuId(self, proc, registerNew=False):
+    id= self.GetMenuId(proc, registerNew)
+    if not self.GetMenuProc(id):
+      self._menuProcs[id] = proc
+      wx.Window.Bind(self, wx.EVT_MENU, self.OnCall, id=id)
+    return id
 
   def EnableMenu(self, menu, item, how):
     if how: how=True
@@ -51,7 +62,20 @@ class MenuOwner:
       menu.Enable(item, how)
     if tb:
       tb.EnableTool(item, how)
+  
+  def AddMenuItem(self, menu, onproc, name, desc=None, id=-1):
+    if id==-1: id=self.GetMenuId(onproc)
+    if desc == None: desc=name
+    item=menu.Append(id, name, desc)
+    self.Bind(wx.EVT_MENU, onproc, item)
+    return item
 
+  def AddMenuCheckItem(self, menu, onproc, name, desc=None, id=-1):
+    if id==-1: id=self.GetMenuId(onproc)
+    if desc == None: desc=name
+    item=menu.AppendCheckItem(id, name, desc)
+    self.Bind(wx.EVT_MENU, onproc, item)
+    return item
 
 class ControlContainer():
   def __init__(self, resname=None):

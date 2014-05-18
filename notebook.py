@@ -158,16 +158,15 @@ class Notebook(wx.Notebook, adm.MenuOwner, _TimerOwner):
     page.GetControl().Show()
 
 
-  def OnCall(self, e):
+  def OnCall(self, evt):
     """
     OnCall(wx.Event)
 
     calls registered procedures from an event using appropriate arguments
     """
-    id=e.GetId()
-    if id in self.calls:
-      proc=self.calls[id]
-
+    id=evt.GetId()
+    proc=self.GetMenuProc(id)
+    if proc:
       args=self.GetCallArgs(proc)
       if len(args) and args[0] == "self":
         del args[0]
@@ -210,7 +209,7 @@ class Notebook(wx.Notebook, adm.MenuOwner, _TimerOwner):
             cm.Enable(item, False)
 
         if cm.GetMenuItemCount():
-          page.GetControl().PopupMenu(cm, evt.GetPosition())
+          cm.Popup(evt)
             
       elif hasattr(self.node, "OnItemRightClick"):
         evt.currentPage = page
@@ -223,7 +222,7 @@ class Notebook(wx.Notebook, adm.MenuOwner, _TimerOwner):
           w=adm.GetCurrentFrame(self)
           cm=w.GetContextMenu(node)
           w.currentNode=node
-          page.GetControl().PopupMenu(cm, evt.GetPosition())
+          cm.Popup(evt)
           w.currentNode=None
 
   
