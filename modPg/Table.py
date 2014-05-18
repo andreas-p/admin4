@@ -45,7 +45,7 @@ class Table(SchemaObject):
     sql.AddOrder("relname")
     return sql
   
-      
+
   def GetIcon(self):
     icons=[]
     icons.append("Table")
@@ -55,6 +55,9 @@ class Table(SchemaObject):
 
   def __init__(self, parentNode, info):
     super(Table, self).__init__(parentNode, info)
+    self.Init()
+    
+  def Init(self):
     self.columns=[]
     self.constraints=None
     self.rowcount=xlt("Not counted")

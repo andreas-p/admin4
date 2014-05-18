@@ -233,6 +233,8 @@ class Node(object):
 
   def DoRefresh(self):
     self.properties=[]
+    if hasattr(self, 'Init'):
+      self.Init()
     
     for child in self.childnodes:
       self.removeChild(child)

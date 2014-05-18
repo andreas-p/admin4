@@ -12,6 +12,8 @@ from _pgsql import quoteIdent, quoteValue
 class ServerObject(Node):
   def __init__(self, parentNode, name):
     super(ServerObject, self).__init__(parentNode, name)
+    if hasattr(self, 'Init'):
+      self.Init()
 
   def GetComment(self):
     return self.info.get('description', "")
@@ -104,7 +106,7 @@ class DatabaseObject(ServerObject):
   def Refresh(self):
     sql=self.InstancesQuery(self.parentNode)
     sql.AddWhere("%s=%d" % (self.refreshOid, self.GetOid()))
-    set=self.parentNode.GetCursor().ExecuteSet(sql.SelectQueryString())
+    set=self.parentNode.GetConnection().GetCursor().ExecuteSet(sql.SelectQueryString())
     self.info = set.Next().getDict()
     self.DoRefresh()
     
