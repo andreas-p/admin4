@@ -219,28 +219,28 @@ class DetailFrame(Frame):
    
   def OnAuiCloseEvent(self, evt):
     if evt.GetPane().name == "objectBrowser":
-      self.viewmenu.Check(self.GetMenuId(self.OnToggleTree), False)
+      self.viewmenu.Check(self.OnToggleTree, False)
   
   def OnQuit(self, evt):
     self.tree.Unbind(wx.EVT_TREE_SEL_CHANGED, self.GetMenuId(self.OnTreeSelChange)) # this is for Win C++ dtor
     self.Close()
 
   def OnToggleTree(self, evt):
-    show=self.viewmenu.IsChecked(self.GetMenuId(self.OnToggleTree))
+    show=self.viewmenu.IsChecked(self.OnToggleTree)
     self.manager.GetPane("objectBrowser").Show(show)
     if evt:
       self.manager.Update()
       adm.config.Write("TreeShown", show)
   
   def OnToggleToolBar(self, evt):
-    show=self.viewmenu.IsChecked(self.GetMenuId(self.OnToggleToolBar))
+    show=self.viewmenu.IsChecked(self.OnToggleToolBar)
     self.GetToolBar().Show(show)
     if evt:
       self.manager.Update()
       adm.config.Write("ToolbarShown", show)
   
   def OnToggleStatusBar(self, evt):
-    show=self.viewmenu.IsChecked(self.GetMenuId(self.OnToggleStatusBar))
+    show=self.viewmenu.IsChecked(self.OnToggleStatusBar)
     self.GetStatusBar().Show(show)
     if evt:
       self.manager.Update()
