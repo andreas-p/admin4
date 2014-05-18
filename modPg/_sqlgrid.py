@@ -201,6 +201,7 @@ class EditTable(wx.grid.PyGridTableBase):
 class SqlEditGrid(wx.grid.Grid):
   def __init__(self, parent, tableSpecs):
     wx.grid.Grid.__init__(self, parent)
+    self.frame=parent
     pt=parent.GetFont().GetPointSize()
     if wx.Platform != "__WXMSW__":
       pt *= 0.95  # a little smaller
@@ -278,13 +279,13 @@ class SqlEditGrid(wx.grid.Grid):
     for col in range(len(self.table.colNames)):
       self.RefreshAttr(row, col)
 
-  
   def DoCommit(self):
     self.RefreshRow(self.table.currentRowNo)
-    if self.table.Commit():
-      self.GetParent().SetStatus(xlt("Saved."))
-    self.deferredChange=False
+    if self.table.Commit(): # if there was something to save
+      self.frame.SetStatus(xlt("Saved."))
     self.dirty=False
+    self.frame.updateMenu()
+    self.deferredChange=False
     
   def OnCellChanged(self, evt):
     if self.deferredChange:
@@ -304,8 +305,11 @@ class SqlEditGrid(wx.grid.Grid):
     self.lastRow = evt.Row
   
   def OnEditorShown(self, evt):
-    self.GetParent().SetStatus()
-    self.GetParent().SetStatusText("", SqlFrame.STATUSPOS_SECS)
+    self.dirty=True
+    self.frame.SetStatus()
+    self.frame.SetStatusText("", SqlFrame.STATUSPOS_SECS)
+    self.frame.updateMenu()
+    
   def OnEditorHidden(self, evt):
     pass
 

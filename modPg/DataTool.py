@@ -222,14 +222,17 @@ class DataFrame(SqlFrame):
   def __init__(self, parentWin, connection, name):
     self.tableSpecs=TableSpecs(connection, name)
     self.worker=None
+    self.output=None
+    
     title=xlt("%(appTitle)s Data Tool - %(tableName)s") % {
                 'appTitle': adm.appTitle, 'tableName': name}
     SqlFrame.__init__(self, parentWin, title, "SqlData")
 
     toolbar=self.GetToolBar()
 
-    toolbar.Add(self.OnRefresh, xlt("Refresh"), "refresh")
+    toolbar.Add(self.OnRefresh, xlt("Refresh"), "data_refresh")
     toolbar.Add(self.OnCancelRefresh, xlt("Cancel refresh"), "query_cancel")
+    toolbar.Add(self.OnSave, xlt("Save data"), "data_save")
     toolbar.Add(self.OnToggleFilter, xlt("Show filter window"), "filter")
     toolbar.AddSeparator()
     toolbar.Add(self.OnCopy, xlt("Copy"), "clip_copy")
@@ -241,6 +244,7 @@ class DataFrame(SqlFrame):
     self.datamenu=menu=Menu(self)
     menu.Add(self.OnRefresh, xlt("Refresh"), xlt("Refresh data"))
     menu.Add(self.OnCancelRefresh, xlt("Cancel"), xlt("Cancel refresh"))
+    menu.Add(self.OnSave, xlt("Save"), xlt("Save data"))
     menu.AppendSeparator()
     menu.AddCheck(self.OnToggleFilter, xlt("Show filter"), xlt("Show filter window"))
     menubar.Append(menu, xlt("&Data"))
@@ -317,6 +321,8 @@ class DataFrame(SqlFrame):
         self.SetStatus()
         
     self.EnableMenu(self.datamenu, self.OnRefresh, ok)
+    if self.output:
+      self.EnableMenu(self.datamenu, self.OnSave, self.output.dirty)
     
 
   def executeQuery(self, sql):
@@ -355,6 +361,8 @@ class DataFrame(SqlFrame):
       self.output.SetData(worker.GetResult())
       
 
+  def OnSave(self, evt):
+    pass
  
   def OnRefresh(self, evt=None):
     if self.notebook.GetSelection():
