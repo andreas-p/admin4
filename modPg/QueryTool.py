@@ -429,9 +429,11 @@ class QueryFrame(SqlFrame):
   
   def OnToggleSnippets(self, evt):
     paneInfo=self.manager.GetPane("snippets")
+    how=self.filemenu.IsChecked(self.OnToggleSnippets)
     if isinstance(evt.EventObject, wx.ToolBar):
-      self.filemenu.Check(self.OnToggleSnippets, True)
-    paneInfo.Show(self.filemenu.IsChecked(self.OnToggleSnippets))
+      how=not how
+      self.filemenu.Check(self.OnToggleSnippets, how)
+    paneInfo.Show(how)
     self.manager.Update()    
   
   def OnAddSnippet(self, evt):

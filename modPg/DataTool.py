@@ -299,9 +299,11 @@ class DataFrame(SqlFrame):
 
   def OnToggleFilter(self, evt):
     paneInfo=self.manager.GetPane("filter")
+    how=self.datamenu.IsChecked(self.OnToggleFilter)
     if isinstance(evt.EventObject, wx.ToolBar):
-      self.datamenu.Check(self.OnToggleFilter, True)
-    paneInfo.Show(self.datamenu.IsChecked(self.OnToggleFilter))
+      how=not how
+      self.datamenu.Check(self.OnToggleFilter, how)
+    paneInfo.Show(how)
     self.manager.Update()    
     
 
@@ -314,15 +316,20 @@ class DataFrame(SqlFrame):
     if sel == None:
       sel=self.notebook.GetSelection()
     if sel:
-      ok=True
+      queryOk=True
     else:
-      ok=self.filter.valid
-      if not self.filter.FilterCheck:
-        self.SetStatus()
-        
-    self.EnableMenu(self.datamenu, self.OnRefresh, ok)
+      queryOk=self.filter.valid
+
     if self.output:
-      self.EnableMenu(self.datamenu, self.OnSave, self.output.dirty)
+      if self.output.table:
+        canSave=self.output.dirty
+        canUndo=(self.output.table.currentRow!=None)
+      else:
+        canSave=canUndo=False
+    
+      self.EnableMenu(self.editmenu, self.OnUndo, canUndo)        
+      self.EnableMenu(self.datamenu, self.OnRefresh, queryOk)
+      self.EnableMenu(self.datamenu, self.OnSave, canSave)
     
 
   def executeQuery(self, sql):
@@ -362,8 +369,8 @@ class DataFrame(SqlFrame):
       
 
   def OnSave(self, evt):
-    pass
- 
+    self.output.DoCommit()
+    self.output.Refresh()
   def OnRefresh(self, evt=None):
     if self.notebook.GetSelection():
       sql=self.editor.GetSelectedText()

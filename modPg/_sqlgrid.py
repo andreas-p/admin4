@@ -65,12 +65,22 @@ class EditTable(wx.grid.PyGridTableBase):
           if value != None:
             query.AddColVal(quoteIdent(colname), self.currentRow[colname])
         
-        returned=query.Insert()
-        if returned:
+        if self.hasoids:
+          returning=None
+        else:
+          returning=",".join(map(quoteIdent, self.tableSpecs.keyCols))
+                             
+        returned=query.Insert(returning)
+        if returned != None:
           if self.hasoids:
             self.currentRow['oid'] = returned
           else:
-            pass # TODO  update of key cols if we had them returned
+            if isinstance(returned, tuple):
+              for i in range(len(returned)):
+                self.currentRow[self.tableSpecs.keyCols[i]] = returned[i]
+            else:
+              self.currentRow[self.tableSpecs.keyCols[0]] = returned
+
         self.rows.append(self.currentRow)
         self.grid.GetParent().SetStatusText(xlt("%d rows") % len(self.rows), SqlFrame.STATUSPOS_ROWS)
         self.grid.AppendRows(1)
@@ -202,6 +212,7 @@ class SqlEditGrid(wx.grid.Grid):
   def __init__(self, parent, tableSpecs):
     wx.grid.Grid.__init__(self, parent)
     self.frame=parent
+    self.table=None
     pt=parent.GetFont().GetPointSize()
     if wx.Platform != "__WXMSW__":
       pt *= 0.95  # a little smaller
@@ -280,12 +291,16 @@ class SqlEditGrid(wx.grid.Grid):
       self.RefreshAttr(row, col)
 
   def DoCommit(self):
+    if self.IsCellEditControlShown():
+      self.SaveEditControlValue()
+      self.HideCellEditControl()
     self.RefreshRow(self.table.currentRowNo)
     if self.table.Commit(): # if there was something to save
       self.frame.SetStatus(xlt("Saved."))
     self.dirty=False
-    self.frame.updateMenu()
     self.deferredChange=False
+    self.RefreshRow(self.table.currentRowNo)
+    self.frame.updateMenu()
     
   def OnCellChanged(self, evt):
     if self.deferredChange:
