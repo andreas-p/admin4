@@ -29,6 +29,12 @@ class Frame(wx.Frame, adm.MenuOwner):
       self.SetSize(size)
 
 
+  def GetToolBar(self):
+    if hasattr(self, 'toolbar'):
+      return self.toolbar
+    return None
+  
+  
   def SetIcon(self, icon, mod=None):
     if isinstance(icon, int):
       icon=adm.images.GetBitmap(icon)

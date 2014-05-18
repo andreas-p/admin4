@@ -137,7 +137,7 @@ class QueryFrame(SqlFrame):
 
     self.fileManager=FileManager(self, adm.config)
 
-    toolbar=self.GetToolBar()
+    toolbar=self.toolbar
     toolbar.Add(self.OnFileOpen, xlt("Load from file"),"file_open")
     toolbar.Add(self.OnFileSave, xlt("Save to file"), "file_save")
     toolbar.Add(self.OnToggleSnippets, xlt("Show snippets browser"), "snippets")
@@ -303,7 +303,6 @@ class QueryFrame(SqlFrame):
       canRedo=self.editor.CanRedo();
       canPaste=self.editor.CanPaste();
       canCut = True;
-    
     a,e=self.editor.GetSelection()
     canQuery = ( a!=e or self.editor.GetLineCount() >1 or self.getSql() )
 

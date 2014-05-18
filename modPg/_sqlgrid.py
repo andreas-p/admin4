@@ -388,7 +388,7 @@ class SqlFrame(adm.Frame):
     self.manager.SetFlags(wx.aui.AUI_MGR_ALLOW_FLOATING|wx.aui.AUI_MGR_TRANSPARENT_HINT | \
          wx.aui.AUI_MGR_HINT_FADE| wx.aui.AUI_MGR_TRANSPARENT_DRAG)
     self.Bind(wx.EVT_CLOSE, self.OnClose)
-    ToolBar(self, 16)
+    self.toolbar=ToolBar(self, 16)
     self.CreateStatusBar(4, wx.ST_SIZEGRIP)
     w,_h=self.StatusBar.GetTextExtent('Mg')
     self.SetStatusWidths([-1, 5*w,6*w,5*w])
