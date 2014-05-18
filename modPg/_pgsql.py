@@ -476,6 +476,11 @@ class pgConnectionPool:
     return len(self.connections) == 0
 
 
+  def Disconnect(self):
+    for conn in self.connections:
+      conn.disconnect()
+    self.connections=[]
+    
   def RemoveConnection(self, conn):
     try:    self.connections.remove(conn)
     except: pass

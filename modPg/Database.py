@@ -83,10 +83,9 @@ class Database(ServerObject):
       return conn.GetCursor()
     return None
 
-  def Disconnect(self):
-    self.connection.disconnect()
+  def DoDisconnect(self):
+    self.connection.Disconnect()
     self.connection = None
-    #self.Refresh()
     self.IconUpdate(True)
     
     
@@ -163,7 +162,7 @@ class DbDisconnect:
 
   @staticmethod
   def OnExecute(_parentWin, node):
-    node.Disconnect()
+    node.DoDisconnect()
     
 menuinfo=[
            {"class": DbDisconnect, "nodeclasses": Database , "sort": 1 } ,
