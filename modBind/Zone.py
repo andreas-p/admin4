@@ -646,9 +646,10 @@ class MultiValRecords(SingleValRecords):
   
   def OnRightClick(self, evt):
     self.cmRow=evt.GetRow()
-    cm=Menu()
-    cm.Append(self.BindMenuId(self.OnDelete), xlt("Delete"), xlt("Delete line"))
-    self.grid.PopupMenu(cm, evt.GetPosition())
+    cm=Menu(self)
+    cm.Add(self.OnDelete, xlt("Delete"), xlt("Delete line"))
+    cm.Popup(evt.GetPosition())
+    
     
   def OnDelete(self, evt):
     self.changed=True

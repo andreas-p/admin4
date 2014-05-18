@@ -261,10 +261,10 @@ class GenericEntry(adm.NotebookPanel):
       oid=property.GetName()
       if oid:
         name=self.dialog.attribs[oid].name
-        cm=Menu()
-        cm.Append(self.dialog.GetMenuId(self.OnDelAttrs), xlt("Remove %s") % name, xlt("Remove attribute \"%s\"") % name)
+        cm=Menu(self)
+        cm.Add(self.OnDelAttrs, xlt("Remove %s") % name, xlt("Remove attribute \"%s\"") % name)
         pos=ev.GetPosition() # + (0,20)
-        self.grid.PopupMenu(cm, pos)
+        cm.Popup(pos)
 
 
   def OnGridChange(self, ev):

@@ -1,4 +1,3 @@
-# The Admin4 Project
 # (c) 2013-2014 Andreas Pflug
 #
 # Licensed under the Apache License, 
@@ -173,7 +172,7 @@ class FileManager:
     If used, the frame.OnRecentFileOpened(filename) called when a recent file is selected
     """
     if not self.recentMenu:
-      self.recentMenu = Menu()
+      self.recentMenu=Menu(self.frame)
     self._handleMenu()
     return self.recentMenu
   
@@ -283,6 +282,36 @@ class Timer(wx.Timer):
     Timer.timerId += 1
 
 class Menu(wx.Menu):
+  def __init__(self, menuOwner=None):
+    wx.Menu.__init__(self)
+    self.menuOwner=menuOwner
+  
+  def Popup(self, pos):
+    self.menuOwner.PopupMenu(self, pos)
+                 
+  def Enable(self, idOrItem, how):
+    if isinstance(idOrItem, wx.MenuItem):
+      idOrItem=idOrItem.GetId()
+    wx.Menu.Enable(self, idOrItem, how)
+    
+  def Add(self, onproc, name, desc=None, id=-1, macproc=None):
+    if id==-1: id=self.menuOwner.GetMenuId(onproc)
+
+    if desc == None: desc=name
+    item=self.Append(id, name, desc)
+    self.menuOwner.Bind(wx.EVT_MENU, onproc, item)
+    if macproc and wx.Platform == "__WXMAC__":
+      macproc(item.GetId())
+    return item
+
+  def AddCheck(self, onproc, name, desc, how=True):
+    if desc == None: desc=name
+    id=self.menuOwner.GetMenuId(onproc)
+    item=self.AppendCheckItem(id, name, desc)
+    self.menuOwner.Bind(wx.EVT_MENU, onproc, item)
+    self.Check(id, how)
+    return item
+  
   def AppendOneMenu(self, menu, txt, help=None):
     if not help:
       help=""
@@ -297,7 +326,7 @@ class Menu(wx.Menu):
 
 
   def Dup(self):
-    menu=Menu()
+    menu=Menu(self.menuOwner)
     for i in self.GetMenuItems():
       item=menu.Append(i.GetId(), i.GetItemLabel(), i.GetHelp())
       item.SetBitmap(i.GetBitmap())

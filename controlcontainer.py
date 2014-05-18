@@ -51,24 +51,7 @@ class MenuOwner:
       menu.Enable(item, how)
     if tb:
       tb.EnableTool(item, how)
-  
-  def AddMenu(self, menu, name, desc, onproc, id=-1, macproc=None):
-    if id == -1:
-      id=self.GetMenuId(onproc)
-    item=menu.Append(id, name, desc)
-    self.Bind(wx.EVT_MENU, onproc, item)
-    if macproc and wx.Platform == "__WXMAC__":
-      macproc(item.GetId())
-    return item
 
-  def AddCheckMenu(self, menu, name, desc, onproc, how=True, id=-1):
-    if id == -1:
-      id=self.GetMenuId(onproc)
-    item=menu.AppendCheckItem(id, name, desc)
-    self.Bind(wx.EVT_MENU, onproc, item)
-    menu.Check(id, how)
-    return item
-  
 
 class ControlContainer():
   def __init__(self, resname=None):

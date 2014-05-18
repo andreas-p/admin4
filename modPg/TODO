@@ -8,5 +8,6 @@ EditGrid
 - @insert: returned key col values
 - Drag/drop not from MouseDown
 - Save button
+- checkMenu for show snippets
 
 Roles as Server page

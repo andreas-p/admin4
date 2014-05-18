@@ -126,37 +126,37 @@ class DetailFrame(Frame):
 
     menubar=wx.MenuBar()
 
-    self.filemenu=menu=Menu()
+    self.filemenu=menu=Menu(self)
 
-    self.registermenu=Menu()
+    self.registermenu=Menu(self)
     for modulename in adm.modules.keys():
       moduleinfo=adm.modules[modulename].moduleinfo
       registerproc=moduleinfo['serverclass'].Register
-      self.registermenu.Append(self.BindMenuId(registerproc), xlt("Register new %s") % moduleinfo['name'])
+      self.registermenu.Add(registerproc, xlt("Register new %s") % moduleinfo['name'])
     self.filemenu.AppendOneMenu(self.registermenu, xlt("Register Server"))
 
     if wx.Platform != "__WXMAC__":
       menu.AppendSeparator()
-    self.AddMenu(menu, xlt("Preferences"), xlt("Preferences"), self.OnPreferences, wx.ID_PREFERENCES, adm.app.SetMacPreferencesMenuItemId)
-    self.AddMenu(menu, xlt("Quit"), xlt("Quit Admin4"), self.OnQuit, wx.ID_EXIT, adm.app.SetMacExitMenuItemId)
+    menu.Add(self.OnPreferences, xlt("Preferences"), xlt("Preferences"), wx.ID_PREFERENCES, adm.app.SetMacPreferencesMenuItemId)
+    menu.Add(self.OnQuit, xlt("Quit"), xlt("Quit Admin4"), wx.ID_EXIT, adm.app.SetMacExitMenuItemId)
 
     menubar.Append(menu, xlt("&File"))
 
-    self.viewmenu=menu=Menu()
-    self.AddMenu(menu, xlt("Show Servers"), xlt("Show registered servers to connect"), self.OnShowServers)
-    self.AddCheckMenu(menu, xlt("Tree"), xlt("Show or hide tree"), self.OnToggleTree, adm.config.Read("TreeShown", True))
-    self.AddCheckMenu(menu, xlt("Toolbar"), xlt("Show or hide tool bar"), self.OnToggleToolBar, adm.config.Read("ToolbarShown", True))
-    self.AddCheckMenu(menu, xlt("Statusbar"), xlt("Show or hide status bar"), self.OnToggleStatusBar, adm.config.Read("StatusbarShown", True))
+    self.viewmenu=menu=Menu(self)
+    menu.Add(self.OnShowServers, xlt("Show Servers"), xlt("Show registered servers to connect"))
+    menu.AddCheck(self.OnToggleTree, xlt("Tree"), xlt("Show or hide tree"), adm.config.Read("TreeShown", True))
+    menu.AddCheck(self.OnToggleToolBar, xlt("Toolbar"), xlt("Show or hide tool bar"), adm.config.Read("ToolbarShown", True))
+    menu.AddCheck(self.OnToggleStatusBar, xlt("Statusbar"), xlt("Show or hide status bar"), adm.config.Read("StatusbarShown", True))
     menubar.Append(menu, xlt("&View"))
 
     _helpid=self.BindMenuId(self.OnHelp)
 
-    self.helpmenu=menu=Menu()
+    self.helpmenu=menu=Menu(self)
 
-    self.AddMenu(menu, xlt("Help"), xlt("Show help"), self.OnHelp, wx.ID_HELP)
-    self.AddMenu(menu, xlt("Logging"), xlt("Show logged problems"), self.OnLogging)
-    self.AddMenu(menu, xlt("Update"), xlt("Update program modules"), self.OnUpdate)
-    self.AddMenu(menu, xlt("About"), xlt("About %s") % adm.appTitle, self.OnAbout, wx.ID_ABOUT, adm.app.SetMacAboutMenuItemId)
+    menu.Add(self.OnHelp, xlt("Help"), xlt("Show help"), wx.ID_HELP)
+    menu.Add(self.OnLogging, xlt("Logging"), xlt("Show logged problems"))
+    menu.Add(self.OnUpdate, xlt("Update"), xlt("Update program modules"))
+    menu.Add(self.OnAbout, xlt("About"), xlt("About %s") % adm.appTitle, wx.ID_ABOUT, adm.app.SetMacAboutMenuItemId)
 
     menubar.Append(menu, xlt("&Help"))
 
@@ -421,16 +421,15 @@ class DetailFrame(Frame):
 
 
   def GetContextMenu(self, node):
-    contextMenu=Menu()
+    contextMenu=Menu(self)
 
     if not len(node.properties):
       node.GetProperties()
     newcls=self.getNewClass(node)
-    newmenu=Menu()
+    newmenu=Menu(self)
 
     if newcls:
-      newid=self.BindMenuId(newcls.New)
-      newmenu.Append(newid, xlt("New %s") % newcls.shortname, xlt("Create new %s") % newcls.typename)
+      newmenu.Add(newcls.New, xlt("New %s") % newcls.shortname, xlt("Create new %s") % newcls.typename)
 
     morenew=node.nodeinfo().get('new', [])
     if isinstance(morenew, list):
@@ -455,21 +454,20 @@ class DetailFrame(Frame):
       if cls == newcls:
         continue
       if hasattr(cls, "New"):
-        id=self.BindMenuId(cls.New)
-        newmenu.Append(id, xlt("New %s") % cls.shortname, xlt("Create new %s") % cls.typename)
+        newmenu.Add(cls.New, xlt("New %s") % cls.shortname, xlt("Create new %s") % cls.typename)
 
     contextMenu.AppendOneMenu(newmenu, xlt("New Object"), xlt("Creates a new object"))
 
     if hasattr(node, "Delete"):
-      contextMenu.Append(self.GetMenuId(self.OnDelete), xlt("Delete %s") % node.shortname, xlt("Delete %s %s") % (node.typename,node.name))
+      contextMenu.Add(self.OnDelete, xlt("Delete %s") % node.shortname, xlt("Delete %s %s") % (node.typename,node.name))
 
     if hasattr(node, "Disconnect"):
-      contextMenu.Append(self.BindMenuId(self.OnDisconnect), xlt("Disconnect %s") % node.name, xlt("Disconnect %s \"%s\"") % (node.typename,node.name))
+      contextMenu.Add(self.OnDisconnect, xlt("Disconnect %s") % node.name, xlt("Disconnect %s \"%s\"") % (node.typename,node.name))
 
     if contextMenu.GetMenuItemCount():
       contextMenu.AppendSeparator()
-    contextMenu.Append(self.GetMenuId(self.OnRefresh), xlt("Refresh"), xlt("Refresh %s") % node.typename)
-    contextMenu.Append(self.GetMenuId(self.OnDetach), xlt("Detach view"), xlt("Show %s in detached window") % node.typename)
+    contextMenu.Add(self.OnRefresh, xlt("Refresh"), xlt("Refresh %s") % node.typename)
+    contextMenu.Add(self.OnDetach, xlt("Detach view"), xlt("Show %s in detached window") % node.typename)
 
     needSeparator=True
 
@@ -480,14 +478,13 @@ class DetailFrame(Frame):
         needSeparator=False
         cls=mi['class']
         id=self.BindMenuId(cls.OnExecute)
-        _item=contextMenu.Append(id, cls.name, cls.help)
+        contextMenu.Append(id, cls.name, cls.help)
         if hasattr(cls, "CheckEnabled") and not cls.CheckEnabled(node):
           contextMenu.Enable(id, False)
 
     if hasattr(node, "Edit"):
       contextMenu.AppendSeparator()
-      id=self.BindMenuId(node.Edit)
-      contextMenu.Append(id, xlt("Properties"), xlt("Edit properties of %s") % node.typename)
+      contextMenu.Add(node.Edit, xlt("Properties"), xlt("Edit properties of %s") % node.typename)
 
     return contextMenu
 

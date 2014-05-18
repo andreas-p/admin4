@@ -222,7 +222,9 @@ class DataFrame(SqlFrame):
   def __init__(self, parentWin, connection, name):
     self.tableSpecs=TableSpecs(connection, name)
     self.worker=None
-    SqlFrame.__init__(self, parentWin, xlt("Data Tool"), "SqlData")
+    title=xlt("%(appTitle)s Data Tool - %(tableName)s") % {
+                'appTitle': adm.appTitle, 'tableName': name}
+    SqlFrame.__init__(self, parentWin, title, "SqlData")
 
     toolbar=self.GetToolBar()
 
@@ -236,18 +238,18 @@ class DataFrame(SqlFrame):
     toolbar.Add(self.OnUndo, xlt("Undo"), "edit_undo")
 
     menubar=wx.MenuBar()
-    self.datamenu=menu=Menu()
-    self.AddMenu(menu, xlt("Refresh"), xlt("Refresh data"), self.OnRefresh)
-    self.AddMenu(menu, xlt("Cancel"), xlt("Cancel refresh"), self.OnCancelRefresh)
+    self.datamenu=menu=Menu(self)
+    menu.Add(self.OnRefresh, xlt("Refresh"), xlt("Refresh data"))
+    menu.Add(self.OnCancelRefresh, xlt("Cancel"), xlt("Cancel refresh"))
     menu.AppendSeparator()
-    self.AddMenu(menu, xlt("Show filter"), xlt("Show filter window"), self.OnShowFilter)
+    menu.Add(self.OnShowFilter, xlt("Show filter"), xlt("Show filter window"))
     menubar.Append(menu, xlt("&Data"))
     
-    self.editmenu=menu=Menu()
-    self.AddMenu(menu, xlt("Cu&t"), xlt("Cut selected data to clipboard"), self.OnCut)
-    self.AddMenu(menu, xlt("&Copy"), xlt("Copy selected data to clipboard"), self.OnCopy)
-    self.AddMenu(menu, xlt("&Paste"), xlt("Paste data from clipboard"), self.OnPaste)
-    self.AddMenu(menu, xlt("&Undo"), xlt("discard last editing"), self.OnUndo)
+    self.editmenu=menu=Menu(self)
+    menu.Add(self.OnCut, xlt("Cu&t"), xlt("Cut selected data to clipboard"))
+    menu.Add(self.OnCopy, xlt("&Copy"), xlt("Copy selected data to clipboard"))
+    menu.Add(self.OnPaste, xlt("&Paste"), xlt("Paste data from clipboard"))
+    menu.Add(self.OnUndo, xlt("&Undo"), xlt("discard last editing"))
     menubar.Append(menu, xlt("&Edit"))
 
     self.EnableMenu(self.datamenu, self.OnCancelRefresh, False)
@@ -327,10 +329,10 @@ class DataFrame(SqlFrame):
     self.EnableMenu(self.datamenu, self.OnCancelRefresh, False)
     self.EnableMenu(self.datamenu, self.OnRefresh, True)
   
-    txt=xlt("%d rows")
-    if not self.notebook.GetSelection() and self.filter.LimitCheck:
+    txt=xlt("%d rows") % worker.GetRowcount()
+    if not self.notebook.GetSelection() and self.filter.LimitCheck and self.filter.LimitValue == worker.GetRowcount():
       txt += " LIMIT"
-    self.SetStatusText(txt % worker.GetRowcount(), self.STATUSPOS_ROWS)
+    self.SetStatusText(txt, self.STATUSPOS_ROWS)
 
     if worker.cancelled:
       self.SetStatus(xlt("Cancelled."));

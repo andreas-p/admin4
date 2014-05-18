@@ -194,27 +194,25 @@ class SnippetTree(DragTreeCtrl):
     if item and item != self.GetSelection():
       self.SelectItem(item)
     
-    cm=Menu()
+    cm=Menu(self.frame)
     if item:
       snippet=self.GetNode(item)
       if snippet.IsGroup():
-        cm.Append(self.frame.BindMenuId(self.OnRenameSnippet), xlt("Rename"), xlt(("Rename group")))
-        id=self.frame.BindMenuId(self.OnDelSnippet)
-        cm.Append(id, xlt("Delete"), xlt(("Delete group")))
+        cm.Add(self.OnRenameSnippet, xlt("Rename"), xlt(("Rename group")))
+        item=cm.Add(self.OnDelSnippet, xlt("Delete"), xlt(("Delete group")))
         for s in self.snippets.values():
           if s.parent == snippet.id:
-            cm.Enable(id, False)
+            cm.Enable(item, False)
             break;
       else:
-        cm.Append(self.frame.BindMenuId(self.OnReplaceSnippet), xlt("Replace"), xlt(("Replace snippet text")))
-        cm.Append(self.frame.BindMenuId(self.OnRenameSnippet), xlt("Rename"), xlt(("Rename snippet")))
-        rv=self.frame.BindMenuId(self.OnRevertSnippet)
-        cm.Append(rv, xlt("Revert"), xlt(("Revert snippet to previous text")))
-        cm.Enable(rv, snippet.prevText != None)
-        cm.Append(self.frame.BindMenuId(self.OnDelSnippet), xlt("Delete"), xlt(("Delete snippet")))
+        cm.Add(self.OnReplaceSnippet, xlt("Replace"), xlt(("Replace snippet text")))
+        cm.Add(self.OnRenameSnippet, xlt("Rename"), xlt(("Rename snippet")))
+        item=cm.Add(self.OnRevertSnippet, xlt("Revert"), xlt(("Revert snippet to previous text")))
+        cm.Enable(item, snippet.prevText != None)
+        cm.Add(self.OnDelSnippet, xlt("Delete"), xlt(("Delete snippet")))
       cm.AppendSeparator()
-    cm.Append(self.frame.BindMenuId(self.OnAddGroup), xlt("Add group"), xlt(("Add group")))
-    self.PopupMenu(cm, evt.GetPosition())
+    cm.Add(self.OnAddGroup, xlt("Add group"), xlt(("Add group")))
+    cm.Popup(evt.GetPosition())
   
   def ExecuteDrag(self, targetItem):
     targetSnippet=self.GetNode(targetItem)

@@ -231,7 +231,7 @@ class SqlEditGrid(wx.grid.Grid):
         if not cd.notNull:
           cd.type += ":Null"
         if cd.type not in self.dataTypes:
-          query=pgQuery("pg_enum", self.tableSpecs.cursor)
+          query=pgQuery("pg_enum", self.tableSpecs.GetCursor())
           query.AddCol("enumlabel")
           if self.tableSpecs.serverVersion > 9.1:
             query.addOrder("enumsortorder")
@@ -316,13 +316,12 @@ class SqlEditGrid(wx.grid.Grid):
     colname=self.table.colNames[evt.Col]
     cd=self.tableSpecs.colSpecs.get(colname)
 
-    cm=Menu()
-    id=self.GetParent().BindMenuId(self.OnSetNull)
+    cm=Menu(self.GetParent())
     if cd:
-      cm.Append(id, xlt("Set NULL"))
+      item=cm.Append(self.OnSetNull, xlt("Set NULL"))
       if cd.notNull:
-        cm.Enable(id, False)
-    self.PopupMenu(cm, evt.GetPosition())
+        cm.Enable(item, False)
+    cm.Popup(evt.GetPosition())
     
 
   def OnSetNull(self, evt):  

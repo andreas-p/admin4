@@ -199,16 +199,15 @@ class Notebook(wx.Notebook, adm.MenuOwner, _TimerOwner):
       if not hasattr(evt, 'page'):
         evt.page=page
       if hasattr(page, 'menus'):
-        cm=Menu()
+        cm=Menu(self)
         menus=page.menus
         for cls in menus:
           if hasattr(cls, "CheckAvailableOn") and not cls.CheckAvailableOn(page):
             continue
-          id=self.BindMenuId(cls.OnExecute)
           cls.OnExecute._classname_=cls.__name__
-          cm.Append(id, cls.name, cls.help)
+          item=cm.Add(cls.OnExecute, cls.name, cls.help)
           if hasattr(cls, "CheckEnabled") and not cls.CheckEnabled(page):
-            cm.Enable(id, False)
+            cm.Enable(item, False)
 
         if cm.GetMenuItemCount():
           page.GetControl().PopupMenu(cm, evt.GetPosition())

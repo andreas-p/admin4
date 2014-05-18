@@ -9,7 +9,7 @@
 import wx
 import adm
 import logger
-from wh import xlt
+from wh import xlt, Menu
 
 
 class TreeItemData(wx.TreeItemData):
@@ -361,23 +361,22 @@ class ServerTreeCtrl(DragTreeCtrl):
     
     
     if self.currentNode:
-      cm=wx.Menu()
+      cm=Menu(frame)
       registerproc=self.currentNode.moduleinfo()['serverclass'].Register
-      cm.Append(frame.BindMenuId(registerproc), xlt("Register new %s") % self.currentNode.moduleinfo()['name'])
-      cm.Append(frame.BindMenuId(self.OnEdit), xlt("Edit registration"))
-      cm.Append(frame.BindMenuId(self.OnUnregister), xlt("Remove registration"))
+      cm.Add(registerproc, xlt("Register new %s") % self.currentNode.moduleinfo()['name'])
+      cm.Add(self.OnEdit, xlt("Edit registration"))
+      cm.Add(self.OnUnregister, xlt("Remove registration"))
       
       if not self.currentNode.settings.get('group'):
-        cm.Append(frame.BindMenuId(self.OnAddGroup), xlt("New group"))
+        cm.Add(self.OnAddGroup, xlt("New group"))
     else:
         cm=self.GetFrame().registermenu.Dup()
         if item:
-          id=frame.BindMenuId(self.OnDelGroup)
-          cm.Append(id, xlt("Remove group"))
+          item=cm.Add(self.OnDelGroup, xlt("Remove group"))
           if self.GetChildrenCount(item) > 0:
-            cm.Enable(id, False)
+            cm.Enable(item, False)
         else:
-          cm.Append(frame.BindMenuId(self.OnAddGroup), xlt("New group"))
+          cm.Add(self.OnAddGroup, xlt("New group"))
       
     self.PopupMenu(cm, evt.GetPosition())
     
