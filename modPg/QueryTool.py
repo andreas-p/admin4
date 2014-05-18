@@ -140,7 +140,7 @@ class QueryFrame(SqlFrame):
     toolbar=self.GetToolBar()
     toolbar.Add(self.OnFileOpen, xlt("Load from file"),"file_open")
     toolbar.Add(self.OnFileSave, xlt("Save to file"), "file_save")
-    toolbar.Add(self.OnShowSnippets, xlt("Show snippets browser"), "snippets")
+    toolbar.Add(self.OnToggleSnippets, xlt("Show snippets browser"), "snippets")
     
     toolbar.AddSeparator()
     toolbar.Add(self.OnCopy, xlt("Copy"), "clip_copy")
@@ -183,7 +183,7 @@ class QueryFrame(SqlFrame):
     menu.Add(self.OnFileSave, xlt("&Save"), xlt("Save current file"))
     menu.Add(self.OnFileSaveAs, xlt("Save &as.."), xlt("Save file under new name"))
     menu.AppendSeparator()
-    menu.Add(self.OnShowSnippets, xlt("Show snippets"), xlt("Show snippet browser"))
+    menu.AddCheck(self.OnToggleSnippets, xlt("Show snippets"), xlt("Show snippet browser"))
     
     menu.AppendSeparator()
 #    menu.Add(xlt("Preferences"), xlt("Preferences"), self.OnPreferences)
@@ -260,9 +260,11 @@ class QueryFrame(SqlFrame):
     self.SetStatus(xlt("ready"))
     
     self.restorePerspective()
+    self.manager.Bind(wx.aui.EVT_AUI_PANE_CLOSE, self.OnAuiCloseEvent)
+    self.filemenu.Check(self.OnToggleSnippets, self.manager.GetPane("snippets").IsShown())
     self.updateMenu()
 
-  
+
   def SetTitle(self, dbName):
     title=xlt("PostGreSQL Query Tool - Database \"%(dbname)s\" on Server \"%(server)s\""  % { 'dbname': dbName, 'server': self.server.name})
     adm.Frame.SetTitle(self, title)
@@ -319,7 +321,7 @@ class QueryFrame(SqlFrame):
     
     self.EnableMenu(self.querymenu, self.OnExecuteQuery, canQuery)
     self.EnableMenu(self.querymenu, self.OnExplainQuery, canQuery)
-    
+      
     
   def executeSql(self, targetPage, sql, _queryOffset=0, resultToMsg=False):
     self.EnableMenu(self.querymenu, self.OnCancelQuery, True)
@@ -421,9 +423,16 @@ class QueryFrame(SqlFrame):
     return sql.strip()
   
   
-  def OnShowSnippets(self, evt):
+  def OnAuiCloseEvent(self, evt):
+    if evt.GetPane().name == "snippets":
+      self.filemenu.Check(self.OnToggleSnippets, False)
+
+  
+  def OnToggleSnippets(self, evt):
     paneInfo=self.manager.GetPane("snippets")
-    paneInfo.Show(not paneInfo.IsShown())
+    if isinstance(evt.EventObject, wx.ToolBar):
+      self.filemenu.Check(self.OnToggleSnippets, True)
+    paneInfo.Show(self.filemenu.IsChecked(self.OnToggleSnippets))
     self.manager.Update()    
   
   def OnAddSnippet(self, evt):

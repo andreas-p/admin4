@@ -230,7 +230,7 @@ class DataFrame(SqlFrame):
 
     toolbar.Add(self.OnRefresh, xlt("Refresh"), "refresh")
     toolbar.Add(self.OnCancelRefresh, xlt("Cancel refresh"), "query_cancel")
-    toolbar.Add(self.OnShowFilter, xlt("Show filter window"), "filter")
+    toolbar.Add(self.OnToggleFilter, xlt("Show filter window"), "filter")
     toolbar.AddSeparator()
     toolbar.Add(self.OnCopy, xlt("Copy"), "clip_copy")
     toolbar.Add(self.OnCut, xlt("Cut"), "clip_cut")
@@ -242,7 +242,7 @@ class DataFrame(SqlFrame):
     menu.Add(self.OnRefresh, xlt("Refresh"), xlt("Refresh data"))
     menu.Add(self.OnCancelRefresh, xlt("Cancel"), xlt("Cancel refresh"))
     menu.AppendSeparator()
-    menu.Add(self.OnShowFilter, xlt("Show filter"), xlt("Show filter window"))
+    menu.AddCheck(self.OnToggleFilter, xlt("Show filter"), xlt("Show filter window"))
     menubar.Append(menu, xlt("&Data"))
     
     self.editmenu=menu=Menu(self)
@@ -282,14 +282,22 @@ class DataFrame(SqlFrame):
                           .Name("Edit Data").Caption(xlt("Edit Data")).CaptionVisible(False))
 
     self.restorePerspective()
+    self.manager.Bind(wx.aui.EVT_AUI_PANE_CLOSE, self.OnAuiCloseEvent)
+    self.datamenu.Check(self.OnToggleFilter, self.manager.GetPane("filter").IsShown())
     self.updateMenu()
     self.filter.Go(self.tableSpecs)
     self.editor.SetText("/*\n%s\n*/\n\n%s" % (xlt("Caution: Don't mess with table and column names!\nYou may experience unwanted behaviour."), self.filter.GetQuery()))
 
     
-  def OnShowFilter(self, evt):
+  def OnAuiCloseEvent(self, evt):
+    if evt.GetPane().name == "filter":
+      self.datamenu.Check(self.OnToggleFilter, False)
+
+  def OnToggleFilter(self, evt):
     paneInfo=self.manager.GetPane("filter")
-    paneInfo.Show(not paneInfo.IsShown())
+    if isinstance(evt.EventObject, wx.ToolBar):
+      self.datamenu.Check(self.OnToggleFilter, True)
+    paneInfo.Show(self.datamenu.IsChecked(self.OnToggleFilter))
     self.manager.Update()    
     
 
