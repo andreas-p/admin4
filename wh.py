@@ -51,7 +51,16 @@ class ToolBar(wx.ToolBar):
     else:
       wx.ToolBar.Enable(self, procOrId)
 
-  def Add(self, procOrCls, text=None, bitmap=None):
+  def AddCheck(self, procOrCls, text=None, bitmap=None):
+    """
+    AddCheck(self, procOrCls, text=None, bitmap=None)
+    
+    Adds a tool to the toolbar.
+    If text==None, proc is assumed to be an class with an OnExecute method, name and toolbitmap statics 
+    """
+    return self.Add(procOrCls, text, bitmap, kind=wx.ITEM_CHECK)
+
+  def Add(self, procOrCls, text=None, bitmap=None, kind=wx.ITEM_NORMAL):
     """
     Add(self, procOrCls, text=None, bitmap=None)
     
@@ -65,9 +74,10 @@ class ToolBar(wx.ToolBar):
       id=self.frame.BindMenuId(procOrCls.OnExecute)
       text=procOrCls.name
       bmp=GetBitmap(procOrCls.toolbitmap, procOrCls)
-    self.DoAddTool(id, text, bmp)
+    self.DoAddTool(id, text, bmp, kind=kind)
     return id
-
+  
+  
 class FileManager:
   maxLastFiles=10
   def __init__(self, frame, config=None):
@@ -288,11 +298,25 @@ class Menu(wx.Menu):
   
   def Popup(self, evt):
     evt.EventObject.PopupMenu(self, evt.GetPosition())
-                 
-  def Enable(self, idOrItem, how):
-    if isinstance(idOrItem, wx.MenuItem):
-      idOrItem=idOrItem.GetId()
-    wx.Menu.Enable(self, idOrItem, how)
+       
+  def getId(self, something):
+    if isinstance(something, wx.MenuItem):
+      return something.GetId()
+    elif isinstance(something, int):
+      return something
+    return self.menuOwner.GetMenuId(something)
+
+  def Enable(self, something, how):
+    wx.Menu.Enable(self, self.getId(something), how)
+    
+  def IsEnabled(self, something):
+    return wx.Menu.IsEnabled(self, self.getId(something))
+    
+  def Check(self, something, how):
+    wx.Menu.Check(self, self.getId(something), how)
+    
+  def IsChecked(self, something):
+    return wx.Menu.IsChecked(self, self.getId(something))
     
   def Add(self, onproc, name, desc=None, id=-1, macproc=None):
     if desc == None: desc=name
