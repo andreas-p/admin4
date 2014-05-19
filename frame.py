@@ -299,6 +299,7 @@ class DetailFrame(Frame):
     node=self.GetNode()
     if node:
       node.Refresh()
+      node.PopulateChildren()
       info=node.GetInfo()
       self.SetStatus(info)
 

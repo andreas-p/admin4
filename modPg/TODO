@@ -2,8 +2,6 @@
 - Edit Table:
   - Table, Column
 
-- AddFav something wrong with Fav node children
-
 EditGrid
 - @insert: returned key col values
 - Drag/drop not from MouseDown

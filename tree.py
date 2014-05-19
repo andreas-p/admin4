@@ -181,6 +181,8 @@ class NodeTreeCtrl(TreeCtrl):
         fr.details.Set(node)
 
     if postExpand:
+      node.PopulateChildren()
+    if len(node.childnodes) > 0:
       self.Expand(item)
 
 
