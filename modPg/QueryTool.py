@@ -348,7 +348,7 @@ class QueryFrame(SqlFrame):
     self.editor.MarkerDelete()   
     self.messages.Clear()
     
-    self.pollWorker()
+    durationTxt=self.pollWorker()
 
     self.worker=None
     self.EnableMenu(self.querymenu, self.OnCancelQuery, False)
@@ -392,6 +392,7 @@ class QueryFrame(SqlFrame):
       self.SetStatusText(rowsMsg, self.STATUSPOS_ROWS)
       self.msgHistory.AppendText("-- %s\n" % rowsMsg)
     
+      rowsMsg += xlt("; %s execution time.") % durationTxt 
       
     self.msgHistory.AppendText("\n")
     currentPage=self.output.GetPage(0)
@@ -401,7 +402,7 @@ class QueryFrame(SqlFrame):
       targetPage.Show()
       self.output.InsertPage(0, targetPage, xlt("Data output"), True)
 
-    if rowset:
+    if rowset and rowset.colNames:
       self.output.SetSelection(0)
       targetPage.SetData(rowset)
     else:

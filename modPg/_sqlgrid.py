@@ -443,6 +443,7 @@ class SqlFrame(adm.Frame):
     else:
       txt="0 ms"
     self.SetStatusText(txt, self.STATUSPOS_SECS)
+    return txt
     
     
   def restorePerspective(self, skipConfig=False):
