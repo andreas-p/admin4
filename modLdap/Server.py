@@ -7,11 +7,11 @@
 
 import wx
 import adm
-import re, ast
+import re
 import wx.propgrid as wxpg
 
 import logger
-from wh import xlt, YesNo
+from wh import xlt, YesNo, evalAsPython
 from . import AttrVal, ConvertResult
 
 from _ldap import LdapServer, ldap
@@ -346,17 +346,17 @@ class ServerConfigData:
     for dn, entry in result:
       if dn:
         self.server.adminLdapDn=dn
-        try:
-          val=entry[self.attrib]
-          config=ast.literal_eval(val[0])
+        val=entry[self.attrib]
+        config=evalAsPython(val[0])
+        if config != None:
           return config
-        except:
+        else:
           logger.debug("Couldn't pythonize '%s[0]'", val)
     return {}
       
   def Update(self, value):    
     dn=self.server.adminLdapDn
-    rc=self.GetConnection().Modify(dn, {self.attrib: value} )
+    rc=self.server.GetConnection().Modify(dn, {self.attrib: value} )
     return rc
 
   
