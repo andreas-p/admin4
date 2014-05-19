@@ -245,9 +245,12 @@ class DataFrame(SqlFrame):
     menu.Add(self.OnRefresh, xlt("Refresh"), xlt("Refresh data"))
     menu.Add(self.OnCancelRefresh, xlt("Cancel"), xlt("Cancel refresh"))
     menu.Add(self.OnSave, xlt("Save"), xlt("Save data"))
-    menu.AppendSeparator()
-    menu.AddCheck(self.OnToggleFilter, xlt("Show filter"), xlt("Show filter window"))
     menubar.Append(menu, xlt("&Data"))
+
+    self.viewmenu=menu=Menu(self)
+    menu.AddCheck(self.OnToggleFilter, xlt("Filter"), xlt("Show or hide filter window"))
+    self.registerToggles(True, True)
+    menubar.Append(menu, xlt("&View"))
     
     self.editmenu=menu=Menu(self)
     menu.Add(self.OnCut, xlt("Cu&t"), xlt("Cut selected data to clipboard"))
@@ -287,7 +290,10 @@ class DataFrame(SqlFrame):
 
     self.restorePerspective()
     self.manager.Bind(wx.aui.EVT_AUI_PANE_CLOSE, self.OnAuiCloseEvent)
-    self.datamenu.Check(self.OnToggleFilter, self.manager.GetPane("filter").IsShown())
+    self.viewmenu.Check(self.OnToggleFilter, self.manager.GetPane("filter").IsShown())
+    self.OnToggleToolBar()
+    self.OnToggleStatusBar()
+
     self.updateMenu()
     self.filter.Go(self.tableSpecs)
     self.editor.SetText("/*\n%s\n*/\n\n%s" % (xlt("Caution: Don't mess with table and column names!\nYou may experience unwanted behaviour."), self.filter.GetQuery()))
@@ -299,10 +305,10 @@ class DataFrame(SqlFrame):
 
   def OnToggleFilter(self, evt):
     paneInfo=self.manager.GetPane("filter")
-    how=self.datamenu.IsChecked(self.OnToggleFilter)
+    how=self.viewmenu.IsChecked(self.OnToggleFilter)
     if isinstance(evt.EventObject, wx.ToolBar):
       how=not how
-      self.datamenu.Check(self.OnToggleFilter, how)
+      self.viewmenu.Check(self.OnToggleFilter, how)
     paneInfo.Show(how)
     self.manager.Update()    
     

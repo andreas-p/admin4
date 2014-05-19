@@ -183,14 +183,17 @@ class QueryFrame(SqlFrame):
     menu.Add(self.OnFileSave, xlt("&Save"), xlt("Save current file"))
     menu.Add(self.OnFileSaveAs, xlt("Save &as.."), xlt("Save file under new name"))
     menu.AppendSeparator()
-    menu.AddCheck(self.OnToggleSnippets, xlt("Show snippets"), xlt("Show snippet browser"))
     
-    menu.AppendSeparator()
 #    menu.Add(xlt("Preferences"), xlt("Preferences"), self.OnPreferences)
     menu.Add(self.OnClose, xlt("Quit SQL"), xlt("Quit Sql"))
 
     menubar.Append(menu, xlt("&File"))
-
+    
+    self.viewmenu=menu=Menu(self)
+    menu.AddCheck(self.OnToggleSnippets, xlt("Snippets"), xlt("Show or hide snippet browser"))
+    self.registerToggles(True, True)
+    menubar.Append(self.viewmenu, xlt("&View"))
+    
     self.editmenu=menu=Menu(self)
     menu.Add(self.OnUndo, xlt("&Undo"), xlt("Undo last action"))
     menu.Add(self.OnRedo, xlt("&Redo"), xlt("Redo last action"))
@@ -257,11 +260,14 @@ class QueryFrame(SqlFrame):
     self.manager.AddPane(self.output, wx.aui.AuiPaneInfo().Center().MinSize((200,100)).BestSize((400,200)).CloseButton(False) \
                           .Name("Result").Caption(xlt("Result")).CaptionVisible(False))
 
-    self.SetStatus(xlt("ready"))
-    
-    self.restorePerspective()
     self.manager.Bind(wx.aui.EVT_AUI_PANE_CLOSE, self.OnAuiCloseEvent)
-    self.filemenu.Check(self.OnToggleSnippets, self.manager.GetPane("snippets").IsShown())
+
+    self.SetStatus(xlt("ready"))
+    self.restorePerspective()
+
+    self.viewmenu.Check(self.OnToggleSnippets, self.manager.GetPane("snippets").IsShown())
+    self.OnToggleToolBar()
+    self.OnToggleStatusBar()
     self.updateMenu()
 
 
@@ -429,10 +435,10 @@ class QueryFrame(SqlFrame):
   
   def OnToggleSnippets(self, evt):
     paneInfo=self.manager.GetPane("snippets")
-    how=self.filemenu.IsChecked(self.OnToggleSnippets)
+    how=self.viewmenu.IsChecked(self.OnToggleSnippets)
     if isinstance(evt.EventObject, wx.ToolBar):
       how=not how
-      self.filemenu.Check(self.OnToggleSnippets, how)
+      self.viewmenu.Check(self.OnToggleSnippets, how)
     paneInfo.Show(how)
     self.manager.Update()    
   

@@ -34,6 +34,29 @@ class Frame(wx.Frame, adm.MenuOwner):
       return self.toolbar
     return None
   
+
+  def registerToggles(self, toolbar, statusbar):
+    """ have toolbar and/or statusbar toggle in viewmenu """
+    
+    if toolbar:  
+      self.viewmenu.AddCheck(self.OnToggleToolBar, xlt("Toolbar"), xlt("Show or hide tool bar"), adm.config.Read("ToolbarShown", True, self))
+    if statusbar:
+      self.viewmenu.AddCheck(self.OnToggleStatusBar, xlt("Statusbar"), xlt("Show or hide status bar"), adm.config.Read("StatusbarShown", True, self))
+  
+  def OnToggleToolBar(self, evt=None):
+    show=self.viewmenu.IsChecked(self.OnToggleToolBar)
+    self.GetToolBar().Show(show)
+    if evt:
+      self.manager.Update()
+      adm.config.Write("ToolbarShown", show, self)
+  
+  def OnToggleStatusBar(self, evt=None):
+    show=self.viewmenu.IsChecked(self.OnToggleStatusBar)
+    self.GetStatusBar().Show(show)
+    if evt:
+      self.manager.Update()
+      adm.config.Write("StatusbarShown", show, self)
+
   
   def SetIcon(self, icon, mod=None):
     if isinstance(icon, int):
@@ -149,9 +172,8 @@ class DetailFrame(Frame):
 
     self.viewmenu=menu=Menu(self)
     menu.Add(self.OnShowServers, xlt("Show Servers"), xlt("Show registered servers to connect"))
-    menu.AddCheck(self.OnToggleTree, xlt("Tree"), xlt("Show or hide tree"), adm.config.Read("TreeShown", True))
-    menu.AddCheck(self.OnToggleToolBar, xlt("Toolbar"), xlt("Show or hide tool bar"), adm.config.Read("ToolbarShown", True))
-    menu.AddCheck(self.OnToggleStatusBar, xlt("Statusbar"), xlt("Show or hide status bar"), adm.config.Read("StatusbarShown", True))
+    menu.AddCheck(self.OnToggleTree, xlt("Tree"), xlt("Show or hide tree"), adm.config.Read("TreeShown", True, self))
+    self.registerToggles(True, True)
     menubar.Append(menu, xlt("&View"))
 
     _helpid=self.BindMenuId(self.OnHelp)
@@ -189,9 +211,9 @@ class DetailFrame(Frame):
     if str:
       self.manager.LoadPerspective(str)
 
-    self.OnToggleTree(None)
-    self.OnToggleToolBar(None)
-    self.OnToggleStatusBar(None)
+    self.OnToggleTree()
+    self.OnToggleToolBar()
+    self.OnToggleStatusBar()
     self.manager.Update()
     self.manager.Bind(wx.aui.EVT_AUI_PANE_CLOSE, self.OnAuiCloseEvent)
 
@@ -231,27 +253,13 @@ class DetailFrame(Frame):
     self.tree.Unbind(wx.EVT_TREE_SEL_CHANGED, self.GetMenuId(self.OnTreeSelChange)) # this is for Win C++ dtor
     self.Close()
 
-  def OnToggleTree(self, evt):
+  def OnToggleTree(self, evt=None):
     show=self.viewmenu.IsChecked(self.OnToggleTree)
     self.manager.GetPane("objectBrowser").Show(show)
     if evt:
       self.manager.Update()
-      adm.config.Write("TreeShown", show)
+      adm.config.Write("TreeShown", show, self)
   
-  def OnToggleToolBar(self, evt):
-    show=self.viewmenu.IsChecked(self.OnToggleToolBar)
-    self.GetToolBar().Show(show)
-    if evt:
-      self.manager.Update()
-      adm.config.Write("ToolbarShown", show)
-  
-  def OnToggleStatusBar(self, evt):
-    show=self.viewmenu.IsChecked(self.OnToggleStatusBar)
-    self.GetStatusBar().Show(show)
-    if evt:
-      self.manager.Update()
-      adm.config.Write("StatusbarShown", show)
-
   def OnLogging(self, evt):
     dlg=LoggingDialog(self)
     dlg.Go()
