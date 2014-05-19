@@ -224,6 +224,7 @@ class DetailFrame(Frame):
     if not self.activated:
       self.activated=True
       self.AutoConnect(evt)
+    evt.Skip()
     
   def AutoConnect(self, evt):
     haveOne=False
