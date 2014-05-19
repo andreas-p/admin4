@@ -76,9 +76,24 @@ class RolesPage(adm.NotebookPage):
     if node != self.lastNode:
       self.lastNode=node
 
+      def members(row):
+        d=row['members']
+        if d:  return ",".join(d)
+      def flags(row):
+        fl=[]
+        if row['rolcreaterole']:
+          fl.append('createRole')
+        if row['rolcreatedb']:
+          fl.append('crDb')
+        if row['rolcatupdate']:
+          fl.append('catUpd')
+        
+        return" ".join(fl)
+        
       add=self.control.AddColumnInfo
       add(xlt("Name"), 20,         colname='name')
-      add(xlt("Members"), 40,         colname='members')
+      add(xlt("Flags"), 25,        proc=flags)
+      add(xlt("Members"), 40,      proc=members)
 
       values=[]
       
@@ -89,16 +104,21 @@ class RolesPage(adm.NotebookPage):
           FROM pg_roles u ORDER BY rolname""")
       
       for role in self.allRoles:
+        # rolsuper, rolcreaterole, colcreatedb, rolcanupdate
         icons=[]
         if role['members']:
-          icons.append("Group")
+          icons.append("group")
+        elif role['rolsuper']:
+          icons.append('admin')
         else:
-          icons.append("User")
-        icon=self.lastNode.GetImageId(icons)
+          icons.append("user")
+        if role['rolcanlogin']:
+          icons.append('key')
 
+        icon=self.lastNode.GetImageId(icons)
         values.append( (role, icon))
       self.control.Fill(values, 'name')
 
 pageinfo=[RolesPage]
-
-nodeinfo= [ { "class" : Role, "parents": ["Server"], "sort": 70, "collection": xlt("Roles") } ]
+nodeinfo=[]
+#nodeinfo= [ { "class" : Role, "parents": ["Server"], "sort": 70, "collection": xlt("Roles") } ]

@@ -284,7 +284,7 @@ class Server(adm.ServerNode):
   def Edit(self, parentWin):
     adm.DisplayDialog(Server.Dlg, parentWin, self)
 
-nodeinfo=[ { 'class': Server, 'collection': xlt("PostgreSQL Server"), 'pages': "ConnectionPage StatisticsPage" } ]
+nodeinfo=[ { 'class': Server, 'collection': xlt("PostgreSQL Server") } ]
  
   
 class ServerInstrument:

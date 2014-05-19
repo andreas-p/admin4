@@ -3,8 +3,4 @@
   - Table, Column
 
 EditGrid
-- @insert: returned key col values
 - Drag/drop not from MouseDown
-
-
-Roles as Server page
