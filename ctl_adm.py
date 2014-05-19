@@ -172,7 +172,7 @@ class ListView(wx.ListView):
       size=self.GetClientSize().GetWidth();
       for i in range(self.GetColumnCount()):
         size -= self.GetColumnWidth(i)
-    else:
+    elif size > 0:
       size=self.convert(size) + self.MARGIN
       if not self.GetColumnCount():
         size += self.ICONWITDH
