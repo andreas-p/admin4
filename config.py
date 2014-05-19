@@ -5,10 +5,9 @@
 # see LICENSE.TXT for conditions of usage
 
 
-import ast
 import wx
 import logger
-from wh import StringType
+from wh import StringType, evalAsPython
 
 ignoreStoredPositions=False
 
@@ -44,11 +43,11 @@ class Config(wx.Config):
       return default
 
     if not isinstance(default, StringType):
-      try:
-        val=ast.literal_eval(val)
-      except:
+      py=evalAsPython(val)
+      if py != None:
+        val=py
+      else:
         logger.debug("Couldn't pythonize '%s'", val)
-        pass
 
     if val == None:
       return default

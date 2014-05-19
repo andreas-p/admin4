@@ -5,7 +5,8 @@
 
 
 import wx
-import os, time, datetime, shutil
+import os, time, datetime, shutil 
+from ast import literal_eval
 import logger
 loaddir=None
 
@@ -242,6 +243,13 @@ def modPath(name, mod):
     return path
   return name
     
+
+def evalAsPython(val):
+  try:
+    return literal_eval(val)
+  except:
+    return None
+
 
 def GetIcon(name, module=None):
   """
