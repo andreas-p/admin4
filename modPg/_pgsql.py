@@ -602,8 +602,21 @@ class pgQuery:
       if group:
         self.group.append(group)
     
+  def groupJoin(self, partList, sep=', ', breakLen=80):
+    result=[]
+    line=""
+    for part in partList:
+      if line:  line += "%s%s" % (sep, part)
+      else:     line=part
+      if len(line) > breakLen:
+        result.append(line)
+        line=""
+    if line:
+      result.append(line)
+    return ",\n       ".join(result)
+  
   def SelectQueryString(self):
-    sql=["SELECT %s" % ", ".join(self.columns), 
+    sql=["SELECT %s" % self.groupJoin(self.columns), 
          "  FROM %s" % "\n  ".join(self.tables) ]
     if self.where:
       sql.append(" WHERE %s" % "\n   AND ".join(self.where))
@@ -623,7 +636,7 @@ class pgQuery:
     values=[]
     for col in range(len(self.columns)):
       values.append("%s" % quoteValue(self.vals[col], self.cursor))
-    sql.append(" VALUES (%s)" % ",".join(values))
+    sql.append(" VALUES (%s)" % self.groupJoin(values))
     return self.cursor.Insert("\n".join(sql), returning)
 
   def Update(self):
@@ -634,7 +647,7 @@ class pgQuery:
     for col in range(len(self.columns)):
       val=quoteValue(self.vals[col], self.cursor)
       cols.append( "%s=%s" % ( self.columns[col], val ))
-    sql.append("  SET %s" % ",".join(cols))
+    sql.append("  SET %s" % self.groupJoin(cols))
     sql.append(" WHERE %s" % "\n   AND ".join(self.where))
     return self.cursor.ExecuteSingle("\n".join(sql))
 
