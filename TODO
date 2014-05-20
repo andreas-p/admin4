@@ -1,3 +1,5 @@
 hide password preference
 
-frames close
+frames/app close
+
+SSL certificate management

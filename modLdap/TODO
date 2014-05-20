@@ -1,1 +1,7 @@
-ldap.OPT_X_TLS_ALLOW
+ignoreCert:
+  ldap.OPT_X_TLS_ALLOW
+
+checkCert:
+  ldap.set_option(ldap.OPT_X_TLS_NEWCTX,ldap.OPT_X_TLS_DEMAND)
+  ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT,ldap.OPT_X_TLS_DEMAND)
+  ldap.set_option(ldap.OPT_X_TLS_CACERTFILE,certfile)
