@@ -231,11 +231,13 @@ class pgRowset(pgCursorResult):
 class pgConnection:
   def __init__(self, dsn, pool=None):
     self.pool=pool
+    self.conn=None
+    self.cursor=None
+    self.inUse=False
+    self.lastError=None
     self.conn=psycopg2.connect(dsn, async=True)
     self.wait("Connect")
     self.cursor=self.conn.cursor()
-    self.inUse=False
-    self.lastError=None
       
   def disconnect(self):
     self.cursor=None
