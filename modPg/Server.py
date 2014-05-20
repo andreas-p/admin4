@@ -107,8 +107,7 @@ class Server(adm.ServerNode):
          'adminprocs': ", ".join(map(lambda p: "'%s'" % p, adminProcs)),
          'snippet_table': quoteValue("Admin_Snippet_%s" % self.user)})
 
-      v=self.info['version'].split(' ')[1]
-      self.version=float(v[0:v.rfind('.')])
+      self.version=conn.ServerVersion()
       self.adminspace=self.info.get('adminspace')
       fav_table=self.info.get('fav_table')
       if fav_table:
