@@ -374,9 +374,9 @@ class ServerTreeCtrl(DragTreeCtrl):
     else:
         cm=self.GetFrame().registermenu.Dup()
         if item:
-          item=cm.Add(self.OnDelGroup, xlt("Remove group"))
+          menuItem=cm.Add(self.OnDelGroup, xlt("Remove group"))
           if self.GetChildrenCount(item) > 0:
-            cm.Enable(item, False)
+            cm.Enable(menuItem, False)
         else:
           cm.Add(self.OnAddGroup, xlt("New group"))
       

@@ -68,10 +68,12 @@ class Notebook(wx.Notebook, adm.MenuOwner, _TimerOwner):
 
 
   def Freeze(self):
+    # TODO we don't like this
     if not wx.version().startswith("3.0.0.0 osx-cocoa"):
       super(Notebook, self).Freeze()
   
   def Thaw(self):
+    # TODO we don't like this
     if not wx.version().startswith("3.0.0.0 osx-cocoa"):
       super(Notebook, self).Thaw()
 
@@ -163,6 +165,11 @@ class Notebook(wx.Notebook, adm.MenuOwner, _TimerOwner):
     OnCall(wx.Event)
 
     calls registered procedures from an event using appropriate arguments
+    It handles:
+      @staticmethod DoSomething(parentNotebook, currentPage)
+      @staticmethod DoSomething(parentNotebook)
+      DoSomething(self, parentNotebook, currentPage)
+      DoSomething(self, parentNotebook)
     """
     id=evt.GetId()
     proc=self.GetMenuProc(id)

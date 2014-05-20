@@ -226,12 +226,18 @@ class Node(object):
         
         
   def RefreshVolatile(self, force=False):
+    """ RefreshVolatile() performs a partial refresh of frequently changed node properties"""
     pass
 
   def Refresh(self):
+    """ Refresh() performs a full refresh of the node on user's demand"""
     self.DoRefresh()
 
   def DoRefresh(self):
+    """
+    DoRefresh() erforms a refresh of the node display; called internally.
+    It might skip some initialization code that's only called in Refresh.
+    """
     self.properties=[]
     if hasattr(self, 'Init'):
       self.Init()

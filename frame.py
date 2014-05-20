@@ -76,6 +76,11 @@ class Frame(wx.Frame, adm.MenuOwner):
     OnCall(wx.Event)
 
     calls registered procedures from an event using appropriate arguments
+    It handles:
+      @staticmethod DoSomething(parentWindow, node) -> bool to refresh node
+      @staticmethod DoSomething(node)
+      @staticmethod Register(parentWindow)
+      HandleEvent(self, evt)
     """
     id=evt.GetId()
     proc=self.GetMenuProc(id)
@@ -83,19 +88,28 @@ class Frame(wx.Frame, adm.MenuOwner):
       args = self.GetCallArgs(proc)
       if len(args) and args[0] == "self":
         del args[0]
+        isStatic=False
+      else:
+        isStatic=True
       ci=[proc.__module__]
       if hasattr(proc, "_classname_"):
         ci.append(proc._classname_)
       ci.append(proc.__name__)
       adm.logger.debug("Calling ID %d: %s", id, ".".join(ci))
+      node=self.currentNode
+      if not node and self.tree:
+        node=self.tree.GetNode()
       if len(args) == 2:
-        node=self.currentNode
-        if not node and self.tree:
-          node=self.tree.GetNode()
         if proc(self, node) and node:
           node.DoRefresh()
       else:
-        proc(evt)
+        if isStatic:
+          if proc.__name__ in ['Register']:
+            proc(self)
+          else:
+            proc(node)
+        else:
+          proc(evt)
     
 
   def OnClose(self, evt):
