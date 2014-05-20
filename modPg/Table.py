@@ -55,12 +55,16 @@ class Table(SchemaObject):
 
   def __init__(self, parentNode, info):
     super(Table, self).__init__(parentNode, info)
+    self.rowcount=xlt("Not counted")
     self.Init()
+    
+  def Refresh(self):
+    self.rowcount=xlt("Not counted")
+    self.DoRefresh()
     
   def Init(self):
     self.columns=[]
     self.constraints=None
-    self.rowcount=xlt("Not counted")
       
   def GetProperties(self):
     if not len(self.properties):
