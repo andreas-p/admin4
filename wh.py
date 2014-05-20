@@ -478,6 +478,23 @@ def restoreSize(unused_name, unused_defSize=None, unused_defPos=None):
 
 decimalSeparators=",."
 
+
+def breakLines(text, breakLen=80):
+  if not text:
+    return ""
+  result=[]
+  line=""
+  for part in text.split():
+    if line:  line += " %s" % part
+    else:     line=part
+    if len(line) > breakLen:
+      result.append(line)
+      line=""
+  if line:
+    result.append(line)
+  return "\n".join(result)
+
+
 def splitValUnit(value):
   num=""
   unit=""
