@@ -461,18 +461,13 @@ class SettingsPage(adm.NotebookPanel, ControlledPage):
     name=self.Find
     if not name: return
     
-    iter=self.grid.GetIterator()
-    while True:
-      prop=iter.GetProperty()
-      if not prop:
-        break
-      label=prop.GetLabel()
-      if label.find(name) >= 0:
+    for prop in self.currentConfig.keys():
+      if prop.find(name) >= 0:
         self.grid.SelectProperty(prop)
         self['Find'].SetForegroundColour(wx.BLACK)
         return
-      iter.Next()
     self['Find'].SetForegroundColour(wx.RED)
+
     
   def OnApply(self, evt):
     self.DoReload()
