@@ -141,10 +141,15 @@ class Server(adm.ServerNode):
     return None
   
   def NeedsInstrumentation(self):
+    missing=[]
     for name in adminProcs:
       if not self.GetValue(name):
-        return True
-    return not self.fav_table or not self.snippet_table     
+        missing.append(name)
+    if not self.fav_table:
+      missing.append('fav_table')
+    if not self.snippet_table:
+      missing.append('snippet_table')  
+    return missing   
 
 
   def ExpandColDefs(self, cols):
@@ -205,8 +210,9 @@ class Server(adm.ServerNode):
             
   def GetProperties(self):
     if not self.properties:
-      if self.NeedsInstrumentation():
-        instr=xlt("incomplete or missing")
+      missing=self.NeedsInstrumentation()
+      if missing:
+        instr=xlt("incomplete: %s missing" % ",".join(missing))
       else:
         instr=xlt("fully instrumented")
       self.properties= [
