@@ -80,6 +80,7 @@ class Frame(wx.Frame, adm.MenuOwner):
       @staticmethod DoSomething(parentWindow, node) -> bool to refresh node
       @staticmethod DoSomething(node)
       @staticmethod Register(parentWindow)
+      Edit(self, parentWindow)
       HandleEvent(self, evt)
     """
     id=evt.GetId()
@@ -506,14 +507,13 @@ class DetailFrame(Frame):
           contextMenu.AppendSeparator()
         needSeparator=False
         cls=mi['class']
-        id=self.BindMenuId(cls.OnExecute)
-        contextMenu.Append(id, cls.name, cls.help)
+        item=contextMenu.Add(cls.OnExecute, cls.name, cls.help)
         if hasattr(cls, "CheckEnabled") and not cls.CheckEnabled(node):
-          contextMenu.Enable(id, False)
+          contextMenu.Enable(item, False)
 
     if hasattr(node, "Edit"):
       contextMenu.AppendSeparator()
-      contextMenu.Add(node.Edit, xlt("Properties"), xlt("Edit properties of %s") % node.typename)
+      contextMenu.Add(self.OnEdit, xlt("Properties"), xlt("Edit properties of %s") % node.typename)
 
     return contextMenu
 

@@ -21,7 +21,7 @@ class SpecificEntry(adm.NotebookPanel):
     for ctl in self._ctls.values():
       if "objectclass" in ctl.flags:
         if self.GetServer().GetClassOid(ctl.name):
-          self.Bind(ctl.name, self.OnCheckObjectClass)
+          self.Bind(ctl, self.OnCheckObjectClass)
         else:
           ctl.Disable()
       else:
@@ -33,7 +33,7 @@ class SpecificEntry(adm.NotebookPanel):
             else:
               self.dialog.rdnOid=oid
           ctl.ldapOid=oid
-          self.Bind(ctl.name, self.OnChangeLdapValue)
+          self.Bind(ctl, self.OnChangeLdapValue)
         else:
           if "modLdap" in ctl.flags:
             ctl.ldapOid=None
