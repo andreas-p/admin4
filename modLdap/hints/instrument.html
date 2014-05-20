@@ -1,0 +1,22 @@
+<html><body>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<title>Server %SERVERNAME% is not instrumented</title>
+</head>
+<h3>Server is not instrumented</h3>
+<p>
+$APPNAME implements some advanced features, which requires an additional entry in the 
+LDAP database to work. These advanced features are:
+<ul>
+<li>configuration of automatic POSIX uid/gid and SAMBA rid generation for new users/groups
+<li>configuration of editing panels when editing specific LDAP entries (see documentation for details)
+</ul>
+This configuration is available on every computer you're connecting from via $APPNAME. 
+</p><p>
+To prepare the server for improved handling through $APPNAME, execute the <code><b>instrument</b></code>
+context menu on the server object and close the connection. After re-opening the connection, the instrumentation
+state will be detected and the advanced features are available. 
+</p><p>
+Note: The RDN used for configuration storage is configured in Preferences/LDAP.
+</p>
+</body></html>

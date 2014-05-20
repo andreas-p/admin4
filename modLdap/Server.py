@@ -44,7 +44,11 @@ class Server(adm.ServerNode):
     self.systemAttrs=settings.get('systemattributes', standardSystemAttributes).split()
     self.systemClasses=settings.get('systemclasses', standardSystemClasses).split()
 
-
+  def GetHint(self):
+    if not self.adminLdapDn:
+      return ( 'instrument', xlt("Server %s not instrumented") % self.name, 
+               { 'servername': self.name } )
+ 
   def GetProperties(self):
     if not self.properties:
       self.version=3
@@ -70,6 +74,8 @@ class Server(adm.ServerNode):
         self.AddChildrenProperty(val, name, -1)
     if self.adminLdapDn:
       self.properties.append( (xlt("Admin Config DN"), self.adminLdapDn))
+    else:
+      self.properties.append( (xlt("Instrumentation"), xlt("not instrumented")) )
     if self.registrationChanged:
       self.properties.append( (xlt("Registration"), xlt("Registration changed"), adm.images['attention']) )
 
