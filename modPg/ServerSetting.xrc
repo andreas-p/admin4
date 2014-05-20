@@ -29,12 +29,29 @@
             <flag>wxALIGN_CENTRE_VERTICAL</flag>
           </object>
           <object class="sizeritem">
-            <object class="unknown" name="ValuePlaceholder">
-              <size>50,12d</size>
+            <object class="wxBoxSizer">
+              <orient>wxHORIZONTAL</orient>
+              <object class="sizeritem">
+                <object class="unknown" name="ValuePlaceholder">
+                  <size>50,12d</size>
+                </object>
+                <option>1</option>
+                <flag>wxEXPAND</flag>
+                <minsize>50,12d</minsize>
+              </object>
+              <object class="spacer">
+                <option>0</option>
+              </object>
+              <object class="sizeritem">
+                <object class="wxButton" name="Reset">
+                  <label>Reset</label>
+                </object>
+                <flag>wxLEFT|wxALIGN_RIGHT|wxALIGN_CENTRE_VERTICAL</flag>
+                <border>10</border>
+              </object>
             </object>
-            <option>0</option>
+            <option>1</option>
             <flag>wxEXPAND</flag>
-            <minsize>50,12d</minsize>
           </object>
           <object class="sizeritem">
             <object class="wxStaticText">

@@ -6,7 +6,9 @@
 
 import adm
 import wx
-from wh import xlt, floatToTime, floatToSize, sizeToFloat, timeToFloat, breakLines
+import wx.propgrid as wxpg
+from page import ControlledPage
+from wh import xlt, floatToTime, floatToSize, sizeToFloat, timeToFloat, breakLines, GetBitmap
 from _pgsql import quoteValue
 from Validator import Validator
 from LoggingDialog import LogPanel
@@ -227,10 +229,11 @@ class ServerSetting(adm.CheckedDialog):
   def __init__(self, server, page, vals):
     # we need self.vals in AddExtraControls, but normal assignment isn't available before __init__
     self.SetAttr('vals', vals)
-    adm.CheckedDialog.__init__(self, page.control)
+    adm.CheckedDialog.__init__(self, page.grid)
     self.server=server
     self.page=page
-    self.BindAll()
+    self.Bind("Reset", self.OnReset)
+    self.BindAll("Reset")
   
   def AddExtraControls(self, res):
     self.type=self.vals['vartype']
@@ -287,8 +290,9 @@ class ServerSetting(adm.CheckedDialog):
       self.SetVal(self.vals['setting'])
 
   
-  def ResetVal(self):
+  def OnReset(self, evt):
     self.SetVal(self.vals['reset_val'])
+    self.OnCheck(evt)
 
   
   def Check(self):
@@ -315,12 +319,39 @@ class ServerSetting(adm.CheckedDialog):
     self.page.Display(self.server, None)
     return True  
   
-class SettingsPage(adm.NotebookPage):
+
+class SettingsPage(adm.NotebookPanel, ControlledPage):
   name=xlt("Settings")
 #  menus=[AlterConfigValue]
   availableOn="Server"
   order=850
-   
+
+  def __init__(self, notebook):
+    adm.NotebookPanel.__init__(self, notebook, notebook)
+    self.lastNode=None
+
+  def AddExtraControls(self, res):
+    self.grid=wxpg.PropertyGrid(self)
+    res.AttachUnknownControl("ValueGrid", self.grid)
+    self.grid.Bind(wxpg.EVT_PG_DOUBLE_CLICK, self.OnItemDoubleClick)
+    self.Bind('Apply', self.OnApply)
+    self.Bind('Find', self.OnFind)
+    self.grid.Bind(wx.EVT_MOTION, self.OnMouseMove)
+    
+  def OnMouseMove(self, evt):
+    txt=""
+    pos=self.grid.HitTest(evt.GetPosition())
+    if pos:
+      property=pos.GetProperty()
+      if property:
+        name=property.GetName()
+        cfg=self.currentConfig.get(name)
+        if cfg:
+          txt=cfg['short_desc']
+    self.grid.SetToolTipString(txt)
+    evt.Skip()
+      
+    
   def Display(self, node, _detached):
     
     def valFmt(val, unit):
@@ -336,13 +367,8 @@ class SettingsPage(adm.NotebookPage):
         return floatToTime(timeToFloat(val))
       else:
         return val
-
     def setting(row):
-      
       return valFmt(row['setting'], row['unit'])
-
-
-  
     def changedSetting(row):
       name=row['name']
       if name in self.changedConfig:
@@ -371,32 +397,52 @@ class SettingsPage(adm.NotebookPage):
         except:  pass
 
 
-      self.control.DeleteAllItems()
+      self.grid.Clear()
       self.lastNode=node
-      add=self.control.AddColumnInfo
-      add(xlt("Name"), 15,            colname='name')
-      add(xlt("Setting"), 25,         proc=setting)
-      add(xlt("Changed Setting"), 20, proc=changedSetting)
       
-      rowset=node.GetCursor().ExecuteSet("SELECT * FROM pg_settings ORDER BY context, setting")
+      sort=[]
+      i=1
+      
+      # TODO read preferences
+      for cat in ['Reporting', 'Query']:
+        sort.append("WHEN substr(category,1,%d)='%s' THEN '%d'" % (len(cat), cat, i))
+        i += 1 
+
+      if sort:
+        sortCase="CASE %s ELSE '' END || category" % " ".join(sort)
+      else:
+        sortCase=""
+      sort=""
+      rowset=node.GetCursor().ExecuteSet("SELECT * FROM pg_settings ORDER BY %s || category, setting" % sortCase)
   
       self.currentConfig={}
-      rows=[]
-      stdIcon=node.GetImageId('setting')
-      chgIcon=node.GetImageId('settingChanged')
-      intIcon=node.GetImageId('settingInternal')
+      category=None
+      stdIcon=GetBitmap('setting', self)
+      chgIcon=GetBitmap('settingChanged', self)
+      intIcon=GetBitmap('settingInternal', self)
       for row in rowset:
-        icon=stdIcon
         name=row['name']
+        if category != row['category']:
+          category = row['category']
+          prop=wxpg.PropertyCategory(category)
+          self.grid.Append(prop)
+
+        icon=stdIcon
+        setting=row['setting']
         self.currentConfig[name]=row.getDict()
         if row['context'] == 'internal':
           icon=intIcon
         if name in self.changedConfig:
-          if self.changedConfig[name] != row['setting']:
+          chg=self.changedConfig[name]
+          if chg != setting:
             icon=chgIcon
-        
-        rows.append( (row, icon) )
-      self.control.Fill(rows, 'name')
+            setting="%s   (->%s)" % (setting, chg)
+        prop=wxpg.StringProperty(name)
+        self.grid.Append(prop)
+        self.grid.SetPropertyImage(prop, icon)
+        self.grid.SetPropertyValue(prop, setting)
+        self.grid.SetPropertyReadOnly(prop, True) 
+
 
   def DoReload(self):
     lst=[]
@@ -407,17 +453,38 @@ class SettingsPage(adm.NotebookPage):
       txt=xlt("The following settings have been changed:\n\n   %s\n\nApply?") % "\n  ".join(lst)
     else:
       txt=xlt("Apparently no changes to apply.\nReload server anyway?")
-    dlg=wx.MessageDialog(self.control, txt, xlt("Reload server with new configuration"))
+    dlg=wx.MessageDialog(self, txt, xlt("Reload server with new configuration"))
     if dlg.ShowModal() == wx.ID_OK:
       self.lastNode.GetCursor().ExecuteSingle("select pg_reload_conf()")
 
+  def OnFind(self, evt):
+    name=self.Find
+    if not name: return
+    
+    iter=self.grid.GetIterator()
+    while True:
+      prop=iter.GetProperty()
+      if not prop:
+        break
+      label=prop.GetLabel()
+      if label.find(name) >= 0:
+        self.grid.SelectProperty(prop)
+        self['Find'].SetForegroundColour(wx.BLACK)
+        return
+      iter.Next()
+    self['Find'].SetForegroundColour(wx.RED)
+    
+  def OnApply(self, evt):
+    self.DoReload()
+    
   def OnItemDoubleClick(self, evt):
     if self.lastNode.version >= 9.4:
-      cfg=self.currentConfig[self.control.GetItemText(evt.GetIndex(), 0)]
-      if cfg['context'] != 'internal':
+      property=evt.GetProperty()
+      name=self.grid.GetPropertyLabel(property)
+      cfg=self.currentConfig.get(name)
+      if cfg and cfg['context'] != 'internal':
         dlg=ServerSetting(self.lastNode, self, cfg)
         dlg.GoModal()
-
     
 pageinfo = [StatisticsPage, ConnectionPage, SettingsPage]
   
