@@ -78,9 +78,12 @@ class MenuOwner:
     return item
 
 class ControlContainer():
+  def SetAttr(self, name, value):
+    object.__setattr__(self, name, value)
+    
   def __init__(self, resname=None):
-    object.__setattr__(self, "_ctls", {})
-
+#    object.__setattr__(self, "_ctls", {})
+    self.SetAttr("_ctls", {})
     self.module=adm.getModule(self)
     self._ctlList=[]
 
@@ -97,11 +100,26 @@ class ControlContainer():
     AddExtraControls(xmlResource)
     """
 
+  def BindAll(self, excludeCtlNames=[]):
+    """
+    BindAllExcept(self, ctlNames=[]):
+    
+    Bind standard event all Controls that are not listed
+    """
+    if isinstance(excludeCtlNames, StringType):
+      excludeCtlNames=excludeCtlNames.split()
+    
+    for name, ctl in self._ctls.items():
+      if isinstance(ctl, wx.Button) or isinstance(ctl, wx.StaticText):
+        continue
+      if name not in excludeCtlNames:
+        self.Bind(ctl)
 
   def Bind(self, ctlName, evt=None, proc=None):
     """
     Bind(controlnameList, eventID=None, eventProc=None)
     Bind(controlname, eventID=None, eventProc=None)
+    Bind(control, eventID=None, eventProc=None)
     Bind(eventID, eventProc=None)
 
     Binds event procedure to control
@@ -112,15 +130,22 @@ class ControlContainer():
       names=ctlName.split()
       if len(names) > 1:
         ctlName=names
+      else:
+        return self._bind(ctlName, evt, proc)
     if isinstance(ctlName, list):
       for n in ctlName:
-        self.Bind(n, evt, proc)
-      return
+        self._bind(n, evt, proc)
+    else:
+      self._bind(ctlName, evt, proc)
 
-    if isinstance(ctlName, wx.PyEventBinder):
+
+  def _bind(self, ctlName, evt=None, proc=None):
+    if isinstance(ctlName, wx.PyEventBinder): # binding to self
       ctl=super(wx.Window, self)
       proc=evt
       evt=ctlName
+    elif isinstance(ctlName, wx.Window):
+      ctl=ctlName
     else:
       ctl=self[ctlName]
 
