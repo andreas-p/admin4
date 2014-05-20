@@ -6,8 +6,11 @@
 
 import adm
 import wx
-from wh import xlt, floatToTime, floatToSize, sizeToFloat, timeToFloat, evalAsPython
+from wh import xlt, floatToTime, floatToSize, sizeToFloat, timeToFloat, breakLines
+from _pgsql import quoteValue
+from Validator import Validator
 from LoggingDialog import LogPanel
+import logger
 
 
   
@@ -196,12 +199,19 @@ class ConnectionPage(LogPanel):
       self.control.DeleteAllItems()
       self.TriggerTimer()
 
-    rowset=node.GetCursor().ExecuteSet("SELECT *, client_addr || ':' || client_port::text AS clientaddr, now()-query_start AS query_runtime FROM pg_stat_activity ORDER BY procpid")
+    if node.version < 9.2:
+      pidCol="procpid"
+    else:
+      pidCol="pid"
+    rowset=node.GetCursor().ExecuteSet("""
+    SELECT *, client_addr || ':' || client_port::text AS clientaddr, now()-query_start AS query_runtime 
+      FROM pg_stat_activity
+     ORDER BY %s"""  % pidCol)
     dbIcon=node.GetImageId('Database')
     ownDbIcon=node.GetImageId('Database-conn')
     rows=[]
     for row in rowset:
-      pid=row['procpid']
+      pid=row[pidCol]
       if pid in self.ignorePids:
         continue
 
@@ -210,9 +220,101 @@ class ConnectionPage(LogPanel):
       else:
         icon=dbIcon
       rows.append( (row, icon))
-    self.control.Fill(rows, 'procpid')
+    self.control.Fill(rows, pidCol)
 
 
+class ServerSetting(adm.CheckedDialog):
+  def __init__(self, server, page, vals):
+    # we need self.vals in AddExtraControls, but normal assignment isn't available before __init__
+    self.SetAttr('vals', vals)
+    adm.CheckedDialog.__init__(self, page.control)
+    self.server=server
+    self.page=page
+    self.BindAll()
+  
+  def AddExtraControls(self, res):
+    self.type=self.vals['vartype']
+    if self.type == 'bool':
+      self.value=wx.CheckBox(self)
+    elif self.type == 'enum':
+      self.value=wx.ComboBox(self, style=wx.CB_READONLY|wx.CB_DROPDOWN)
+      self.value.AppendItems(self.vals['enumvals'])
+    elif self.type == 'integer':
+      self.value = wx.TextCtrl(self)
+      self.value.validator=Validator.Get('uint')
+    elif self.type == 'real':
+      self.value=wx.TextCtrl(self)
+#      self.value.validator=Validator.Get('real') TODO
+    elif self.type == 'string':
+      self.value=wx.TextCtrl(self)
+    else:
+      self.value=wx.TextCtrl(self)
+      logger.debug("Unknown pg_settings vartype %s", self.type)
+      
+    res.AttachUnknownControl("ValuePlaceholder", self.value)
+    self._ctls['value'] = self.value
+
+
+  def SetVal(self, val):
+    if self.type == 'bool':
+      self.value.SetValue(val in ['true', 'on'])
+    elif self.type == 'enum':
+      self.value.SetStringSelection(val)
+    else:
+      self.value.SetValue(val)
+  
+  def GetVal(self):
+    if self.type == 'bool':
+      if self.value.GetValue(): return 'on'
+      else:                     return 'off'
+    else:
+      return self.value.GetValue()
+    
+  def Go(self):
+    name=self.vals['name']
+    unit=self.vals['unit']
+    if unit:
+      self.ValueLabel="%s (%s)" % (self.ValueLabel, unit)
+
+    self.Name=name
+    self.Category=self.vals['category']
+    self.short_desc=breakLines(self.vals['short_desc'], 40)
+    self.extra_desc=breakLines(self.vals['extra_desc'], 40)
+    
+    if name in self.page.changedConfig:
+      self.SetVal(self.page.changedConfig[name])
+    else:
+      self.SetVal(self.vals['setting'])
+
+  
+  def ResetVal(self):
+    self.SetVal(self.vals['reset_val'])
+
+  
+  def Check(self):
+    ok=True
+    minVal=self.vals['min_val']
+    self.CheckValid(ok, minVal==None or self.value.GetValue() >=minVal, xlt("Must be %s or more") % minVal)
+    maxVal=self.vals['max_val']
+    self.CheckValid(ok, maxVal==None or self.value.GetValue() <=maxVal, xlt("Must be %s or less") % maxVal)
+    
+    return ok
+
+  def Save(self):
+    name=self.vals['name']
+    val=self.GetVal()
+    cursor=self.server.GetCursor()
+    self.SetStatus(xlt("Setting value..."))
+    cursor.ExecuteSingle("ALTER SYSTEM SET %s=%s" % (name, quoteValue(val, cursor)))
+    
+    self.page.changedConfig[name] = val
+    if self.Reload:
+      self.page.DoReload()
+    # trigger a refresh
+    self.page.lastNode=None
+    self.page.Display(self.server, None)
+    return True  
+  
 class SettingsPage(adm.NotebookPage):
   name=xlt("Settings")
 #  menus=[AlterConfigValue]
@@ -220,9 +322,8 @@ class SettingsPage(adm.NotebookPage):
   order=850
    
   def Display(self, node, _detached):
-    def setting(row):
-      unit=row['unit']
-      val=row['setting']
+    
+    def valFmt(val, unit):
       if not unit:
         return val
       ul=unit.lower()
@@ -235,27 +336,87 @@ class SettingsPage(adm.NotebookPage):
         return floatToTime(timeToFloat(val))
       else:
         return val
+
+    def setting(row):
+      
+      return valFmt(row['setting'], row['unit'])
+
+
+  
+    def changedSetting(row):
+      name=row['name']
+      if name in self.changedConfig:
+        cv=self.changedConfig[name]
+        if cv != row['setting']:
+          return valFmt(cv, row['unit'])
+    
     
     if node != self.lastNode:
+      self.changedConfig={}
+      if node.version >= 9.4:
+        try:
+          confFile=node.GetCursor().ExecuteSingle("SELECT pg_read_file('postgresql.auto.conf')")
+          for line in confFile.splitlines():
+            if line.startswith('#'):
+              continue
+            i=line.find('=')
+            if i<0:
+              logger.debug("postgresql.auto.conf format error")
+              continue
+            name=line[:i].strip()
+            val=line[i+1:].strip()
+            if val.startswith("'"):
+              val=val[1:-1]
+            self.changedConfig[name]=val
+        except:  pass
+
+
       self.control.DeleteAllItems()
       self.lastNode=node
       add=self.control.AddColumnInfo
-      add(xlt("Name"), "OneArbitraryNameToConsumeSpace",        colname='name')
-      add(xlt("Setting"),                                       proc=setting)
-      add("rowDict", 0,                                         proc=lambda row: str(row.getDict()) )
-    
+      add(xlt("Name"), 15,            colname='name')
+      add(xlt("Setting"), 25,         proc=setting)
+      add(xlt("Changed Setting"), 20, proc=changedSetting)
+      
       rowset=node.GetCursor().ExecuteSet("SELECT * FROM pg_settings ORDER BY context, setting")
-      icon=-1 # node.GetImageId('Database')
   
+      self.currentConfig={}
       rows=[]
+      stdIcon=node.GetImageId('setting')
+      chgIcon=node.GetImageId('settingChanged')
+      intIcon=node.GetImageId('settingInternal')
       for row in rowset:
+        icon=stdIcon
+        name=row['name']
+        self.currentConfig[name]=row.getDict()
+        if row['context'] == 'internal':
+          icon=intIcon
+        if name in self.changedConfig:
+          if self.changedConfig[name] != row['setting']:
+            icon=chgIcon
+        
         rows.append( (row, icon) )
       self.control.Fill(rows, 'name')
 
-  def OnItemDoubleClick(self, evr):
+  def DoReload(self):
+    lst=[]
+    for name, value in self.changedConfig.items():
+      if self.currentConfig[name]['setting'] != value:
+        lst.append("%s=%s" % (name, value))
+    if lst:
+      txt=xlt("The following settings have been changed:\n\n   %s\n\nApply?") % "\n  ".join(lst)
+    else:
+      txt=xlt("Apparently no changes to apply.\nReload server anyway?")
+    dlg=wx.MessageDialog(self.control, txt, xlt("Reload server with new configuration"))
+    if dlg.ShowModal() == wx.ID_OK:
+      self.lastNode.GetCursor().ExecuteSingle("select pg_reload_conf()")
+
+  def OnItemDoubleClick(self, evt):
     if self.lastNode.version >= 9.4:
-      vals=evalAsPython(self.control.GetItemText(evr.GetIndex(), 2))
-      print "EDIT SETTING CODE HERE", vals 
+      cfg=self.currentConfig[self.control.GetItemText(evt.GetIndex(), 0)]
+      if cfg['context'] != 'internal':
+        dlg=ServerSetting(self.lastNode, self, cfg)
+        dlg.GoModal()
 
     
 pageinfo = [StatisticsPage, ConnectionPage, SettingsPage]
