@@ -299,7 +299,7 @@ class pgConnection:
   
 class pgCursor():
   def __init__(self, conn):
-    conn.trappError=True
+    conn.trapSqlException=True
     self.conn=conn
     self.cursor=self.conn.cursor
   
