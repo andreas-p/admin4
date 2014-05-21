@@ -272,12 +272,15 @@ class pgConnection:
       cmd=self.cursor.query
     else:
       cmd=None
+
     errlines=str(exception)
-    self.lastError=errlines
-    if self.pool:
-      self.pool.lastError=errlines
-      
     logger.querylog(cmd, error=errlines)
+
+    if self.trapSqlException:
+      self.lastError=errlines
+      if self.pool:
+        self.pool.lastError=errlines
+        
     adm.StopWaiting(adm.mainframe)
     if self.conn and self.conn.closed:
       self.disconnect()
