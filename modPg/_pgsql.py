@@ -273,7 +273,7 @@ class pgConnection:
     else:
       cmd=None
 
-    errlines=str(exception)
+    exception.message=errlines=exception.message.decode('utf8')
     logger.querylog(cmd, error=errlines)
 
     if self.trapSqlException:
@@ -376,7 +376,7 @@ class pgCursor():
       adm.StopWaiting(frame)
       return rowset
     except Exception as e:
-      adm.StopWaiting(frame, e)
+      adm.StopWaiting(frame, e.error)
       raise e
   
   

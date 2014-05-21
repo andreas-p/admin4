@@ -70,7 +70,7 @@ class SqlResultGrid(wx.grid.Grid):
         self.SetReadOnly(y,x) 
       y = y+1
     self.EndBatch()
-    self.AutoSizeColumns()
+    self.AutoSizeColumns(False)
     self.Thaw()
     self.SendSizeEventToParent()
     
@@ -356,7 +356,7 @@ class QueryFrame(SqlFrame):
     self.EnableMenu(self.querymenu, self.OnExplainQuery, True)
 
     if worker.error:
-      errmsg=worker.error.error.decode('utf8')
+      errmsg=worker.error.error
       errlines=errmsg.splitlines()
 
       self.messages.SetValue(errmsg)

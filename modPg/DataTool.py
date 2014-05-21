@@ -188,7 +188,8 @@ class FilterPanel(adm.NotebookPanel):
     self.valid=False
     
     sql="EXPLAIN " + self.GetQuery()
-    self.tableSpecs.GetCursor().ExecuteSet(sql)  # will throw exception if invalid
+    cursor=self.tableSpecs.GetCursor()
+    cursor.ExecuteSet(sql)  # will throw and show exception if invalid
 
     self.dialog.SetStatus(xlt("Filter expression valid"))
     self.valid=True
@@ -241,12 +242,15 @@ class DataFrame(SqlFrame):
     toolbar.Add(self.OnCut, xlt("Cut"), "clip_cut")
     toolbar.Add(self.OnPaste, xlt("Paste"), "clip_paste")
     toolbar.Add(self.OnUndo, xlt("Undo"), "edit_undo")
+    toolbar.AddSeparator()
+    toolbar.Add(self.OnDelete, xlt("Delete"), "delete")
 
     menubar=wx.MenuBar()
     self.datamenu=menu=Menu(self)
     menu.Add(self.OnRefresh, xlt("Refresh"), xlt("Refresh data"))
     menu.Add(self.OnCancelRefresh, xlt("Cancel"), xlt("Cancel refresh"))
     menu.Add(self.OnSave, xlt("Save"), xlt("Save data"))
+    menu.Add(self.OnDelete, xlt("Delete"), xlt("Delete row(s)"))
     menubar.Append(menu, xlt("&Data"))
 
     self.viewmenu=menu=Menu(self)
@@ -339,6 +343,8 @@ class DataFrame(SqlFrame):
       self.EnableMenu(self.datamenu, self.OnRefresh, queryOk)
       self.EnableMenu(self.datamenu, self.OnSave, canSave)
     
+  def OnDelete(self, evt):
+    self.output.OnDeleteRow(evt)
 
   def executeQuery(self, sql):
     self.output.SetEmpty()

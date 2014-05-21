@@ -257,12 +257,13 @@ class SqlEditGrid(wx.grid.Grid):
           self.RegisterDataType(cd.type, wx.grid.GRID_VALUE_CHOICE, editor)
       else:
         cd.type= wx.grid.GRID_VALUE_STRING
-         
+
     self.Bind(wx.grid.EVT_GRID_SELECT_CELL, self.OnSelectCell)
     self.Bind(wx.grid.EVT_GRID_EDITOR_SHOWN, self.OnEditorShown)
     self.Bind(wx.grid.EVT_GRID_EDITOR_HIDDEN, self.OnEditorHidden)
     self.Bind(wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.OnCellRightClick)
     self.Bind(wx.grid.EVT_GRID_LABEL_LEFT_DCLICK, self.OnLabelDclick)
+    self.Bind(wx.grid.EVT_GRID_LABEL_RIGHT_CLICK, self.OnLabelRightClick)
     self.Bind(wx.grid.EVT_GRID_CELL_CHANGED, self.OnCellChanged)
 
 
@@ -328,6 +329,15 @@ class SqlEditGrid(wx.grid.Grid):
   def OnEditorHidden(self, evt):
     pass
 
+  def OnLabelRightClick(self, evt):
+    if evt.Row >= 0:
+      rows=self.GetSelectedRows()
+      if self.tableSpecs.keyCols and rows:
+        cm=Menu(self.GetParent())
+        if len(rows) > 1: cm.Add(self.OnDeleteRow, xlt("Delete rows"))
+        else:             cm.Add(self.OnDeleteRow, xlt("Delete row"))
+        cm.Popup(evt)
+
   def OnCellRightClick(self, evt):
     self.GoToCell(evt.Row, evt.Col)
     self.cmRow=evt.Row
@@ -342,6 +352,20 @@ class SqlEditGrid(wx.grid.Grid):
         cm.Enable(item, False)
     cm.Popup(evt)
     
+  def OnDeleteRow(self, evt):
+    rows=self.GetSelectedRows()
+    if True: # askDeleteConfirmation
+      if len(rows)>1:
+        msg=xlt("Delete selected %d rows?") % len(rows)
+      else:
+        msg=xlt("Delete selected row?")
+      dlg=wx.MessageDialog(self, msg, xlt("Delete data"))
+      if not dlg.ShowModal() == wx.ID_OK:
+        return
+    
+    print "DELETE", rows
+
+
 
   def OnSetNull(self, evt):  
     self.SetCellValue(self.cmRow, self.cmCol, "")
@@ -379,7 +403,8 @@ class SqlEditGrid(wx.grid.Grid):
     self.EnableEditing(not self.table.readOnly)
     self.EndBatch()
     self.Thaw()
-    self.AutoSizeColumns()
+    # restore remembered cols here
+    self.AutoSizeColumns(False)
     self.SendSizeEventToParent()
     
     

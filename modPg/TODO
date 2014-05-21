@@ -1,3 +1,6 @@
+Browser:
+- update Favorites when deleting on
+
 - Triggers
 - Edit Table:
   - Table, Column
@@ -5,3 +8,10 @@
 EditGrid
 - Drag/drop not from MouseDown
 - FK drilldown
+- Delete Row
+- remember filter
+- remember columns (whGrid)
+- OnFilterValidate and executeQuery catch error w/o logging
+
+
+
