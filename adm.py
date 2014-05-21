@@ -357,4 +357,4 @@ def StopWaiting(frame=None, txt=None):
       pass
     frame.MakeModal(False)
     if txt:
-      frame.SetStatus(str(txt).splitlines()[0])
+      frame.SetStatus(unicode(txt).splitlines()[0])
