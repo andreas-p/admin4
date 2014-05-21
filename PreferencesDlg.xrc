@@ -3,7 +3,7 @@
   <object class="wxDialog" name="PreferencesDlg">
     <title>Preferences</title>
     <size>200,200d</size>
-    <style>wxCAPTION|wxCLOSE_BOX</style>
+    <style>wxCAPTION|wxRESIZE_BORDER|wxCLOSE_BOX</style>
     <object class="wxBoxSizer">
       <orient>wxVERTICAL</orient>
       <object class="sizeritem">
