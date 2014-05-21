@@ -111,6 +111,8 @@ def _log(level, fmt, args, tb=None):
   loglines.append(line)
 
   if logfile:
+    try:    txt=txt.encode('utf8')
+    except: pass
     try:
       f=open(logfile, 'a')
       f.write("%s %s: %s\n" % (line.Timestamp(), line.LevelText(), txt))
