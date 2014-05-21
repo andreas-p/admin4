@@ -257,7 +257,7 @@ class ServerSetting(adm.CheckedDialog):
     else:
       self.value=wx.TextCtrl(self)
       logger.debug("Unknown pg_settings vartype %s", self.type)
-      
+
     res.AttachUnknownControl("ValuePlaceholder", self.value)
     self._ctls['value'] = self.value
 
@@ -286,7 +286,7 @@ class ServerSetting(adm.CheckedDialog):
     self.Name=name
     self.Category=self.vals['category']
     context=self.vals['context']
-    self.Context="%s - %s" % (context, ServerSetting.contextDesc.get(context))
+    self.Context="%s - %s" % (context, xlt(ServerSetting.contextDesc.get(context)))
     self.short_desc=breakLines(self.vals['short_desc'], 40)
     self.extra_desc=breakLines(self.vals['extra_desc'], 40)
     
@@ -294,7 +294,8 @@ class ServerSetting(adm.CheckedDialog):
       self.SetVal(self.page.changedConfig[name])
     else:
       self.SetVal(self.vals['setting'])
-    if context == 'internal':
+    
+    if self.page.lastNode.version < 9.4 or context == 'internal':
       self.EnableControls("VALUE OK Reset Reload", False)
 
   
@@ -304,11 +305,15 @@ class ServerSetting(adm.CheckedDialog):
 
   
   def Check(self):
+    if self.type == 'bool':
+      self['value'].SetLabel(self.GetVal())
     ok=True
+    ok=self.CheckValid(ok, self.page.lastNode.version>=9.4, xlt("Can edit server versions 9.4 and up only."))
+    ok=self.CheckValid(ok, self.vals['context'] != 'internal', xlt("Internal setting; cannot be edited."))
     minVal=self.vals['min_val']
-    self.CheckValid(ok, minVal==None or self.value.GetValue() >=minVal, xlt("Must be %s or more") % minVal)
+    ok=self.CheckValid(ok, minVal==None or self.value.GetValue() >=minVal, xlt("Must be %s or more") % minVal)
     maxVal=self.vals['max_val']
-    self.CheckValid(ok, maxVal==None or self.value.GetValue() <=maxVal, xlt("Must be %s or less") % maxVal)
+    ok=self.CheckValid(ok, maxVal==None or self.value.GetValue() <=maxVal, xlt("Must be %s or less") % maxVal)
     
     return ok
 
@@ -493,13 +498,12 @@ class SettingsPage(adm.NotebookPanel, ControlledPage):
     self.DoReload()
     
   def OnItemDoubleClick(self, evt):
-    if self.lastNode.version >= 9.4:
-      property=evt.GetProperty()
-      name=self.grid.GetPropertyLabel(property)
-      cfg=self.currentConfig.get(name)
-      if cfg:
-        dlg=ServerSetting(self.lastNode, self, cfg)
-        dlg.GoModal()
+    property=evt.GetProperty()
+    name=self.grid.GetPropertyLabel(property)
+    cfg=self.currentConfig.get(name)
+    if cfg:
+      dlg=ServerSetting(self.lastNode, self, cfg)
+      dlg.GoModal()
     
 pageinfo = [StatisticsPage, ConnectionPage, SettingsPage]
   
