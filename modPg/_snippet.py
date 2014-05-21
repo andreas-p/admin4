@@ -46,10 +46,14 @@ class SnippetTree(DragTreeCtrl):
         if not snippet.parent:
           rootSnippets.append(snippet)
           
+        
       for snippet in rootSnippets:
         if not snippet.parent:
-          self.AppendSnippet(snippet, None, self.GetRootItem())      
+          self.AppendSnippet(snippet, parentItem=self.GetRootItem())      
           self.checkChildren(snippet)
+      for snippet in self.snippets.values():
+        if not snippet.treeitem:
+          self.AppendSnippet(snippet, parentItem=self.GetRootItem())
     else:
       item=self.AppendItem(self.GetRootItem(), xlt("Snippets not available:"))
       item=self.AppendItem(item, xlt("Server not instrumented."))
@@ -184,7 +188,7 @@ class SnippetTree(DragTreeCtrl):
     if dlg.ShowModal() == wx.ID_OK:
       name=dlg.GetValue()
       if name:
-        self.AppendSnippet(name)
+        self.AppendSnippet(name, parentItem=self.GetRootItem())
       
   def OnTreeSelChanged(self, evt):
     self.frame.updateMenu()
@@ -242,6 +246,7 @@ class SnippetTree(DragTreeCtrl):
 
       if targetSnippet:
         self.AppendSnippet(snippet, None, parentItem)
+        self.updateSnippet(snippet)
       self.checkChildren(snippet)
 
 
