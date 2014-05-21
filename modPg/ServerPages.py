@@ -226,6 +226,10 @@ class ConnectionPage(LogPanel):
 
 
 class ServerSetting(adm.CheckedDialog):
+  contextDesc={'internal': xlt("Cannot be changed"), 'postmaster': xlt("Needs server restart to get applied"),
+               'sighup': xlt("Needs reload go get applied"), 'backend': xlt("Used for new backends after a reload"),
+               'superuser': xlt("Can be overridden by superuser SET command"), 'user': xlt("Can be overridden by SET command")  }
+
   def __init__(self, server, page, vals):
     # we need self.vals in AddExtraControls, but normal assignment isn't available before __init__
     self.SetAttr('vals', vals)
@@ -281,6 +285,8 @@ class ServerSetting(adm.CheckedDialog):
 
     self.Name=name
     self.Category=self.vals['category']
+    context=self.vals['context']
+    self.Context="%s - %s" % (context, ServerSetting.contextDesc.get(context))
     self.short_desc=breakLines(self.vals['short_desc'], 40)
     self.extra_desc=breakLines(self.vals['extra_desc'], 40)
     
@@ -288,6 +294,8 @@ class ServerSetting(adm.CheckedDialog):
       self.SetVal(self.page.changedConfig[name])
     else:
       self.SetVal(self.vals['setting'])
+    if context == 'internal':
+      self.EnableControls("VALUE OK Reset Reload", False)
 
   
   def OnReset(self, evt):
@@ -310,13 +318,10 @@ class ServerSetting(adm.CheckedDialog):
     cursor=self.server.GetCursor()
     self.SetStatus(xlt("Setting value..."))
     cursor.ExecuteSingle("ALTER SYSTEM SET %s=%s" % (name, quoteValue(val, cursor)))
-    
-    self.page.changedConfig[name] = val
+    self.page.SetProperty(name, val)
+
     if self.Reload:
       self.page.DoReload()
-    # trigger a refresh
-    self.page.lastNode=None
-    self.page.Display(self.server, None)
     return True  
   
 
@@ -439,10 +444,21 @@ class SettingsPage(adm.NotebookPanel, ControlledPage):
             setting="%s   (->%s)" % (setting, chg)
         prop=wxpg.StringProperty(name)
         self.grid.Append(prop)
-        self.grid.SetPropertyImage(prop, icon)
-        self.grid.SetPropertyValue(prop, setting)
+        self.grid.SetPropertyImage(name, icon)
+        self.grid.SetPropertyValue(name, setting)
         self.grid.SetPropertyReadOnly(prop, True) 
 
+  def SetProperty(self, name, value):
+    self.changedConfig[name]=value
+
+    setting=self.currentConfig[name]['setting']
+    if name in self.changedConfig and self.changedConfig[name] != setting:
+      icon=GetBitmap('settingChanged', self)
+      setting="%s   (->%s)" % (setting, self.changedConfig[name])
+    else:
+      icon=GetBitmap('setting', self)
+    self.grid.SetPropertyImage(name, icon)
+    self.grid.SetPropertyValue(name, setting)
 
   def DoReload(self):
     lst=[]
@@ -456,6 +472,9 @@ class SettingsPage(adm.NotebookPanel, ControlledPage):
     dlg=wx.MessageDialog(self, txt, xlt("Reload server with new configuration"))
     if dlg.ShowModal() == wx.ID_OK:
       self.lastNode.GetCursor().ExecuteSingle("select pg_reload_conf()")
+      node=self.lastNode
+      self.lastNode=None
+      self.Display(node, False)
 
   def OnFind(self, evt):
     name=self.Find
@@ -477,7 +496,7 @@ class SettingsPage(adm.NotebookPanel, ControlledPage):
       property=evt.GetProperty()
       name=self.grid.GetPropertyLabel(property)
       cfg=self.currentConfig.get(name)
-      if cfg and cfg['context'] != 'internal':
+      if cfg:
         dlg=ServerSetting(self.lastNode, self, cfg)
         dlg.GoModal()
     

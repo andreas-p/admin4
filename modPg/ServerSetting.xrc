@@ -19,7 +19,7 @@
               <label></label>
             </object>
           </object>
-          <vgap>10</vgap>
+          <vgap>5</vgap>
           <hgap>10</hgap>
           <growablecols>1</growablecols>
           <object class="sizeritem">
@@ -51,7 +51,8 @@
               </object>
             </object>
             <option>1</option>
-            <flag>wxEXPAND</flag>
+            <flag>wxTOP|wxBOTTOM|wxEXPAND</flag>
+            <border>5</border>
           </object>
           <object class="sizeritem">
             <object class="wxStaticText">
@@ -62,6 +63,20 @@
             <object class="wxStaticText" name="Category">
               <label></label>
             </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText">
+              <label>Context</label>
+            </object>
+            <flag>wxBOTTOM</flag>
+            <border>5</border>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText" name="Context">
+              <label></label>
+            </object>
+            <flag>wxBOTTOM</flag>
+            <border>5</border>
           </object>
           <object class="sizeritem">
             <object class="wxStaticText">
@@ -96,8 +111,13 @@
         <object class="wxBoxSizer">
           <orient>wxHORIZONTAL</orient>
           <object class="sizeritem">
+            <object class="wxStaticText">
+              <label>Reload </label>
+            </object>
+          </object>
+          <object class="sizeritem">
             <object class="wxCheckBox" name="Reload">
-              <label>Reload server</label>
+              <label></label>
             </object>
           </object>
           <object class="spacer">
