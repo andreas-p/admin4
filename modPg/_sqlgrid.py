@@ -337,7 +337,7 @@ class SqlEditGrid(wx.grid.Grid):
 
     cm=Menu(self.GetParent())
     if cd:
-      item=cm.Append(self.OnSetNull, xlt("Set NULL"))
+      item=cm.Add(self.OnSetNull, xlt("Set NULL"))
       if cd.notNull:
         cm.Enable(item, False)
     cm.Popup(evt)
