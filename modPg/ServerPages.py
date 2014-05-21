@@ -386,7 +386,9 @@ class SettingsPage(adm.NotebookPanel, ControlledPage):
       self.changedConfig={}
       if node.version >= 9.4:
         try:
-          confFile=node.GetCursor().ExecuteSingle("SELECT pg_read_file('postgresql.auto.conf')")
+          cursor=node.GetCursor()
+          cursor.SetThrowSqlException(False)
+          confFile=cursor.ExecuteSingle("SELECT pg_read_file('postgresql.auto.conf')")
           for line in confFile.splitlines():
             if line.startswith('#'):
               continue

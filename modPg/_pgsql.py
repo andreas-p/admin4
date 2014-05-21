@@ -235,6 +235,7 @@ class pgConnection:
     self.cursor=None
     self.inUse=False
     self.lastError=None
+    self.trapSqlException=True
     self.conn=psycopg2.connect(dsn, async=True)
     self.wait("Connect")
     self.cursor=self.conn.cursor()
@@ -266,12 +267,12 @@ class pgConnection:
           raise adm.ConnectionException(self.node, xlt("WAIT %s" % spot), self.lastError) 
     return False
 
-  def _handleException(self, e):
+  def _handleException(self, exception):
     if self.cursor and self.cursor.query:
       cmd=self.cursor.query
     else:
       cmd=None
-    errlines=str(e)
+    errlines=str(exception)
     self.lastError=errlines
     if self.pool:
       self.pool.lastError=errlines
@@ -280,7 +281,10 @@ class pgConnection:
     adm.StopWaiting(adm.mainframe)
     if self.conn and self.conn.closed:
       self.disconnect()
-    raise SqlException(cmd, errlines)
+      if self.trapSqlException:
+        raise SqlException(cmd, errlines)
+      else:
+        raise exception
 
   def isRunning(self):
     return self.conn.poll() != psycopg2.extensions.POLL_OK
@@ -292,11 +296,21 @@ class pgConnection:
   
 class pgCursor():
   def __init__(self, conn):
+    conn.trappError=True
     self.conn=conn
     self.cursor=self.conn.cursor
   
   def __del__(self):
     self.Close()
+    
+  def SetThrowSqlException(self, how):
+    """
+    SetThrowSqlException(bool)
+    
+    If set to false, will throw psycopg exception instead of SqlException.
+    Use this to catch expected exception without GUI display
+    """
+    self.conn.trapSqlException=how
     
   def Close(self):
     if self.conn:
