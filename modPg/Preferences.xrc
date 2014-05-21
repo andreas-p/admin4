@@ -1,13 +1,47 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resource>
   <object class="wxPanel" name="Preferences">
-    <object class="wxStaticText">
-      <label>Admin Namespace</label>
-      <pos>5,7d</pos>
-    </object>
-    <object class="wxTextCtrl" name="AdminNamespace">
-      <pos>80,5d</pos>
-      <size>80,-1d</size>
+    <object class="wxBoxSizer">
+      <orient>wxVERTICAL</orient>
+      <object class="sizeritem">
+        <object class="wxFlexGridSizer">
+          <cols>2</cols>
+          <object class="sizeritem">
+            <object class="wxStaticText">
+              <label>Admin Namespace</label>
+              <pos>5,7d</pos>
+            </object>
+            <flag>wxALIGN_CENTRE_VERTICAL</flag>
+          </object>
+          <object class="sizeritem">
+            <object class="wxTextCtrl" name="AdminNamespace">
+              <pos>80,5d</pos>
+              <size>80,-1d</size>
+            </object>
+            <flag>wxGROW</flag>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText">
+              <label>Category sort</label>
+              <pos>5,22d</pos>
+            </object>
+            <flag>wxALIGN_CENTRE_VERTICAL</flag>
+          </object>
+          <object class="sizeritem">
+            <object class="wxTextCtrl" name="SettingCategorySort">
+              <pos>80,20d</pos>
+              <size>80,-1d</size>
+            </object>
+            <flag>wxGROW</flag>
+          </object>
+          <vgap>5d</vgap>
+          <hgap>5d</hgap>
+          <growablecols>1</growablecols>
+        </object>
+        <option>1</option>
+        <flag>wxALL|wxGROW</flag>
+        <border>5d</border>
+      </object>
     </object>
   </object>
 </resource>

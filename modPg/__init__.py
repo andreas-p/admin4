@@ -54,6 +54,7 @@ if not hasattr(sys, 'skipSetupInit'):
       
   class Preferences(adm.PreferencePanel):
     name="PostgreSQL"
-    configDefaults={ "AdminNamespace":  "Admin4" }
+    configDefaults={ 'AdminNamespace':  "Admin4",
+                    'SettingCategorySort': "Reporting Query" }
 
   import Server

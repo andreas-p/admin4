@@ -411,8 +411,8 @@ class SettingsPage(adm.NotebookPanel, ControlledPage):
       i=1
       
       # TODO read preferences
-      for cat in ['Reporting', 'Query']:
-        sort.append("WHEN substr(category,1,%d)='%s' THEN '%d'" % (len(cat), cat, i))
+      for cat in self.lastNode.GetPreference('SettingCategorySort').split():
+        sort.append("WHEN substr(category,1,%01d)='%s' THEN '%d'" % (len(cat), cat, i))
         i += 1 
 
       if sort:
