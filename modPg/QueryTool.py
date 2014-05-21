@@ -111,7 +111,7 @@ class SqlResultGrid(wx.grid.Grid):
         if cols:
           rows=range(self.GetTable().GetRowsCount())
         else:
-          return None
+          return quoted(self.GetCellValue(self.GetGridCursorRow(), self.GetGridCursorCol()))
       for row in rows:
         v=[]
         for col in cols:
