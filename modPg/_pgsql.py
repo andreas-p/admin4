@@ -284,10 +284,10 @@ class pgConnection:
     adm.StopWaiting(adm.mainframe)
     if self.conn and self.conn.closed:
       self.disconnect()
-      if self.trapSqlException:
-        raise SqlException(cmd, errlines)
-      else:
-        raise exception
+    if self.trapSqlException:
+      raise SqlException(cmd, errlines)
+    else:
+      raise exception
 
   def isRunning(self):
     return self.conn.poll() != psycopg2.extensions.POLL_OK
@@ -360,6 +360,7 @@ class pgCursor():
     try:
       self.cursor.execute(cmd, args)
     except Exception as e:
+      print "EXcept", e, str(e)
       self.conn._handleException(e)
 
   def wait(self, spot=""):
@@ -547,7 +548,7 @@ class QueryWorker(threading.Thread):
       self.error=e
     self.running=False
 
-    
+
   def cancel(self):
     if self.running:
       self.cancelled=True
