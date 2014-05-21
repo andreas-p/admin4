@@ -95,6 +95,8 @@ class TableSpecs:
             break;
       if self.primaryConstraint:
         self.keyCols=self.primaryConstraint.get('colnames')
+      else:
+        self.keyCols=[]
 
 
   def GetCursor(self):
