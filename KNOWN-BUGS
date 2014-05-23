@@ -1,8 +1,14 @@
 Windows
-http://trac.wxwidgets.org/ticket/15967  Crash in _propgrid.py
+- http://trac.wxwidgets.org/ticket/15967  Crash in _propgrid.py
 
 Mac OSX
-http://trac.wxwidgets.org/ticket/10916  SetToolBitmapSize() ignored
-http://trac.wxwidgets.org/ticket/16204  ShowModal regression in 3.0
-http://trac.wxwidgets.org/ticket/16268  no wx.CANCEL_DEFAULT
-http://trac.wxwidgets.org/ticket/14523  Installation needs signing
+- http://trac.wxwidgets.org/ticket/10916  SetToolBitmapSize() ignored
+- http://trac.wxwidgets.org/ticket/16204  ShowModal regression in 3.0
+- http://trac.wxwidgets.org/ticket/16268  no wx.CANCEL_DEFAULT
+- http://trac.wxwidgets.org/ticket/14523  Installation needs signing
+
+psycopg2
+- doesn't handle unicode as expected, http://initd.org/psycopg/docs/usage.html#unicode-handling won't work
+    psycopg2.extensions.register_type(psycopg2.extensions.UNICODE)
+    psycopg2.extensions.register_type(psycopg2.extensions.UNICODEARRAY)
+  have no effect
