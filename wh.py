@@ -244,11 +244,11 @@ def modPath(name, mod):
   return name
     
 
-def evalAsPython(val):
+def evalAsPython(val, default=None):
   try:
     return literal_eval(val)
   except:
-    return None
+    return default
 
 
 def GetIcon(name, module=None):
