@@ -7,14 +7,220 @@
 
 from wh import xlt, AcceleratorHelper, Menu
 import wx.aui
+import wx.grid
 import adm
 
 from _pgsql import pgQuery, pgConnectionPool
-from _sqlgrid import SqlFrame, SqlEditGrid
+from _sqlgrid import SqlFrame, EditTable, HMARGIN, VMARGIN
 from _sqledit import SqlEditor
 from Table import Table
 
 
+class SqlEditGrid(wx.grid.Grid):
+  def __init__(self, parent, tableSpecs):
+    wx.grid.Grid.__init__(self, parent)
+    self.frame=parent
+    self.table=None
+    pt=parent.GetFont().GetPointSize()
+    if wx.Platform != "__WXMSW__":
+      pt *= 0.95  # a little smaller
+    font=wx.Font(pt, wx.FONTFAMILY_TELETYPE, wx.NORMAL, wx.NORMAL)
+    self.SetDefaultCellFont(font)
+    self.Bind(wx.grid.EVT_GRID_COL_SIZE, self.OnChangeColSize)
+
+    self.tableSpecs=tableSpecs
+    self.lastRow=-1
+#    self.node=node
+    self.deferredChange=False
+    self.dirty=False
+
+    
+    self.dataTypes=[]
+    
+    for cd in self.tableSpecs.colSpecs.values():
+      if cd.category == 'B':
+        cd.type = self.RegisterDataType('bool:Null', None, wx.grid.GRID_VALUE_BOOL)
+      elif cd.category == 'N':
+        if cd.pgtype in ['real', 'double precision']:
+          cd.type=wx.grid.GRID_VALUE_FLOAT
+        elif cd.pgtype in ['numeric']:
+          cd.type=wx.grid.GRID_VALUE_NUMBER
+        else:
+          cd.type=wx.grid.GRID_VALUE_LONG
+      elif cd.category == 'E':
+        cd.type="ENUM:%s" % cd.pgtype
+        if not cd.notNull:
+          cd.type += ":Null"
+        if cd.type not in self.dataTypes:
+          query=pgQuery("pg_enum", self.tableSpecs.GetCursor())
+          query.AddCol("enumlabel")
+          if self.tableSpecs.serverVersion > 9.1:
+            query.addOrder("enumsortorder")
+          query.AddWhere('enumtypid', cd.typoid)
+          enum=[]
+          if not cd.notNull:
+            enum.append("")
+          for row in query.Select():
+            enum.append(row['enumlabel'])
+          editor=wx.grid.GridCellChoiceEditor(enum)
+          self.RegisterDataType(cd.type, wx.grid.GRID_VALUE_CHOICE, editor)
+      else:
+        cd.type= wx.grid.GRID_VALUE_STRING
+
+    self.Bind(wx.grid.EVT_GRID_SELECT_CELL, self.OnSelectCell)
+    self.Bind(wx.grid.EVT_GRID_EDITOR_SHOWN, self.OnEditorShown)
+    self.Bind(wx.grid.EVT_GRID_EDITOR_HIDDEN, self.OnEditorHidden)
+    self.Bind(wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.OnCellRightClick)
+    self.Bind(wx.grid.EVT_GRID_LABEL_LEFT_DCLICK, self.OnLabelDclick)
+    self.Bind(wx.grid.EVT_GRID_LABEL_RIGHT_CLICK, self.OnLabelRightClick)
+    self.Bind(wx.grid.EVT_GRID_CELL_CHANGED, self.OnCellChanged)
+
+  def OnChangeColSize(self, evt):
+    adm.config.storeGridPositions(self, self, self.tableSpecs.tabName)
+
+  def RegisterDataType(self, typename, renderer, editor):
+    if not typename in self.dataTypes:
+      if not renderer:
+        renderer=wx.grid.GRID_VALUE_STRING
+      if not editor:
+        editor=wx.grid.GRID_VALUE_STRING
+      if isinstance(renderer, str):
+        renderer=self.GetDefaultRendererForType(renderer)
+      if isinstance(editor, str):
+        editor=self.GetDefaultEditorForType(editor)
+      wx.grid.Grid.RegisterDataType(self, typename, renderer, editor)
+      self.dataTypes.append(typename)
+    return typename
+
+  def RevertEdit(self):
+    self.table.Revert()
+    self.Refresh()
+      
+  def RefreshRow(self, row):
+    if row < 0:
+      return
+    for col in range(len(self.table.colNames)):
+      self.RefreshAttr(row, col)
+
+  def DoCommit(self):
+    if self.IsCellEditControlShown():
+      self.SaveEditControlValue()
+      self.HideCellEditControl()
+    self.RefreshRow(self.table.currentRowNo)
+    if self.table.Commit(): # if there was something to save
+      self.frame.SetStatus(xlt("Saved."))
+    self.dirty=False
+    self.deferredChange=False
+    self.RefreshRow(self.table.currentRowNo)
+    self.frame.updateMenu()
+    
+  def OnCellChanged(self, evt):
+    if self.deferredChange:
+      self.DoCommit()
+    else:
+      if not self.dirty and self.table.colsChanged:
+        self.dirty = True
+        self.RefreshRow(evt.Row)
+      
+  def OnSelectCell(self, evt):
+    if evt.Row != self.lastRow:
+      if self.lastRow >= 0:
+        if self.IsCellEditControlShown():
+          self.deferredChange=True
+        else:
+          self.DoCommit()
+    self.lastRow = evt.Row
+  
+  def OnEditorShown(self, evt):
+    self.dirty=True
+    self.frame.SetStatus()
+    self.frame.SetStatusText("", SqlFrame.STATUSPOS_SECS)
+    self.frame.updateMenu()
+    
+  def OnEditorHidden(self, evt):
+    pass
+
+  def OnLabelRightClick(self, evt):
+    if evt.Row >= 0:
+      rows=self.GetSelectedRows()
+      if self.tableSpecs.keyCols and rows:
+        cm=Menu(self.GetParent())
+        if len(rows) > 1: cm.Add(self.OnDeleteRow, xlt("Delete rows"))
+        else:             cm.Add(self.OnDeleteRow, xlt("Delete row"))
+        cm.Popup(evt)
+
+  def OnCellRightClick(self, evt):
+    self.GoToCell(evt.Row, evt.Col)
+    self.cmRow=evt.Row
+    self.cmCol=evt.Col
+    colname=self.table.colNames[evt.Col]
+    cd=self.tableSpecs.colSpecs.get(colname)
+
+    cm=Menu(self.GetParent())
+    if cd:
+      item=cm.Add(self.OnSetNull, xlt("Set NULL"))
+      if cd.notNull:
+        cm.Enable(item, False)
+    cm.Popup(evt)
+    
+  def OnDeleteRow(self, evt):
+    rows=self.GetSelectedRows()
+    if True: # askDeleteConfirmation
+      if len(rows)>1:
+        msg=xlt("Delete selected %d rows?") % len(rows)
+      else:
+        msg=xlt("Delete selected row?")
+      dlg=wx.MessageDialog(self, msg, xlt("Delete data"))
+      if not dlg.ShowModal() == wx.ID_OK:
+        return
+    
+    print "DELETE", rows
+
+
+
+  def OnSetNull(self, evt):  
+    self.SetCellValue(self.cmRow, self.cmCol, "")
+    self.table.SetValue(self.cmRow, self.cmCol, None)  
+    
+  
+  def OnLabelDclick(self, evt):
+    if evt.Row >= 0:
+      if evt.Row < self.table.GetRowsCount():
+        data=self.table.rows[evt.Row]
+      else:
+        data={}
+      _editDataHere=data
+    elif evt.Col >= 0:
+      pass # RefTable here
+    
+  def SetEmpty(self):
+    self.table=None
+    self.SetTable(wx.grid.GridStringTable(0,0))
+    self.SetColLabelSize(0)
+    self.SetRowLabelSize(0)
+    self.AutoSize()
+    
+  def SetData(self, rowset):
+    self.table=EditTable(self, self.tableSpecs, rowset)
+    self.SetTable(self.table)
+    self.Freeze()
+    self.BeginBatch()
+    w,h=self.GetTextExtent('Colname')
+    self.SetColLabelSize(h+HMARGIN)
+    self.SetRowLabelSize(w+VMARGIN)
+    self.SetDefaultRowSize(h+HMARGIN)
+
+    self.EnableEditing(not self.table.readOnly)
+    self.EndBatch()
+
+    self.AutoSizeColumns(False)
+    adm.config.restoreGridPositions(self, self, self.tableSpecs.tabName)
+    adm.config.storeGridPositions(self, self, self.tableSpecs.tabName)
+
+    self.Thaw()
+    self.SendSizeEventToParent()
+    
+    
 class ColSpec:
   def __init__(self, row):
     self.category=row['typcategory']

@@ -13,8 +13,11 @@ from wh import xlt, Menu, AcceleratorHelper, FileManager
 from _pgsql import pgConnection
 from _explain import ExplainCanvas
 from _snippet import SnippetTree
-from _sqlgrid import SqlFrame, HMARGIN, VMARGIN, NULLSTRING
+from _sqlgrid import SqlFrame, HMARGIN, VMARGIN
 from _sqledit import SqlEditor
+
+
+NULLSTRING="(NULL)"
 
 
 class SqlResultGrid(wx.grid.Grid):
@@ -28,7 +31,12 @@ class SqlResultGrid(wx.grid.Grid):
       pt *= 0.95  # a little smaller
     font=wx.Font(pt, wx.FONTFAMILY_TELETYPE, wx.NORMAL, wx.NORMAL)
     self.SetDefaultCellFont(font)
+    self.Bind(wx.grid.EVT_GRID_COL_SIZE, self.OnChangeColSize)
     self.AutoSize()
+
+  def OnChangeColSize(self, evt):
+    adm.config.storeGridPositions(self)
+
     
   def SetEmpty(self):
     self.SetTable(wx.grid.GridStringTable(0,0))
@@ -71,6 +79,9 @@ class SqlResultGrid(wx.grid.Grid):
       y = y+1
     self.EndBatch()
     self.AutoSizeColumns(False)
+    
+    adm.config.restoreGridPositions(self)
+    adm.config.storeGridPositions(self)
     self.Thaw()
     self.SendSizeEventToParent()
     

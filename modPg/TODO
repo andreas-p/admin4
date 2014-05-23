@@ -10,7 +10,6 @@ EditGrid
 - FK drilldown
 - Delete Row
 - remember filter
-- remember columns (whGrid)
 - OnFilterValidate and executeQuery catch error w/o logging
 
 
