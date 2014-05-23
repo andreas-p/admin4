@@ -142,6 +142,10 @@ def sysexception(extype, args, tb):
   _log(LOGLEVEL.ERROR, "%s: %s", (extype.__name__, " ".join(args)),   "".join(traceback.format_tb(tb)))
 
 def querylog(cmd, result=None, error=None):
+  if isinstance(cmd, str):
+    try:  cmd=cmd.decode('utf8')
+    except: pass
+    
   line=None
   if querylevel > LOGLEVEL.DEBUG or error:
     line=QueryLine(LOGLEVEL.ERROR, cmd, error, result)
