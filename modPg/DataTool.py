@@ -5,7 +5,7 @@
 # see LICENSE.TXT for conditions of usage
 
 
-from wh import xlt, AcceleratorHelper, Menu
+from wh import xlt, AcceleratorHelper, Menu, Grid
 import wx.aui
 import wx.grid
 import adm
@@ -17,9 +17,9 @@ from Table import Table
 import logger
 
 
-class SqlEditGrid(wx.grid.Grid):
+class SqlEditGrid(Grid):
   def __init__(self, parent, tableSpecs):
-    wx.grid.Grid.__init__(self, parent)
+    Grid.__init__(self, parent)
     self.frame=parent
     self.table=None
     pt=parent.GetFont().GetPointSize()
@@ -141,17 +141,6 @@ class SqlEditGrid(wx.grid.Grid):
   def OnEditorHidden(self, evt):
     pass
 
-  def GetAllSelectedRows(self):
-      rows=self.GetSelectedRows()
-      tll=self.GetSelectionBlockTopLeft()
-      if tll:
-        for tl, br in zip(tll, self.GetSelectionBlockBottomRight()):
-          for row in range(tl[0], br[0]+1):
-            rows.append(row)
-        return list(tuple(rows))
-      return rows
-    
-
   def OnCellRightClick(self, evt):
     self.GoToCell(evt.Row, evt.Col)
     self.cmRow=evt.Row
@@ -168,10 +157,8 @@ class SqlEditGrid(wx.grid.Grid):
     
   def OnLabelRightClick(self, evt):
     if evt.Row >= 0:
-      rows=self.GetAllSelectedRows()
-      if not evt.Row in rows:
-        self.SelectRow(evt.Row, evt.ControlDown())
-        rows.append(evt.Row)
+      self.SelectRow(evt.Row, evt.ControlDown())
+      rows=self.GetSelectedRows()
       try:  rows.remove(len(self.table.rows))
       except: pass
 
@@ -182,7 +169,7 @@ class SqlEditGrid(wx.grid.Grid):
         cm.Popup(evt)
         
   def OnDeleteRows(self, evt):
-    rows=self.GetAllSelectedRows()
+    rows=self.GetSelectedRows()
     try:  rows.remove(len(self.table.rows))
     except: pass
 

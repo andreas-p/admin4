@@ -4,7 +4,7 @@
 # see LICENSE.TXT for conditions of usage
 
 
-import wx
+import wx.grid
 import os, time, datetime, shutil 
 from ast import literal_eval
 import logger
@@ -34,7 +34,36 @@ class AcceleratorHelper:
   def Realize(self):
     self.frame.SetAcceleratorTable(self.GetTable())
   
-  
+
+
+class Grid(wx.grid.Grid):
+  """
+  Grid handling row selection more consistent
+  """
+  def __init__(self, parent):
+    wx.grid.Grid.__init__(self, parent)
+    self.lastRow=-1
+    self.Bind(wx.grid.EVT_GRID_LABEL_LEFT_CLICK, self.OnLabelLeftClick)
+
+  def OnLabelLeftClick(self, evt):
+    if not evt.ShiftDown():
+      self.GoToCell(evt.Row, 0)
+    evt.Skip()
+    return
+
+
+def GetSelectedRows(self):
+      rows=wx.grid.Grid.GetSelectedRows(self)
+      tll=self.GetSelectionBlockTopLeft()
+      if tll:
+        print "TLL"
+        for tl, br in zip(tll, self.GetSelectionBlockBottomRight()):
+          for row in range(tl[0], br[0]+1):
+            rows.append(row)
+        return list(tuple(rows))
+      return rows
+
+
 class ToolBar(wx.ToolBar):
   def __init__(self, frame, size=16, style=wx.TB_FLAT|wx.TB_NODIVIDER):
     wx.ToolBar.__init__(self, frame, -1, style=style)
