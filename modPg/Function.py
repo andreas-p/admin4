@@ -27,7 +27,7 @@ class Function(SchemaObject):
     sql.AddJoin("pg_language lang ON lang.oid=prolang")
     sql.AddLeft("pg_namespace ns ON ns.oid=pronamespace")
     sql.AddLeft("pg_description des ON (des.objoid=pro.oid AND des.objsubid=0)")
-    sql.AddWhere("pronamespace=%d" % parentNode.parentNode.GetOid())
+    sql.AddWhere("pronamespace", parentNode.parentNode.GetOid())
     sql.AddOrder("proname")
     return sql
 

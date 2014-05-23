@@ -26,7 +26,7 @@ class View(SchemaObject):
     sql.AddLeft("pg_description des ON (des.objoid=rel.oid AND des.objsubid=0)")
     sql.AddLeft("pg_constraint c ON c.conrelid=rel.oid AND c.contype='p'")
     sql.AddWhere("relkind  in ('v', 'm')")
-    sql.AddWhere("relnamespace=%d" % parentNode.parentNode.GetOid())
+    sql.AddWhere("relnamespace", parentNode.parentNode.GetOid())
     sql.AddOrder("CASE WHEN nspname='%s' THEN ' ' else nspname END" % "public")
     sql.AddOrder("relname")
     return sql

@@ -39,8 +39,8 @@ class Table(SchemaObject):
     sql.AddLeft("pg_tablespace ta ON ta.oid=rel.reltablespace")
     sql.AddLeft("pg_description des ON (des.objoid=rel.oid AND des.objsubid=0)")
     sql.AddLeft("pg_constraint c ON c.conrelid=rel.oid AND c.contype='p'")
-    sql.AddWhere("relkind ='r'")
-    sql.AddWhere("relnamespace=%d" % parentNode.parentNode.GetOid())
+    sql.AddWhere("relkind", 'r')
+    sql.AddWhere("relnamespace", parentNode.parentNode.GetOid())
     sql.AddOrder("CASE WHEN nspname='%s' THEN ' ' else nspname END" % "public")
     sql.AddOrder("relname")
     return sql
