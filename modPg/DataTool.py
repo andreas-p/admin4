@@ -356,7 +356,7 @@ class DataFrame(SqlFrame):
     self.worker=worker=self.tableSpecs.GetCursor().ExecuteAsync(sql)
     worker.start()
     
-    self.SetStatus(xlt("Query is running."));
+    self.SetStatus(xlt("Refreshing data..."));
     self.SetStatusText("", self.STATUSPOS_ROWS)
 
     self.pollWorker()
@@ -373,8 +373,8 @@ class DataFrame(SqlFrame):
       self.SetStatus(xlt("Cancelled."));
       self.output.SetData(worker.GetResult())
     elif worker.error:
-      errmsg=worker.error.error.decode('utf8')
-      errlines=errmsg.splitlines()
+      errlines=worker.error.error.splitlines()
+      self.output.SetEmpty()
       self.SetStatus(errlines[0]);
     else:
       self.SetStatus(xlt("OK."));

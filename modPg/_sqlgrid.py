@@ -384,8 +384,7 @@ class SqlEditGrid(wx.grid.Grid):
     
   def SetEmpty(self):
     self.table=None
-    self.SetTable(wx.grid.GridStringTable(1,1))
-    self.SetCellValue(0, 0, xlt("Refreshing data..."))
+    self.SetTable(wx.grid.GridStringTable(0,0))
     self.SetColLabelSize(0)
     self.SetRowLabelSize(0)
     self.AutoSize()
