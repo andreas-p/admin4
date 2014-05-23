@@ -136,7 +136,7 @@ class pgRow(pgCursorResult):
   def __str__(self):
     cols=[]
     for i in range(len(self.colNames)):
-      val=str(self.getItem(i))
+      val=unicode(self.getItem(i))
       cols.append("%s=%s" % (self.colNames[i], val))
       
     return "( %s )" % ",".join(cols)
@@ -360,7 +360,7 @@ class pgCursor():
     try:
       self.cursor.execute(cmd, args)
     except Exception as e:
-      print "EXcept", e, str(e)
+      print "EXcept", e, unicode(e)
       self.conn._handleException(e)
 
   def wait(self, spot=""):
@@ -406,7 +406,7 @@ class pgCursor():
     
     if row:
       row=pgRow(self, row)
-      logger.querylog(self.cursor.query, result=str(row))
+      logger.querylog(self.cursor.query, result=unicode(row))
       return row
     return None
     
@@ -539,7 +539,7 @@ class pgConnectionPool:
       conn=pgConnection(self.dsn, self)
       return conn
     except Exception as e:
-      self.lastError = str(e)
+      self.lastError = unicode(e)
       raise adm.ConnectionException(self.node, xlt("Connect"), self.lastError)   
 
 
