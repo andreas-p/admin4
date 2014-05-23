@@ -611,7 +611,7 @@ class pgQuery:
   def AddWhere(self, where, val=None):
     if where:
       if val:
-        where="%s=%s" % (where, quoteValue(val))
+        where="%s=%s" % (quoteIdent(where), quoteValue(val))
       self.where.append(where)
       
   def AddOrder(self, order):
