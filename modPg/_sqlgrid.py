@@ -7,7 +7,7 @@
 import adm
 import wx.grid, wx.aui
 from wh import xlt, ToolBar, floatToTime
-from _pgsql import pgQuery, quoteIdent
+from _pgsql import pgQuery, quoteIdent, quoteValue
 
 HMARGIN=5
 VMARGIN=5
@@ -34,6 +34,32 @@ class EditTable(wx.grid.PyGridTableBase):
     self.currentRowNo=-1
     self.colsChanged=[]
 
+
+  def Delete(self, rows):
+    """
+    Delete(rows) expects rows in reverse sorted order
+    """
+    query=pgQuery(self.tableSpecs.tabName, self.tableSpecs.GetCursor())
+    all=[]
+    for row in rows:
+      wh=[]
+      for colname in self.tableSpecs.keyCols:
+        wh.append("%s=%s" % (quoteIdent(colname), quoteValue(self.rows[row][colname])))
+      all.append("(%s)" % " AND ".join(wh))
+    query.AddWhere("\n    OR ".join(all))
+    rc=query.Delete()
+    
+    self.grid.Freeze()
+    self.grid.BeginBatch()
+    for row in rows:
+      self.grid.DeleteRows(row, 1, True)
+
+    self.grid.EndBatch()
+    self.grid.ForceRefresh()
+    self.grid.Thaw()
+    return rc
+    
+    
   def Commit(self):
     if self.currentRowNo >= 0:
       query=pgQuery(self.tableSpecs.tabName, self.tableSpecs.GetCursor())
@@ -49,7 +75,7 @@ class EditTable(wx.grid.PyGridTableBase):
           query.AddWhere("oid", r['oid'])
         else:
           for colname in self.tableSpecs.keyCols:
-            query.AddWhere(quoteIdent(colname), self.currentRow[colname])
+            query.AddWhere(colname, self.currentRow[colname])
             
         query.Update()
         self.rows[self.currentRowNo] = self.currentRow
@@ -78,9 +104,11 @@ class EditTable(wx.grid.PyGridTableBase):
             else:
               self.currentRow[self.tableSpecs.keyCols[0]] = returned
 
+        self.grid.AppendRows(1, True)
         self.rows.append(self.currentRow)
+        self.grid.ForceRefresh()
+
         self.grid.GetParent().SetStatusText(xlt("%d rows") % len(self.rows), SqlFrame.STATUSPOS_ROWS)
-        self.grid.AppendRows(1)
       rc=True
     else:
       rc=False
@@ -92,7 +120,12 @@ class EditTable(wx.grid.PyGridTableBase):
     return self.tableSpecs.colSpecs.get(self.colNames[col])
 
   def AppendRows(self, _rowcount):
-    return 
+    return True
+  
+  def DeleteRows(self, row, count):
+    for _ in range(count):
+      del self.rows[row]
+    return True
   
   def GetNumberRows(self):
     rc=len(self.rows)

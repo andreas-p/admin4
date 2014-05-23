@@ -14,6 +14,7 @@ from _pgsql import pgQuery, pgConnectionPool
 from _sqlgrid import SqlFrame, EditTable, HMARGIN, VMARGIN
 from _sqledit import SqlEditor
 from Table import Table
+import logger
 
 
 class SqlEditGrid(wx.grid.Grid):
@@ -140,14 +141,16 @@ class SqlEditGrid(wx.grid.Grid):
   def OnEditorHidden(self, evt):
     pass
 
-  def OnLabelRightClick(self, evt):
-    if evt.Row >= 0:
+  def GetAllSelectedRows(self):
       rows=self.GetSelectedRows()
-      if self.tableSpecs.keyCols and rows:
-        cm=Menu(self.GetParent())
-        if len(rows) > 1: cm.Add(self.OnDeleteRow, xlt("Delete rows"))
-        else:             cm.Add(self.OnDeleteRow, xlt("Delete row"))
-        cm.Popup(evt)
+      tll=self.GetSelectionBlockTopLeft()
+      if tll:
+        for tl, br in zip(tll, self.GetSelectionBlockBottomRight()):
+          for row in range(tl[0], br[0]+1):
+            rows.append(row)
+        return list(tuple(rows))
+      return rows
+    
 
   def OnCellRightClick(self, evt):
     self.GoToCell(evt.Row, evt.Col)
@@ -163,8 +166,26 @@ class SqlEditGrid(wx.grid.Grid):
         cm.Enable(item, False)
     cm.Popup(evt)
     
-  def OnDeleteRow(self, evt):
-    rows=self.GetSelectedRows()
+  def OnLabelRightClick(self, evt):
+    if evt.Row >= 0:
+      rows=self.GetAllSelectedRows()
+      if not evt.Row in rows:
+        self.SelectRow(evt.Row, evt.ControlDown())
+        rows.append(evt.Row)
+      try:  rows.remove(len(self.table.rows))
+      except: pass
+
+      if self.tableSpecs.keyCols and rows:
+        cm=Menu(self.GetParent())
+        if len(rows) > 1: cm.Add(self.OnDeleteRows, xlt("Delete rows"))
+        else:             cm.Add(self.OnDeleteRows, xlt("Delete row"))
+        cm.Popup(evt)
+        
+  def OnDeleteRows(self, evt):
+    rows=self.GetAllSelectedRows()
+    try:  rows.remove(len(self.table.rows))
+    except: pass
+
     if True: # askDeleteConfirmation
       if len(rows)>1:
         msg=xlt("Delete selected %d rows?") % len(rows)
@@ -174,8 +195,14 @@ class SqlEditGrid(wx.grid.Grid):
       if not dlg.ShowModal() == wx.ID_OK:
         return
     
-    print "DELETE", rows
-
+    rows.sort()
+    rows.reverse()
+    rc=self.table.Delete(rows)
+    if rc != len(rows):
+      logger.debug("Rowcount %d after DELETE differs from expected %d", rc, len(rows))
+      self.GetParent().OnRefresh()
+      return
+    self.frame.SetStatusText(xlt("%d rows") % len(self.table.rows), self.frame.STATUSPOS_ROWS)
 
 
   def OnSetNull(self, evt):  
@@ -550,7 +577,7 @@ class DataFrame(SqlFrame):
       self.EnableMenu(self.datamenu, self.OnSave, canSave)
     
   def OnDelete(self, evt):
-    self.output.OnDeleteRow(evt)
+    self.output.OnDeleteRows(evt)
 
   def executeQuery(self, sql):
     self.output.SetEmpty()
