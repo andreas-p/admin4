@@ -10,7 +10,7 @@ EditGrid
 - FK drilldown
 - remember filter
 - OnFilterValidate and executeQuery catch error w/o logging
-- append/delete grid refresh
+
 
 ShowBusy abort enable
 

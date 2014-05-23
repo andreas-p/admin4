@@ -54,6 +54,8 @@ class EditTable(wx.grid.PyGridTableBase):
     for row in rows:
       self.grid.DeleteRows(row, 1, True)
 
+#        msg=wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_ROWS_APPENDED)
+
     self.grid.EndBatch()
     self.grid.ForceRefresh()
     self.grid.Thaw()
@@ -104,9 +106,8 @@ class EditTable(wx.grid.PyGridTableBase):
             else:
               self.currentRow[self.tableSpecs.keyCols[0]] = returned
 
-        self.grid.AppendRows(1, True)
         self.rows.append(self.currentRow)
-        self.grid.ForceRefresh()
+        self.grid.ProcessTableMessage(wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_ROWS_APPENDED, 1))
 
         self.grid.GetParent().SetStatusText(xlt("%d rows") % len(self.rows), SqlFrame.STATUSPOS_ROWS)
       rc=True
@@ -119,12 +120,11 @@ class EditTable(wx.grid.PyGridTableBase):
   def GetColDef(self, col):
     return self.tableSpecs.colSpecs.get(self.colNames[col])
 
-  def AppendRows(self, _rowcount):
-    return True
   
   def DeleteRows(self, row, count):
     for _ in range(count):
       del self.rows[row]
+    self.grid.ProcessTableMessage(wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_ROWS_DELETED, row, count))
     return True
   
   def GetNumberRows(self):
