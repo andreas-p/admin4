@@ -412,6 +412,22 @@ class pgCursor():
     
   
   
+  def Execute(self, cmd, args=None, spot=None):
+    frame=adm.StartWaiting()
+    try:
+      self.execute(cmd, args)
+      self.wait("Execute")
+      adm.StopWaiting(frame)
+    except Exception as e:
+      adm.StopWaiting(frame, e)
+      raise e
+    rc=self.GetRowcount()
+    if spot: spot += " "
+    else: spot=""
+      
+    logger.querylog(self.cursor.query, result=spot+ xlt("%d rows") % rc)
+    return rc
+
   def ExecuteSingle(self, cmd, args=None):
     frame=adm.StartWaiting()
     try:
@@ -669,11 +685,11 @@ class pgQuery:
       cols.append( "%s=%s" % ( self.columns[col], val ))
     sql.append("  SET %s" % self.groupJoin(cols))
     sql.append(" WHERE %s" % "\n   AND ".join(self.where))
-    return self.cursor.ExecuteSingle("\n".join(sql))
+    return self.cursor.Execute("\n".join(sql), spot="UPDATE")
 
   def Delete(self):
     if len(self.tables) != 1:
       raise Exception("pgQuery: DELETE with single table only")
     sql=["DELETE FROM %s" % self.tables[0]]
     sql.append(" WHERE %s" % "\n   AND ".join(self.where))
-    return self.cursor.ExecuteSingle("\n".join(sql))
+    return self.cursor.Execute("\n".join(sql), spot="DELETE")
