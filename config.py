@@ -130,6 +130,32 @@ class Config(wx.Config):
 
     return size, pos
 
+  def restoreGridPositions(self, grid, module=None, name='Grid'):
+    if ignoreStoredPositions:
+      return
+    if not module:
+      module=grid
+    name=self.getName("ColumnWidths", module, name)
+    colWidths=evalAsPython(self.Read(name, "{}"), {})
+    
+    for i in range(grid.GetNumberCols()):
+      colname=grid.GetColLabelValue(i)
+      width=colWidths.get(colname)
+      if width:
+        grid.SetColSize(i, width)
+
+  def storeGridPositions(self, grid, module=None, name='Grid'):
+    if not module:
+      module=grid
+    name=self.getName("ColumnWidths", module, name)
+    colWidths=evalAsPython(self.Read(name, "{}"), {})
+    for i in range(grid.GetNumberCols()):
+      colname=grid.GetColLabelValue(i)
+      width=grid.GetColSize(i)
+      colWidths[colname] = width
+    self.Write(name, colWidths)
+    
+    
   def restoreListviewPositions(self, listview, module, name=None):
     if ignoreStoredPositions:
       return
