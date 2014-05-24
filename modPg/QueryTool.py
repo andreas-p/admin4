@@ -9,7 +9,7 @@ import wx.aui
 import adm
 import xmlres
 import wx.grid
-from wh import xlt, Menu, AcceleratorHelper, FileManager
+from wh import xlt, Menu, AcceleratorHelper, FileManager, Grid
 from _pgsql import pgConnection
 from _explain import ExplainCanvas
 from _snippet import SnippetTree
@@ -20,9 +20,9 @@ from _sqledit import SqlEditor
 NULLSTRING="(NULL)"
 
 
-class SqlResultGrid(wx.grid.Grid):
+class SqlResultGrid(Grid):
   def __init__(self, parent):
-    wx.grid.Grid.__init__(self, parent)
+    Grid.__init__(self, parent)
     self.CreateGrid(0,0)
     self.SetColLabelSize(0)
     self.SetRowLabelSize(0)
@@ -85,51 +85,34 @@ class SqlResultGrid(wx.grid.Grid):
     self.Thaw()
     self.SendSizeEventToParent()
     
+    
   def Paste(self):
-    pass
+    pass    
   
   def Cut(self):
     self.Copy()
   
   def Copy(self):
-    vals=self.getCells()
+    vals=self.GetAllSelectedCellValues()
+    cellSep=", "
+    rowSep="\n"
     if vals:
-      adm.SetClipboard(vals)
+      txt=rowSep.join(map(lambda row:cellSep.join(row), vals))
+      adm.SetClipboard(txt)
 
-
-  def getCells(self, quoteChar="'", commaChar=', ', lfChar='\n', null='NULL'):
-    def quoted(v):
-      if v == NULLSTRING:
-        return null
-      try:
-        _=float(v)
-        return v
-      except:
-        return "%s%s%s" % (quoteChar, v, quoteChar) 
+      
+  def GetQuotedColLabelValue(self, col):
+    quoteChar="'"
+    val=self.GetColLabelValue(col)
+    return self.quoteVal(val, quoteChar)
+          
+  def GetQuotedCellValue(self, row, col):
+    quoteChar="'"
+    val=self.GetCellValue(row, col)
+    if val == NULLSTRING:
+      return "NULL"
+    return self.quoteVal(val, quoteChar)
     
-    vals=[]
-    cells=self.GetSelectedCells()
-    if cells:
-      for row,col in cells:
-        vals.append(quoted(self.GetCellValue(row, col)))
-        return commaChar.join(vals)
-    else:
-      rows=self.GetSelectedRows()
-      if rows:
-        cols=range(self.GetTable().GetColsCount())
-      else:
-        cols=self.GetSelectedCols()
-        if cols:
-          rows=range(self.GetTable().GetRowsCount())
-        else:
-          return quoted(self.GetCellValue(self.GetGridCursorRow(), self.GetGridCursorCol()))
-      for row in rows:
-        v=[]
-        for col in cols:
-          v.append(quoted(self.GetCellValue(row, col)))
-        vals.append(commaChar.join(v))
-      return lfChar.join(vals)
-
 
 class QueryFrame(SqlFrame):
   def __init__(self, parentWin, node):

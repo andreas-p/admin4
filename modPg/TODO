@@ -11,6 +11,7 @@ EditGrid
 - remember filter
 - OnFilterValidate and executeQuery catch error w/o logging
 
+QC copy/Paste
 
 ShowBusy abort enable
 

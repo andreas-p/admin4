@@ -93,6 +93,30 @@ class SqlEditGrid(Grid):
       self.dataTypes.append(typename)
     return typename
 
+  def Cut(self):
+    self.Copy()
+  
+  def Copy(self):
+    vals=self.GetAllSelectedCellValues()
+    cellSep=", "
+    rowSep="\n"
+    if vals:
+      txt=rowSep.join(map(lambda row:cellSep.join(row), vals))
+      adm.SetClipboard(txt)
+
+      
+  def GetQuotedColLabelValue(self, col):
+    quoteChar="'"
+    val=self.table.colNames[col]
+    return self.quoteVal(val, quoteChar)
+          
+  def GetQuotedCellValue(self, row, col):
+    quoteChar="'"
+    val=self.table.rows[row][self.table.colNames[col]]
+    if val == None:
+      return "NULL"
+    return self.quoteVal(val, quoteChar)
+  
   def RevertEdit(self):
     self.table.Revert()
     self.Refresh()
@@ -158,7 +182,7 @@ class SqlEditGrid(Grid):
   def OnLabelRightClick(self, evt):
     if evt.Row >= 0:
       self.SelectRow(evt.Row, evt.ControlDown())
-      rows=self.GetSelectedRows()
+      rows=self.GetAllSelectedRows()
       try:  rows.remove(len(self.table.rows))
       except: pass
 
@@ -169,7 +193,7 @@ class SqlEditGrid(Grid):
         cm.Popup(evt)
         
   def OnDeleteRows(self, evt):
-    rows=self.GetSelectedRows()
+    rows=self.GetAllSelectedRows()
     try:  rows.remove(len(self.table.rows))
     except: pass
 
