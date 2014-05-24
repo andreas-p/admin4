@@ -42,26 +42,84 @@ class Grid(wx.grid.Grid):
   """
   def __init__(self, parent):
     wx.grid.Grid.__init__(self, parent)
-    self.lastRow=-1
     self.Bind(wx.grid.EVT_GRID_LABEL_LEFT_CLICK, self.OnLabelLeftClick)
 
   def OnLabelLeftClick(self, evt):
+    self.SetFocus()
     if not evt.ShiftDown():
       self.GoToCell(evt.Row, 0)
     evt.Skip()
     return
 
+  def GetAllSelectedRows(self):
+    rows=wx.grid.Grid.GetSelectedRows(self)
+    tll=self.GetSelectionBlockTopLeft()
+    if tll:
+      for tl, br in zip(tll, self.GetSelectionBlockBottomRight()):
+        for row in range(tl[0], br[0]+1):
+          if not row in rows:
+            rows.append(row) 
+    rows.sort()
+    return rows
 
-def GetSelectedRows(self):
-      rows=wx.grid.Grid.GetSelectedRows(self)
-      tll=self.GetSelectionBlockTopLeft()
-      if tll:
-        print "TLL"
-        for tl, br in zip(tll, self.GetSelectionBlockBottomRight()):
-          for row in range(tl[0], br[0]+1):
-            rows.append(row)
-        return list(tuple(rows))
-      return rows
+  def quoteVal(self, val, quoteChar):
+    try:
+      _=float(val)
+      return val
+    except:
+      val.replace(quoteChar, "%s%s" % (quoteChar, quoteChar))
+      return "%s%s%s" % (quoteChar, val, quoteChar) 
+    
+    
+  def GetAllSelectedCellValues(self, withLabel=True):
+    """
+    GetAllSelectedCellValues
+    
+    returns 2-dim array of possibly quoted values
+    Only one row is returned, if:
+    - only cells are selected, no rows or cols  or
+    - only one col is selected
+    if more than one row is present, a column label might be added
+    """
+    vals=[]
+    cells=self.GetSelectedCells()
+    tll=self.GetSelectionBlockTopLeft()
+    if tll:
+      for tl, br in zip(tll, self.GetSelectionBlockBottomRight()):
+        for row in range(tl[0], br[0]+1):
+          for col in range(tl[1], br[1]+1):
+            cells.append( (row, col))
+      cells.sort()
+    if cells:
+      for row,col in cells:
+        vals.append(self.GetQuotedCellValue(row, col))
+      return [vals]
+    else:
+      rows=self.GetAllSelectedRows()
+      if rows:
+        cols=range(self.GetTable().GetColsCount())
+      else:
+        cols=self.GetSelectedCols()
+        if cols:
+          rows=range(self.GetTable().GetRowsCount())
+          if len(cols) == 1:
+            for row in rows:
+              vals.append(self.GetQuotedCellValue(row, cols[0]))
+            return [vals]
+        else:
+          return [[self.GetQuotedCellValue(self.GetGridCursorRow(), self.GetGridCursorCol())]]
+      if withLabel and len(rows) > 1:
+        v=[]
+        for col in cols:
+          v.append(self.GetQuotedColLabelValue(col))
+        vals.append(v)
+      for row in rows:
+        v=[]
+        for col in cols:
+          v.append(self.GetQuotedCellValue(row, col))
+        vals.append(v)
+      return vals
+ 
 
 
 class ToolBar(wx.ToolBar):
