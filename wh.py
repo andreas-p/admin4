@@ -65,10 +65,10 @@ class Grid(wx.grid.Grid):
   def quoteVal(self, val, quoteChar):
     try:
       _=float(val)
-      return val
+      return unicode(val)
     except:
       val.replace(quoteChar, "%s%s" % (quoteChar, quoteChar))
-      return "%s%s%s" % (quoteChar, val, quoteChar) 
+      return "%s%s%s" % (quoteChar, unicode(val), quoteChar) 
     
     
   def GetAllSelectedCellValues(self, withLabel=True):
