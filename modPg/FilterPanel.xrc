@@ -4,70 +4,103 @@
     <object class="wxBoxSizer">
       <orient>wxHORIZONTAL</orient>
       <object class="sizeritem">
-        <object class="wxStaticBoxSizer">
-          <label>Filter</label>
+        <object class="wxBoxSizer">
           <orient>wxVERTICAL</orient>
           <object class="sizeritem">
-            <object class="wxFlexGridSizer">
-              <cols>3</cols>
+            <object class="wxStaticBoxSizer">
+              <label>Filter Presets</label>
+              <orient>wxHORIZONTAL</orient>
               <object class="sizeritem">
-                <object class="wxCheckBox" name="LimitCheck">
-                  <label></label>
-                  <checked>1</checked>
-                </object>
-                <flag>wxALIGN_CENTRE_VERTICAL</flag>
-              </object>
-              <object class="sizeritem">
-                <object class="wxStaticText" name="">
-                  <label>Limit</label>
+                <object class="wxComboBox" name="FilterPreset">
+                  <content/>
+                  <style>wxCB_DROPDOWN</style>
                 </object>
                 <option>1</option>
-                <flag>wxRIGHT|wxALIGN_CENTRE_VERTICAL</flag>
+                <flag>wxGROW|wxALIGN_CENTRE_VERTICAL</flag>
+              </object>
+              <object class="sizeritem">
+                <object class="wxButton" name="FilterSave">
+                  <label>Save</label>
+                </object>
+                <flag>wxLEFT|wxALIGN_CENTRE_VERTICAL</flag>
                 <border>10</border>
               </object>
-              <object class="sizeritem">
-                <object class="wxTextCtrl" name="LimitValue-uint">
-                  <value>100</value>
-                  <size>40,-1d</size>
-                </object>
-                <flag>wxALIGN_RIGHT|wxALIGN_CENTRE_VERTICAL</flag>
-              </object>
-              <object class="sizeritem">
-                <object class="wxCheckBox" name="FilterCheck">
-                  <label></label>
-                </object>
-                <flag></flag>
-              </object>
-              <object class="sizeritem">
-                <object class="wxStaticText" name="">
-                  <label>Filter</label>
-                </object>
-                <option>1</option>
-                <flag>wxRIGHT|wxALIGN_CENTRE_VERTICAL</flag>
-                <border>10</border>
-              </object>
-              <object class="sizeritem">
-                <object class="wxButton" name="FilterValidate">
-                  <label>Check</label>
-                </object>
-                <flag>wxALIGN_RIGHT</flag>
-              </object>
-              <vgap>10</vgap>
-              <growablecols>1</growablecols>
             </object>
+            <option>0</option>
             <flag>wxEXPAND</flag>
-            <minsize>100,150d</minsize>
           </object>
           <object class="sizeritem">
-            <object class="wxTextCtrl" name="FilterValue">
-              <style>wxTE_PROCESS_ENTER|wxTE_MULTILINE</style>
+            <object class="wxStaticBoxSizer">
+              <label>Filter</label>
+              <orient>wxVERTICAL</orient>
+              <object class="sizeritem">
+                <object class="wxFlexGridSizer">
+                  <cols>7</cols>
+                  <object class="sizeritem">
+                    <object class="wxCheckBox" name="LimitCheck">
+                      <label></label>
+                      <checked>1</checked>
+                    </object>
+                    <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                  </object>
+                  <object class="sizeritem">
+                    <object class="wxStaticText" name="">
+                      <label>Limit</label>
+                    </object>
+                    <option>1</option>
+                    <flag>wxRIGHT|wxALIGN_CENTRE_VERTICAL</flag>
+                    <border>10</border>
+                  </object>
+                  <object class="sizeritem">
+                    <object class="wxTextCtrl" name="LimitValue-uint">
+                      <value>100</value>
+                      <size>40,-1d</size>
+                    </object>
+                    <flag>wxALIGN_RIGHT|wxALIGN_CENTRE_VERTICAL</flag>
+                  </object>
+                  <object class="spacer">
+                    <size>0,0</size>
+                  </object>
+                  <object class="sizeritem">
+                    <object class="wxCheckBox" name="FilterCheck">
+                      <label></label>
+                    </object>
+                    <flag></flag>
+                  </object>
+                  <object class="sizeritem">
+                    <object class="wxStaticText" name="">
+                      <label>Filter</label>
+                    </object>
+                    <option>1</option>
+                    <flag>wxRIGHT|wxALIGN_CENTRE_VERTICAL</flag>
+                    <border>10</border>
+                  </object>
+                  <object class="sizeritem">
+                    <object class="wxButton" name="FilterValidate">
+                      <label>Check</label>
+                    </object>
+                    <flag>wxALIGN_RIGHT</flag>
+                  </object>
+                  <vgap>10</vgap>
+                  <growablecols>3</growablecols>
+                </object>
+                <flag>wxEXPAND</flag>
+                <minsize>100,150d</minsize>
+              </object>
+              <object class="sizeritem">
+                <object class="wxTextCtrl" name="FilterValue">
+                  <style>wxTE_PROCESS_ENTER|wxTE_MULTILINE</style>
+                </object>
+                <option>1</option>
+                <flag>wxTOP|wxEXPAND</flag>
+                <border>10</border>
+              </object>
             </object>
             <option>1</option>
-            <flag>wxTOP|wxEXPAND</flag>
-            <border>10</border>
+            <flag>wxEXPAND</flag>
           </object>
         </object>
-        <option>1</option>
+        <option>2</option>
         <flag>wxEXPAND</flag>
       </object>
       <object class="sizeritem">

@@ -304,7 +304,7 @@ class QueryFrame(SqlFrame):
       canPaste=self.editor.CanPaste();
       canCut = True;
     a,e=self.editor.GetSelection()
-    canQuery = ( a!=e or self.editor.GetLineCount() >1 or self.getSql() )
+    canQuery = not self.worker and ( a!=e or self.editor.GetLineCount() >1 or self.getSql() )
 
 
     self.EnableMenu(self.editmenu, self.OnAddSnippet, self.server.snippet_table)
@@ -327,6 +327,7 @@ class QueryFrame(SqlFrame):
     self.EnableMenu(self.querymenu, self.OnExecuteQuery, False)
     self.EnableMenu(self.querymenu, self.OnExplainQuery, False)
     
+    wx.YieldIfNeeded()
     self.startTime=wx.GetLocalTimeMillis();
     self.worker=worker=self.conn.GetCursor().ExecuteAsync(sql)
     rowcount=0

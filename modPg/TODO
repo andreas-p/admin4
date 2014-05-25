@@ -8,10 +8,11 @@ Browser:
 EditGrid
 - Drag/drop not from MouseDown
 - FK drilldown
-- remember filter
 - OnFilterValidate and executeQuery catch error w/o logging
 
-QC copy/Paste
+DataGrid
+- FK drilldown
+- filter presets
 
 ShowBusy abort enable
 
