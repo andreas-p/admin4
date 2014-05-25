@@ -123,7 +123,7 @@ class Grid(wx.grid.Grid):
 
 
 class ToolBar(wx.ToolBar):
-  def __init__(self, frame, size=16, style=wx.TB_FLAT|wx.TB_NODIVIDER):
+  def __init__(self, frame, size=32, style=wx.TB_FLAT|wx.TB_NODIVIDER):
     wx.ToolBar.__init__(self, frame, -1, style=style)
     self.frame=frame
     if not isinstance(size, wx.Size):
