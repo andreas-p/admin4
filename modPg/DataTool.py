@@ -5,12 +5,12 @@
 # see LICENSE.TXT for conditions of usage
 
 
-from wh import xlt, AcceleratorHelper, Menu, Grid
+from wh import xlt, AcceleratorHelper, Menu, Grid, evalAsPython
 import wx.aui
 import wx.grid
 import adm
 
-from _pgsql import pgQuery, pgConnectionPool
+from _pgsql import pgQuery, pgConnectionPool, quoteValue, quoteIdent
 from _sqlgrid import SqlFrame, EditTable, HMARGIN, VMARGIN
 from _sqledit import SqlEditor
 from Table import Table
@@ -295,6 +295,9 @@ class TableSpecs:
     self.tabName=name
     self.connectionPool=connectionPool
     self.serverVersion= connectionPool.ServerVersion()
+    for part in self.connectionPool.dsn.split():
+      if part.startswith('dbname='):
+        self.dbName=part[7:]
     
     cursor=connectionPool.GetCursor()
     row=cursor.ExecuteRow("""
@@ -374,6 +377,9 @@ class FilterPanel(adm.NotebookPanel):
     self.Bind("FilterCheck", self.OnFilterCheck)
     self.Bind("FilterValidate", self.OnFilterValidate)
     self.Bind("FilterValue", self.OnFilterValueChanged)
+    self.Bind("FilterPreset", wx.EVT_COMBOBOX, self.OnPresetSelect)
+    self.Bind("FilterPreset", wx.EVT_TEXT, self.OnPresetChange)
+    self.Bind("FilterSave", self.OnFilterSave)
     self['SortCols'].Bind(wx.EVT_LISTBOX_DCLICK, self.OnDclickSort)
     if True: # wx.Platform == "__WXMAC__" and wx.VERSION < (3,0):
       event=wx.EVT_LEFT_DOWN
@@ -386,8 +392,71 @@ class FilterPanel(adm.NotebookPanel):
     self.OnFilterCheck()
     self.valid=True
     self.dialog=dlg
+    self.EnableControls("FilterPreset", dlg.querypreset_table)
+    self.EnableControls("FilterSave", False)
 
+  def OnPresetSelect(self, evt):
+    query=pgQuery(self.dialog.querypreset_table, self.dialog.server.GetCursor())
+    query.AddCol('querylimit')
+    query.AddCol('filter')
+    query.AddCol('sort')
+    query.AddCol('display')
+    query.AddCol('sql')
+    query.AddWhere('dbname', self.tableSpecs.dbName)
+    query.AddWhere('tabname', self.tableSpecs.tabName)
+    query.AddWhere('presetname', self.FilterPreset)
+    
+    res=query.Select()
+    for row in res:
+      limit=row['querylimit']
+      filter=row['filter']
+      sort=evalAsPython(row['sort'])
+      display=evalAsPython(row['display'])
+      sql=row['sql']
+      if limit:
+        self.LimitCheck=True
+        self.LimitValue=limit
+      else:
+        self.LimitCheck=False
+      if filter:
+        self.FilterCheck=True
+        self.FilterValue=filter
+      else:
+        self.FilterCheck=False
+      if sql:
+        self.dialog.editor.SetText(sql)
+      
+      if sort:
+        sc=self['SortCols']
+        sc.Clear()
+        cols=self.tableSpecs.colNames[:]
+        for col in sort:
+          id=sc.Append(col)
+          sc.Check(id, True)
+          if col.endswith(' DESC'):
+            col=col[:-5]
+          try:  cols.remove(col)
+          except: pass
+        sc.AppendItems(cols)
+      if display:
+        dc=self['DisplayCols']
+        dc.Clear()
+        cols=self.tableSpecs.colNames[:]
+        for col in display:
+          id=dc.Append(col)
+          dc.Check(id, True)
+          try:  cols.remove(col)
+          except: pass
+        dc.AppendItems(cols)
+          
 
+      break # only one row, hopefully
+    
+    self.OnPresetChange(evt)
+    
+  def OnPresetChange(self, evt):
+    self.EnableControls("FilterSave", self.FilterPreset)
+    
   def OnClickCol(self, evt):
     if evt.String in self.dialog.tableSpecs.keyCols:
       # don't un-display key colums; we need them
@@ -417,6 +486,37 @@ class FilterPanel(adm.NotebookPanel):
       colname = colname+" DESC"
     self['SortCols'].SetString(evt.Selection, colname)
   
+  
+  def OnFilterSave(self, evt):
+    preset=self.FilterPreset
+    if self.LimitCheck:   limit=self.LimitValue
+    else:                 limit=None
+    if self.FilterCheck:  filter=self.FilterValue
+    else:                 filter=None
+    sort=self['SortCols'].GetCheckedStrings()
+    display=self['DisplayCols'].GetCheckedStrings()
+    sql=self.dialog.editor.GetText()
+    
+    query=pgQuery(self.dialog.querypreset_table, self.dialog.server.GetCursor())
+    query.AddColVal('querylimit', limit)
+    query.AddColVal('filter', filter)
+    query.AddColVal('sort', unicode(sort))
+    query.AddColVal('display', unicode(display))
+    query.AddColVal('sql', sql)
+    
+    fp=self['FilterPreset']
+    if fp.FindString(preset) < 0:
+      query.AddColVal('dbname', self.tableSpecs.dbName)
+      query.AddColVal('tabname', self.tableSpecs.tabName)
+      query.AddColVal('presetname', preset)
+      query.Insert()
+      fp.Append(preset)
+    else:
+      query.AddWhere('dbname', self.tableSpecs.dbName)
+      query.AddWhere('tabname', self.tableSpecs.tabName)
+      query.AddWhere('presetname', preset)
+      query.Update()
+    
   def OnLimitCheck(self, evt=None):
     self.EnableControls("LimitValue", self.LimitCheck)
 
@@ -450,7 +550,16 @@ class FilterPanel(adm.NotebookPanel):
       i=sc.Append(colName)
       if colName in self.tableSpecs.keyCols:
         sc.Check(i, True)
-      
+    if self.dialog.querypreset_table:
+      query=pgQuery(self.dialog.querypreset_table, self.dialog.server.GetCursor())
+      query.AddCol('presetname')
+      query.AddWhere('dbname', self.tableSpecs.dbName)
+      query.AddWhere('tabname', self.tableSpecs.tabName)
+      query.AddOrder('presetname')
+      res=query.Select()
+      for row in res:
+        self['FilterPreset'].Append(row[0])
+        
   def GetQuery(self):
     query=pgQuery(self.tableSpecs.tabName)
     for colName in self['DisplayCols'].GetCheckedStrings():
@@ -465,12 +574,20 @@ class FilterPanel(adm.NotebookPanel):
       sql += "\n LIMIT %d" % self.LimitValue
     return sql
 
+
 class DataFrame(SqlFrame):
-  def __init__(self, parentWin, connection, name):
+  def __init__(self, parentWin, connection, name, server):
     self.tableSpecs=TableSpecs(connection, name)
     self.worker=None
     self.output=None
-    
+    self.server=server
+    querypreset_table=self.server.info.get('querypreset_table')
+    if self.server.adminspace and querypreset_table:
+      self.querypreset_table="%s.%s" % (quoteIdent(self.server.adminspace), quoteIdent(querypreset_table))
+    else:
+      self.querypreset_table=None
+      
+          
     title=xlt("%(appTitle)s Data Tool - %(tableName)s") % {
                 'appTitle': adm.appTitle, 'tableName': name}
     SqlFrame.__init__(self, parentWin, title, "SqlData")
@@ -546,7 +663,9 @@ class DataFrame(SqlFrame):
 
     self.updateMenu()
     self.filter.Go(self.tableSpecs)
-    self.editor.SetText("/*\n%s\n*/\n\n%s" % (xlt("Caution: Don't mess with table and column names!\nYou may experience unwanted behaviour."), self.filter.GetQuery()))
+    self.editor.SetText("/*\n%s\n*/\n\n%s" % (xlt(
+                "Caution: Don't mess with table and column names!\nYou may experience unwanted behaviour or data loss."), 
+                                              self.filter.GetQuery()))
 
     
   def OnAuiCloseEvent(self, evt):
@@ -667,7 +786,35 @@ class DataTool:
   help=xlt("Show and modify data")
   toolbitmap='SqlData'
   knownClasses=['Table', 'View']
+  
+  @staticmethod
+  def GetInstrumentQuery(server):
+    sql="""SELECT 'querypreset_table', relname FROM pg_class JOIN pg_namespace nsp ON nsp.oid=relnamespace 
+         WHERE nspname=%(adminspace)s AND relname=%(querypreset_table)s""" % {
+         'adminspace': quoteValue(server.GetPreference("AdminNamespace")),
+         'querypreset_table': quoteValue("Admin_QueryPreset_%s" % server.user)
+          }
+    return sql
 
+  @staticmethod
+  def GetMissingInstrumentation(server):
+    if not server.info.get('querypreset_table'):
+      return 'querypreset_table'
+  
+  @staticmethod
+  def DoInstrument(server):
+    if not server.info.get('querypreset_table'):
+      querypreset_table=quoteIdent("Admin_QueryPreset_%s" % server.user)
+      server.GetCursor().ExecuteSingle("""
+        CREATE TABLE %(adminspace)s.%(querypreset_table)s 
+                  (dbname TEXT NOT NULL, tabname TEXT NOT NULL, presetname TEXT NOT NULL, 
+                   querylimit INTEGER, filter TEXT, sort TEXT, display TEXT, sql TEXT,
+                   PRIMARY KEY(dbname, tabname, presetname));""" % 
+        {'adminspace': quoteIdent(server.adminspace),
+        'querypreset_table': querypreset_table })
+    return True
+  
+  
   @staticmethod
   def CheckAvailableOn(node):
     return node.__class__.__name__ in DataTool.knownClasses
@@ -679,8 +826,9 @@ class DataTool:
   @staticmethod
   def OnExecute(parentWin, node):
     application="%s Data Tool" % adm.appTitle
-    pool=pgConnectionPool(node.GetServer(), node.GetServer().GetDsn(node.GetDatabase().name, application))
-    frame=DataFrame(parentWin, pool, node.NameSql())
+    server=node.GetServer()
+    pool=pgConnectionPool(server, server.GetDsn(node.GetDatabase().name, application))
+    frame=DataFrame(parentWin, pool, node.NameSql(), server)
     frame.Show()
     frame.OnRefresh()
 
