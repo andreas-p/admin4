@@ -51,7 +51,7 @@ class Server(adm.ServerNode):
             ('connect_timeout', 3),
             ('application_name', application)
             ]
-    return ' '.join(["%s=%s" % (key, psycopg2._param_escape(str(val))) for (key, val) in params])
+    return ' '.join(["%s=%s" % (key, psycopg2._param_escape(unicode(val))) for (key, val) in params])
     
 
   def GetType(self, oid):
