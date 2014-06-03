@@ -10,7 +10,7 @@ import adm
 import xmlres
 import wx.grid
 from wh import xlt, Menu, AcceleratorHelper, FileManager, Grid
-from _pgsql import pgConnection
+from _pgsql import pgConnection, quoteValue, quoteIdent
 from _explain import ExplainCanvas
 from _snippet import SnippetTree
 from _sqlgrid import SqlFrame, HMARGIN, VMARGIN
@@ -121,6 +121,12 @@ class QueryFrame(SqlFrame):
     self.server=node.GetServer()
     self.application="%s Query Tool" % adm.appTitle
     
+    snippet_table=self.server.info.get('snippet_table')
+    if self.server.adminspace and snippet_table:
+      self.snippet_table="%s.%s" % (quoteIdent(self.server.adminspace), quoteIdent(snippet_table))
+    else:
+      self.snippet_table=None
+
     if hasattr(node, "GetDatabase"):
       dbName=node.GetDatabase().name
     else:
@@ -232,7 +238,7 @@ class QueryFrame(SqlFrame):
     self.manager.AddPane(self.snippets, wx.aui.AuiPaneInfo().Left().Top().PaneBorder().Resizable().MinSize((100,100)).BestSize((100,100)).CloseButton(True) \
                           .Name("snippets").Caption(xlt("SQL Snippets")))
 
-    if not self.server.snippet_table:
+    if not self.snippet_table:
       self.manager.GetPane("snippets").Show(False)
 
     
@@ -307,7 +313,7 @@ class QueryFrame(SqlFrame):
     canQuery = not self.worker and ( a!=e or self.editor.GetLineCount() >1 or self.getSql() )
 
 
-    self.EnableMenu(self.editmenu, self.OnAddSnippet, self.server.snippet_table)
+    self.EnableMenu(self.editmenu, self.OnAddSnippet, self.snippet_table)
     self.EnableMenu(self.editmenu, self.OnReplaceSnippet, self.snippets.CanReplace())
     self.EnableMenu(self.editmenu, self.OnCut, canCut)
     self.EnableMenu(self.editmenu, self.OnPaste, canPaste)
@@ -557,6 +563,31 @@ class QueryTool:
   name=xlt("Query Tool")
   help=xlt("Execute SQL Queries")
   toolbitmap='SqlQuery'
+  
+  @staticmethod
+  def GetInstrumentQuery(server):
+    sql="""SELECT 'snippet_table', relname FROM pg_class JOIN pg_namespace nsp ON nsp.oid=relnamespace 
+         WHERE nspname=%(adminspace)s AND relname=%(snippet_table)s""" % {
+         'adminspace': quoteValue(server.GetPreference("AdminNamespace")),
+         'snippet_table': quoteValue("Admin_Snippet_%s" % server.user)
+          }
+    return sql  
+
+  @staticmethod
+  def GetMissingInstrumentation(server):
+    if not server.info.get('snippet_table'):
+      return 'snippet_table'  
+
+  @staticmethod
+  def DoInstrument(server):
+    if not server.info.get('snippet_table'):
+      snippet_table=quoteIdent("Admin_Snippet_%s" % server.user)
+      server.GetCursor().ExecuteSingle("""
+        CREATE TABLE %(adminspace)s.%(snippet_table)s 
+                  (id SERIAL PRIMARY KEY, parent INT4 NOT NULL DEFAULT 0, sort FLOAT NOT NULL DEFAULT 0.0, name TEXT, snippet TEXT);""" % 
+        {'adminspace': quoteIdent(server.adminspace),
+        'snippet_table': snippet_table })
+
   
   @staticmethod
   def CheckAvailableOn(_node):

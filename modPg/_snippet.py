@@ -38,8 +38,8 @@ class SnippetTree(DragTreeCtrl):
     self.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnTreeActivate)
     
     rootSnippets=[]
-    if server.snippet_table:
-      set=self.server.GetCursor().ExecuteSet("SELECT * FROM %s ORDER BY parent, sort" % server.snippet_table)
+    if self.frame.snippet_table:
+      set=self.server.GetCursor().ExecuteSet("SELECT * FROM %s ORDER BY parent, sort" % self.frame.snippet_table)
       for row in set:
         snippet=Snippet(row['id'], row['parent'], row['name'], row['snippet'], row['sort'])
         self.snippets[snippet.id]=snippet
@@ -61,7 +61,7 @@ class SnippetTree(DragTreeCtrl):
 
     
   def updateSnippet(self, snippet):
-    query=pgQuery(self.server.snippet_table, self.server.GetCursor())
+    query=pgQuery(self.frame.snippet_table, self.server.GetCursor())
     query.AddColVal('parent', snippet.parent)
     query.AddColVal('sort', snippet.sort)
     query.AddColVal('name', snippet.name)
@@ -71,7 +71,7 @@ class SnippetTree(DragTreeCtrl):
 
 
   def insertSnippet(self, snippet):
-    query=pgQuery(self.server.snippet_table, self.server.GetCursor())
+    query=pgQuery(self.frame.snippet_table, self.server.GetCursor())
     query.AddColVal('parent', snippet.parent)
     query.AddColVal('sort', snippet.sort)
     query.AddColVal('name', snippet.name)
@@ -83,7 +83,7 @@ class SnippetTree(DragTreeCtrl):
   def OnDelSnippet(self, evt):
     snippet=self.GetNode()
     if snippet:
-      query=pgQuery(self.server.snippet_table, self.server.GetCursor())
+      query=pgQuery(self.frame.snippet_table, self.server.GetCursor())
       query.AddWhere('id', snippet.id)
       query.Delete()
       self.Delete(snippet.treeitem)
@@ -140,7 +140,7 @@ class SnippetTree(DragTreeCtrl):
       
 
   def CanReplace(self):
-    if not self.server.snippet_table:
+    if not self.frame.snippet_table:
       return False
     a,e=self.editor.GetSelection()
     if a==e and self.editor.GetLineCount() < 2 and not self.frame.getSql():
@@ -246,7 +246,7 @@ class SnippetTree(DragTreeCtrl):
 
       if targetSnippet:
         self.AppendSnippet(snippet, None, parentItem)
-        self.updateSnippet(snippet)
+      self.updateSnippet(snippet)
       self.checkChildren(snippet)
 
 

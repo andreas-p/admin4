@@ -82,7 +82,7 @@ class Server(adm.ServerNode):
     if not db and not self.connection:
       self.connection = conn
       
-      self.info=conn.GetCursor().ExecuteDict("""
+      parts=["""
         SELECT name, setting FROM pg_settings
          WHERE name in ('autovacuum', 'log_line_prefix', 'log_destination')
         UNION  
@@ -98,14 +98,19 @@ class Server(adm.ServerNode):
         UNION
         SELECT 'fav_table', relname FROM pg_class JOIN pg_namespace nsp ON nsp.oid=relnamespace 
          WHERE nspname=%(adminspace)s AND relname=%(fav_table)s
-        UNION
-        SELECT 'snippet_table', relname FROM pg_class JOIN pg_namespace nsp ON nsp.oid=relnamespace 
-         WHERE nspname=%(adminspace)s AND relname=%(snippet_table)s""" %
-        {'datname': quoteValue(dbname), 
+        """ % {'datname': quoteValue(dbname), 
          'adminspace': quoteValue(self.GetPreference("AdminNamespace")),
          'fav_table': quoteValue("Admin_Fav_%s" % self.user),
-         'adminprocs': ", ".join(map(lambda p: "'%s'" % p, adminProcs)),
-         'snippet_table': quoteValue("Admin_Snippet_%s" % self.user)})
+         'adminprocs': ", ".join(map(lambda p: "'%s'" % p, adminProcs))
+         }]
+
+      # check instrumentation of tools
+      for tool in self.moduleinfo().get('tools', []):
+        cls=tool['class']
+        if hasattr(cls, 'GetInstrumentQuery'):
+          parts.append(cls.GetInstrumentQuery(self))
+      query="\nUNION\n".join(parts)
+      self.info=conn.GetCursor().ExecuteDict(query)
 
       self.version=conn.ServerVersion()
       self.adminspace=self.info.get('adminspace')
@@ -114,11 +119,7 @@ class Server(adm.ServerNode):
         self.fav_table="%s.%s" % (quoteIdent(self.adminspace), quoteIdent(fav_table))
       else:
         self.fav_table=None
-      snippet_table=self.info.get('snippet_table')
-      if snippet_table:
-        self.snippet_table="%s.%s" % (quoteIdent(self.adminspace), quoteIdent(snippet_table))
-      else:
-        self.snippet_table=None
+        
     return conn
   
 
@@ -146,8 +147,16 @@ class Server(adm.ServerNode):
         missing.append(name)
     if not self.fav_table:
       missing.append('fav_table')
-    if not self.snippet_table:
-      missing.append('snippet_table')  
+    
+    for tool in self.moduleinfo().get('tools', []):
+      cls=tool['class']
+      if hasattr(cls, 'GetMissingInstrumentation'):
+        mi=cls.GetMissingInstrumentation(self)
+        if mi:
+          if isinstance(mi, list):
+            missing.extend(mi)
+          else:
+            missing.append(mi)
     return missing   
 
 
@@ -320,14 +329,10 @@ CREATE TABLE %(adminspace)s.%(fav_table)s
         'fav_table': fav_table })
       server.fav_table="%s.%s" % (adsQuoted, fav_table)
 
-    if not server.snippet_table:
-      snippet_table=quoteIdent("Admin_Snippet_%s" % server.user)
-      server.GetCursor().ExecuteSingle("""
-CREATE TABLE %(adminspace)s.%(snippet_table)s 
-  (id SERIAL PRIMARY KEY, parent INT4 NOT NULL DEFAULT 0, sort FLOAT NOT NULL DEFAULT 0.0, name TEXT, snippet TEXT);""" % 
-        {'adminspace': adsQuoted,
-        'snippet_table': snippet_table })
-      server.snippet_table="%s.%s" % (adsQuoted, snippet_table)
+    for tool in server.moduleinfo().get('tools', []):
+      cls=tool['class']
+      if hasattr(cls, 'DoInstrument'):
+        cls.DoInstrument(server)
     return True
     
     
