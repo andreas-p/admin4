@@ -439,6 +439,7 @@ class ServerTreeCtrl(DragTreeCtrl):
     if not server.IsConnected(True):
       rc=False
       frame=adm.StartWaiting(xlt("Connecting to %(type)s %(name)s...") % { "type": server.typename, "name": server.name}, True)
+      server.properties=[]
       try:
         rc=server.Connect(self)
       except adm.ConnectionException as _e:
