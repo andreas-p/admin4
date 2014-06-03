@@ -294,6 +294,8 @@ class ControlContainer():
     return ctls.get(name.lower())
 
   def EnableControls(self, ctlList, how=True):
+    if how: how=True
+    else:   how=False
     if isinstance(ctlList, StringType):
       ctlList=ctlList.split()
     for cn in ctlList:
