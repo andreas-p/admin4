@@ -436,7 +436,7 @@ class FilterPanel(adm.NotebookPanel):
           if colpure in cols:
             id=sc.Append(col)
             sc.Check(id, True)
-            cols.remove(col)
+            cols.remove(colpure)
         sc.AppendItems(cols)
       if display:
         dc=self['DisplayCols']
@@ -635,6 +635,7 @@ class DataFrame(SqlFrame):
     ah.Add(wx.ACCEL_CTRL, 'X', self.OnCut)
     ah.Add(wx.ACCEL_CTRL, 'C', self.OnCopy)
     ah.Add(wx.ACCEL_CTRL, 'V', self.OnPaste)
+    ah.Add(wx.ACCEL_CTRL, 'S', self.OnSave)
     ah.Add(wx.ACCEL_NORMAL,wx.WXK_F5, self.OnRefresh)
     ah.Add(wx.ACCEL_ALT,wx.WXK_PAUSE, self.OnCancelRefresh)
     ah.Realize()
