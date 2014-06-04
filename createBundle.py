@@ -88,7 +88,7 @@ if __name__ == '__main__':
         continue
       path=os.path.join(dir, fn)
       if os.path.isdir(path):
-        lst.extend(searchFiles(path))
+        lst.extend(searchFiles(path, stripdirlen))
       else:
         ext=path[path.rfind('.'):].lower()
         if ext in filePatterns:
