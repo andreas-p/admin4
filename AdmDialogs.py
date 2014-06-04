@@ -397,6 +397,11 @@ class UpdateDlg(adm.Dialog):
           self.updateZipHash=el.getAttribute('sha1')
           msg.append(xlt("Update info as of %s:") % self.onlineUpdateInfo.getElementText('status'))
           #msg.append("")
+          alerts=self.onlineUpdateInfo.getElements('alert')
+          if alerts:
+            alert=alerts[0].getText()
+            if alert.strip():
+              msg.append(alert)
           modules=self.onlineUpdateInfo.getElements('module')
           
           for module in modules:
