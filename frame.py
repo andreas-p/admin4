@@ -415,11 +415,12 @@ class DetailFrame(Frame):
             en=cls.CheckEnabled(node)
         self.toolbar.Enable(cls.OnExecute, en)
 
-      nodePath=self.GetNodePath(item)
-      if nodePath:
-        server=node.GetServer()
-        server.settings['nodePath'] = nodePath
-        adm.config.storeServerSettings(server, server.settings)
+      server=node.GetServer()
+      if server != node: # don't store a server's nodePath, this would overwrite the desired nodePath on disconnect
+        nodePath=self.GetNodePath(item)
+        if nodePath:
+          server.settings['nodePath'] = nodePath
+          adm.config.storeServerSettings(server, server.settings)
 
     if not node:
       self.SetStatus("")
