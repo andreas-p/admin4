@@ -415,14 +415,10 @@ class FilterPanel(adm.NotebookPanel):
       sql=row['sql']
       if limit:
         self.LimitCheck=True
+        self.OnLimitCheck()
         self.LimitValue=limit
       else:
         self.LimitCheck=False
-      if filter:
-        self.FilterCheck=True
-        self.FilterValue=filter
-      else:
-        self.FilterCheck=False
       if sql:
         self.dialog.editor.SetText(sql)
       
@@ -449,6 +445,13 @@ class FilterPanel(adm.NotebookPanel):
             cols.remove(col)
         dc.AppendItems(cols)
           
+      if filter:
+        self.FilterCheck=True
+        self.OnFilterCheck()
+        self.FilterValue=filter
+        self.OnFilterValidate(evt)
+      else:
+        self.FilterCheck=False
 
       break # only one row, hopefully
     
@@ -557,8 +560,14 @@ class FilterPanel(adm.NotebookPanel):
       query.AddWhere('tabname', self.tableSpecs.tabName)
       query.AddOrder('presetname')
       res=query.Select()
+      fp=self['FilterPreset']
       for row in res:
-        self['FilterPreset'].Append(row[0])
+        fp.Append(row[0])
+      
+      default=fp.FindString('default')
+      if id >= 0:
+        fp.SetSelection(default)
+        self.OnPresetSelect(None)
         
   def GetQuery(self):
     query=pgQuery(self.tableSpecs.tabName)
@@ -664,7 +673,9 @@ class DataFrame(SqlFrame):
 
     self.updateMenu()
     self.filter.Go(self.tableSpecs)
-    self.editor.SetText("/*\n%s\n*/\n\n%s" % (xlt(
+
+    if not self.editor.GetText():    # otherwise set from default preset
+      self.editor.SetText("/*\n%s\n*/\n\n%s" % (xlt(
                 "Caution: Don't mess with table and column names!\nYou may experience unwanted behaviour or data loss."), 
                                               self.filter.GetQuery()))
 
@@ -749,6 +760,8 @@ class DataFrame(SqlFrame):
   def OnSave(self, evt):
     self.output.DoCommit()
     self.output.Refresh()
+    
+    
   def OnRefresh(self, evt=None):
     if self.notebook.GetSelection():
       sql=self.editor.GetSelectedText()
