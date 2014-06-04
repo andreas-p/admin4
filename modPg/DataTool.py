@@ -431,22 +431,22 @@ class FilterPanel(adm.NotebookPanel):
         sc.Clear()
         cols=self.tableSpecs.colNames[:]
         for col in sort:
-          id=sc.Append(col)
-          sc.Check(id, True)
-          if col.endswith(' DESC'):
-            col=col[:-5]
-          try:  cols.remove(col)
-          except: pass
+          if col.endswith(' DESC'): colpure=col[:-5]
+          else:                     colpure=col
+          if colpure in cols:
+            id=sc.Append(col)
+            sc.Check(id, True)
+            cols.remove(col)
         sc.AppendItems(cols)
       if display:
         dc=self['DisplayCols']
         dc.Clear()
         cols=self.tableSpecs.colNames[:]
         for col in display:
-          id=dc.Append(col)
-          dc.Check(id, True)
-          try:  cols.remove(col)
-          except: pass
+          if col in cols:
+            id=dc.Append(col)
+            dc.Check(id, True)
+            cols.remove(col)
         dc.AppendItems(cols)
           
 
