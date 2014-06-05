@@ -13,7 +13,7 @@ modLdap 0.95.3:
 modBind 0.98.3:
 - check status connection
 
-modPg 0.4.0:
+modPg 0.5.0:
 - pgConnectionPool/pgCursor
 - improved QueryTool:
   - SQL Snippets
@@ -21,6 +21,7 @@ modPg 0.4.0:
   - QueryTool file functions
   - syntax highlighting
   - error marking
+  - Data Tool including presets
 
 
 
