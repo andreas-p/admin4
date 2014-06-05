@@ -383,7 +383,7 @@ class UpdateDlg(adm.Dialog):
       return False
     else: # Notebook.GetSelection=0, online update
       if not Crypto:
-        self.ModuleInfo("No crypto functions available;\no online update possible.")
+        self.ModuleInfo=xlt("No crypto functions available;\no online update possible.")
         return False
       
       if self.onlineUpdateInfo:
