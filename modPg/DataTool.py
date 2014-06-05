@@ -396,6 +396,9 @@ class FilterPanel(adm.NotebookPanel):
     self.EnableControls("FilterSave", False)
 
   def OnPresetSelect(self, evt):
+    preset=self.FilterPreset.strip()
+    if not preset:
+      return
     query=pgQuery(self.dialog.querypreset_table, self.dialog.server.GetCursor())
     query.AddCol('querylimit')
     query.AddCol('filter')
@@ -404,7 +407,7 @@ class FilterPanel(adm.NotebookPanel):
     query.AddCol('sql')
     query.AddWhere('dbname', self.tableSpecs.dbName)
     query.AddWhere('tabname', self.tableSpecs.tabName)
-    query.AddWhere('presetname', self.FilterPreset)
+    query.AddWhere('presetname', preset)
     
     res=query.Select()
     for row in res:
