@@ -80,9 +80,9 @@ if __name__ == '__main__':
         os.unlink(path)
     return remainder
         
-  def searchFiles(dir, stripdirlen):
+  def searchFiles(dir, stripdirlen, addFiles=[]):
     lst=[]
-    filenames=[]
+    filenames=addFiles
     for fn in os.listdir(dir):
       if fn.startswith('.'):
         continue
@@ -198,6 +198,7 @@ if __name__ == '__main__':
     if os.path.isdir(fn):
       if os.path.exists("%s/_requires.py" % fn):
         mod=__import__("%s._requires" % fn)
+        addFiles=[]
         try:
           requires=getattr(mod, "_requires")
           rq=requires.GetPrerequisites(True)
@@ -207,11 +208,12 @@ if __name__ == '__main__':
             requiredMods.extend(rq)
             packages.extend(rq)
           if hasattr(requires, 'moreFiles'):
-            moreFiles.extend(map(lambda x: os.path.join(fn, x), requires.moreFiles))
+            # requires.morefiles must be a list of filenames located in the module dir; no subdir allowed
+            addFiles=map(lambda mf: os.path.join(fn, mf), requires.moreFiles)
         except:
           pass
         
-      data_files.extend(searchFiles(fn, stripdirlen))
+      data_files.extend(searchFiles(fn, stripdirlen, addFiles))
     else:
       if fn.startswith('ctl_') and fn.endswith('.py'):
         admResources.append(fn)
