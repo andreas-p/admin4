@@ -157,7 +157,7 @@ class ImageList(wx.ImageList):
         dc.SelectObject(wx.NullBitmap)
         dcs.SelectObject(wx.NullBitmap)
         id=self.Add(bmpneu)
-        logger.debug("Bitmap has wrong format. Need %s, is %s", self.GetSize(0), bmp.GetSize())
+        logger.debug("Bitmap %s has wrong format. Need %s, is %s", name, self.GetSize(0), bmp.GetSize())
       else:
         id=self.Add(bmp)
     else:
