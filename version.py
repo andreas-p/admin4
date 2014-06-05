@@ -37,7 +37,7 @@ except:
   revOriginChange=True
   requiredAdmVersion="2.0"
 
-libVersion="2.1.0"
+libVersion="2.1.4"
 
 description="4th generation\nAdministration Tool\n"
 vendor="PSE"
