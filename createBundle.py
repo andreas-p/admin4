@@ -10,7 +10,7 @@ ignoredirs=['xrced', 'build', 'dist', '_update']
 ignoredfiles=['admin4.py', 'createBundle.py']
 moreFiles=["LICENSE.TXT", 'CHANGELOG', 'admin4.pubkey']
 
-requiredMods=['wx.lib.ogl', 'xml', 'ast', 'Crypto.Signature.PKCS1_v1_5']
+requiredMods=['wx.lib.ogl', 'xml', 'ast', 'Crypto.Signature']
 appEntry='admin4.py'
 packages=['wx']
 includes=[]
