@@ -5,7 +5,7 @@
 # see LICENSE.TXT for conditions of usage
 
 
-filePatterns=['.png', '.ico', '.xrc', '.py']
+filePatterns=['.png', '.ico', '.xrc', '.py', '.html']
 ignoredirs=['xrced', 'build', 'dist', '_update']
 ignoredfiles=['admin4.py', 'createBundle.py']
 moreFiles=["LICENSE.TXT", 'CHANGELOG']
