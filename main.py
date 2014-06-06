@@ -20,7 +20,7 @@ import frame
 from wh import StringType, SetLoaddir
 
 logger.loglevel=logger.LOGLEVEL.DEBUG
-IGNORE_MODULES=['xrced', 'dist', 'build', 'lib', 'include', 'mpl-data', 'tcl']
+IGNORE_MODULES=['xrced', 'dist', 'build', 'release', 'lib', 'include', 'mpl-data', 'tcl']
 
 def getRevision(revStr, modRevision, modDate):
   s=revStr.split()
