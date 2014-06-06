@@ -7,7 +7,7 @@
 
 filePatterns=['.png', '.ico', '.xrc', '.py', '.html']
 ignoredirs=['xrced', 'build', 'dist', '_update']
-ignoredfiles=['admin4.py', 'createBundle.py']
+ignoredfiles=['createBundle.py']
 moreFiles=["LICENSE.TXT", 'CHANGELOG', 'admin4.pubkey']
 
 requiredMods=['wx.lib.ogl', 'xml', 'ast', 'Crypto.Signature']
@@ -17,14 +17,17 @@ includes=[]
 addModules=[]
 excludes=['lib2to3', 'hotshot', 'distutils', 'ctypes', 'unittest']
 buildDir=".build"
+releaseDir="release/"
 appName="Admin4"
 versionTag=None
 requiredAdmVersion="2.1.2"
 checkGit=True
+checkGitCommits=False
 standardInstallDir="/usr/share/%s" % appName
+recentlyChanged=[]
 
 if __name__ == '__main__':
-  import sys, os, platform
+  import sys, os, platform, time
   import shutil, zipfile
   import Crypto.Hash.SHA
   import version
@@ -36,18 +39,19 @@ if __name__ == '__main__':
   else:
     if platform == "Windows":
       installer='py2exe'
-      distDir="../Admin4-%s-Win"
+      distDir=releaseDir + "Admin4-%s-Win"
     else:
       if platform == "Darwin":
         installer='py2app'
-        distDir="../Admin4-%s-Mac"
+        distDir=releaseDir + "Admin4-%s-Mac"
       else:
         print "Platform %s not supported" % platform
         sys.exit(1)
     sys.argv.insert(1, installer)
 
   if installer == "srcUpdate":
-    distDir='../Admin4-%s-Src'
+    checkGitCommits=True
+    distDir=releaseDir + 'Admin4-%s-Src'
 
   while '--addModule' in sys.argv:
     i=sys.argv.index('--addModule')
@@ -64,6 +68,10 @@ if __name__ == '__main__':
     del sys.argv[i]
     checkGit=False
     
+  def appendChanged(lst, name):
+    if not recentlyChanged or name in recentlyChanged:
+      lst.append(name)
+      
   def cleanWxDir(dir):
     remainder=0
     for fn in os.listdir(dir):
@@ -92,7 +100,7 @@ if __name__ == '__main__':
       else:
         ext=path[path.rfind('.'):].lower()
         if ext in filePatterns:
-          filenames.append(path)
+          appendChanged(filenames, path)
     
     if filenames:
       lst.append( (dir[stripdirlen:], filenames) )
@@ -145,6 +153,13 @@ if __name__ == '__main__':
       tag=findTag(lastCommit)
       if tag:
         versionTag=tag.name
+        if checkGitCommits:
+          for commit in repo.iter_commits("%s..HEAD" % versionTag):
+            for change in commit.diff(tag.commit):
+              path=change.a_blob.path
+              if path not in recentlyChanged:
+                recentlyChanged.append(path)
+            
         f=open("__version.py", "w")
         f.write("# Automatically created from GIT by createBundle.\n# Do not edit manually!\n\n")
         f.write("version='%s'\n" % tag.name)
@@ -191,14 +206,12 @@ if __name__ == '__main__':
   data_files=[]
   admResources=[]
   
-  if installer == 'srcUpdate':
-    ignoredfiles=[]
     
   def checkAddItem(fn, stripdirlen=0):
     if os.path.isdir(fn):
+      addFiles=[]
       if os.path.exists("%s/_requires.py" % fn):
         mod=__import__("%s._requires" % fn)
-        addFiles=[]
         try:
           requires=getattr(mod, "_requires")
           rq=requires.GetPrerequisites(True)
@@ -209,18 +222,18 @@ if __name__ == '__main__':
             packages.extend(rq)
           if hasattr(requires, 'moreFiles'):
             # requires.morefiles must be a list of filenames located in the module dir; no subdir allowed
-            addFiles=map(lambda mf: os.path.join(fn, mf), requires.moreFiles)
-        except:
-          pass
+            for mf in requires.moreFiles:
+              appendChanged(addFiles, os.path.join(fn, mf))
+        except:  pass
         
       data_files.extend(searchFiles(fn, stripdirlen, addFiles))
     else:
       if fn.startswith('ctl_') and fn.endswith('.py'):
-        admResources.append(fn)
+        appendChanged(admResources, fn)
       else:
         ext=fn[fn.rfind('.'):].lower()
         if ext in filePatterns:
-          admResources.append(fn)
+          appendChanged(admResources, fn)
   
   for fn in os.listdir("."):
     if fn.startswith('.') or fn in ignoredirs or fn in ignoredfiles or os.path.islink(fn):
@@ -229,8 +242,10 @@ if __name__ == '__main__':
   for fn in addModules:
     fn=os.path.abspath(fn)
     checkAddItem(fn, len(os.path.dirname(fn))+1)
+  
+  for file in moreFiles:
+    appendChanged(admResources, file)
     
-  admResources.extend(moreFiles)
   data_files.append( (".", admResources) )
   
   data_files.reverse()
@@ -246,7 +261,10 @@ if __name__ == '__main__':
   print "Required:", ", ".join(packages)
   
   if installer == 'srcUpdate':
-    print "Collecting update into %s" %distDir
+    if recentlyChanged:
+      distDir = distDir[:-4] + "+%s-Upd" % time.strftime("%y%m%d", time.localtime(time.time()))
+
+    print "Collecting update into %s" % distDir
     try:
       shutil.rmtree(distDir)
       os.mkdir(distDir)
@@ -263,7 +281,8 @@ if __name__ == '__main__':
         destDir=os.path.join(distDir, d[0])
         os.mkdir(destDir)
       for file in d[1]:
-        shutil.copy2(file, destDir)
+#        if not recentlyChanged or file in recentlyChanged:
+          shutil.copy2(file, destDir)
     
   else:
     print "Creating package in %s" %distDir
@@ -315,7 +334,7 @@ if __name__ == '__main__':
   
     print "\nWriting zip."
     zipOut=distDir+".zip"
-    zip=zipfile.ZipFile(zipOut, 'w')
+    zip=zipfile.ZipFile(zipOut, 'w', zipfile.ZIP_DEFLATED)
     zipwrite(distDir, len(os.path.dirname(distDir))+1)
   
   f=open(zipOut, 'rb')
