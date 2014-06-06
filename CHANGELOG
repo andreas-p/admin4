@@ -1,3 +1,6 @@
+modPg 0.5.1:
+- fix empty preset preventing Data Tool to come up
+
 Changes in 2.1.4
 Core:
 - Online update
