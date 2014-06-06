@@ -6,7 +6,7 @@
 
 
 filePatterns=['.png', '.ico', '.xrc', '.py', '.html']
-ignoredirs=['xrced', 'build', 'dist', '_update']
+ignoredirs=['xrced', 'build', 'dist', '_update', 'release']
 ignoredfiles=['createBundle.py']
 moreFiles=["LICENSE.TXT", 'CHANGELOG', 'admin4.pubkey']
 
@@ -20,7 +20,7 @@ buildDir=".build"
 releaseDir="release/"
 appName="Admin4"
 versionTag=None
-requiredAdmVersion="2.1.2"
+requiredAdmVersion="2.1.4"
 checkGit=True
 checkGitCommits=False
 standardInstallDir="/usr/share/%s" % appName
