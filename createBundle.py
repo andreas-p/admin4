@@ -125,7 +125,7 @@ if __name__ == '__main__':
     
     if checkGit:
       try: 
-        import git, time
+        import git
         if git.__version__ < "0.3":
           print "\nWARNING: GIT too old, must be >0.3\n\n"
           return False
@@ -336,6 +336,7 @@ if __name__ == '__main__':
     zipOut=distDir+".zip"
     zip=zipfile.ZipFile(zipOut, 'w', zipfile.ZIP_DEFLATED)
     zipwrite(distDir, len(os.path.dirname(distDir))+1)
+    zip.close()
   
   f=open(zipOut, 'rb')
   txt=f.read(102400)
