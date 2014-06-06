@@ -1,3 +1,6 @@
+Core:
+- Shift key while starting suppresses auto-connect
+
 modPg 0.5.1:
 - fix empty preset preventing Data Tool to come up
 
