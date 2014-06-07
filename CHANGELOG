@@ -1,3 +1,5 @@
+modPg 0.5.2:
+- force client_encoding to utf8
 modPg 0.5.1:
 - fix empty preset preventing Data Tool to come up
 

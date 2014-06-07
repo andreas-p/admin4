@@ -49,6 +49,7 @@ class Server(adm.ServerNode):
             ('user', self.user),
             ('password', self.password),
             ('connect_timeout', 3),
+            ('client_encoding', 'UTF8'),
             ('application_name', application)
             ]
     return ' '.join(["%s=%s" % (key, psycopg2._param_escape(unicode(val))) for (key, val) in params])
