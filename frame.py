@@ -238,7 +238,8 @@ class DetailFrame(Frame):
   def OnActivate(self, evt):
     if not self.activated:
       self.activated=True
-      self.AutoConnect(evt)
+      if not wx.GetKeyState(wx.WXK_SHIFT):
+        self.AutoConnect(evt)
     evt.Skip()
     
   def AutoConnect(self, evt):
