@@ -1,0 +1,11 @@
+For complete packages suitable for your platform, see the Vn.n.n directories. 
+- Windows users: unzip the zip file and move the directory where you like.
+- Mac users: mount the dmg and move the app where you like.
+- other systems: no packages available yet, use the source and install required python runtime and modules.
+  Installation instructions and further documentation can be found at http://www.admin4.org/docs
+
+The Updates directory contains minor releases with bug fixes and additions based on major Vn.n.n files. 
+It's recommended to use the online update feature which will automatically do the right thing, but you also can download a file and insatll it manually.
+
+
+
