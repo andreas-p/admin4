@@ -179,6 +179,8 @@ class HintDlg(adm.Dialog):
     adm.config.SetWantHint(self.hint, self.hintModule, not self.NeverShowAgain)
     return True
   
+
+
 class UpdateDlg(adm.Dialog):
   def __init__(self, parentWin):
     adm.Dialog.__init__(self, parentWin)
@@ -204,7 +206,6 @@ class UpdateDlg(adm.Dialog):
       self.Check()
   
   def OnCheckUpdate(self, evt):
-
     self.onlineUpdateInfo=None
     try:
       # no need use SSL here; we'll verify the update.xml later
@@ -390,11 +391,15 @@ class UpdateDlg(adm.Dialog):
         msg=[]
         canUpdate=True
         haveUpdate=False
-        hasCoreUpdate=False
+        self.hasCoreUpdate=False
         try:
           el=self.onlineUpdateInfo.getElement('updateUrl')
           self.updateUrl=el.getText().strip()
           self.updateZipHash=el.getAttribute('sha1')
+          el=self.onlineUpdateInfo.getElement('minorUpdateUrl')
+          self.minorUpdateUrl=el.getText().strip()
+          self.minorUpdateZipHash=el.getAttribute('sha1')
+
           msg.append(xlt("Update info as of %s:") % self.onlineUpdateInfo.getElementText('status'))
           #msg.append("")
           alerts=self.onlineUpdateInfo.getElements('alert')
@@ -412,7 +417,7 @@ class UpdateDlg(adm.Dialog):
               if admVersion.version < version:
                 msg.append("  Core: %(old)s can be updated to %(new)s" % info)
                 haveUpdate=True
-                hasCoreUpdate=True
+                self.hasCoreUpdate=True
             elif name == "Lib":
               if admVersion.libVersion < version:
                 msg=[msg[0], "There is a newer %(app)s Core version %(new)s available.\nHowever, the current version %(old)s can't update online.\nPlease download and install a full package manually." % info]
@@ -426,13 +431,13 @@ class UpdateDlg(adm.Dialog):
               if rev:
                 info= { 'name': mod.moduleinfo['modulename'], 'old': rev, 'new': version }
                 if rev < version:
-                  if hasCoreUpdate:
+                  if self.hasCoreUpdate:
                     msg.append("  %(name)s: %(old)s upgrade to %(new)s" % info)
                   else:
                     msg.append("Current %(name)s module revision %(old)s can be updated to  %(new)s." % info)
                     haveUpdate=True
                 elif rev > version:
-                  if hasCoreUpdate:
+                  if self.hasCoreUpdate:
                     msg.append("  %(name)s: %(old)s DOWNGRADE to %(new)s, please check" % info)
               
         except Exception as ex:
@@ -451,39 +456,7 @@ class UpdateDlg(adm.Dialog):
         return False
   
   
-  def Execute(self):
-    tmpDir=os.path.join(adm.loaddir, "_update")
-    
-    try: shutil.rmtree(tmpDir)
-    except: pass
-    try: os.mkdir(tmpDir)
-    except: pass
-    
-    if self['Notebook'].GetSelection():
-      source = self.Source
-    else:
-      self.ModuleInfo = xlt("Downloading...\n\n%s") % self.updateUrl
-      try:
-        response=requests.get(self.updateUrl, timeout=self.onlineTimeout*5, proxies=adm.GetProxies())
-        response.raise_for_status()
-      except Exception as ex:
-        self.ModuleInfo = xlt("The download failed:\n%s\n\n%s") % (str(ex), self.updateUrl)
-        return False
-      
-      content=response.content
-      hash=Crypto.Hash.SHA.new(content)
-      if hash.hexdigest() != self.updateZipHash:
-        self.ModuleInfo = xlt("The download failed:\nSHA1 checksum invalid.\n\n%s") % self.updateUrl
-        self['Ok'].Disable()
-        return False
-      
-      source=os.path.join(tmpDir, "Admin4-OnlineUpdate-Src.zip")
-      f=open(source, "w")
-      f.write(content)
-      f.close()
-      self.modname = "Core"
-      
-    self.ModuleInfo = xlt("Installing...")
+  def DoInstall(self, tmpDir, source):
     if not os.path.isdir(source):
       try:
         zip=zipfile.ZipFile(source)
@@ -505,9 +478,67 @@ class UpdateDlg(adm.Dialog):
     copytree(source, destination)
     try: shutil.rmtree(tmpDir)
     except: pass
+    return True
+  
+  def prepareTmp(self):
+    tmpDir=os.path.join(adm.loaddir, "_update")
+    
+    try: shutil.rmtree(tmpDir)
+    except: pass
+    try: os.mkdir(tmpDir)
+    except: pass
+    return tmpDir
+  
+  def DoDownload(self, tmpDir, url, hash):
+      self.ModuleInfo = xlt("Downloading...\n\n%s") % url
+      try:
+        response=requests.get(url, timeout=self.onlineTimeout*5, proxies=adm.GetProxies())
+        response.raise_for_status()
+      except Exception as ex:
+        self.ModuleInfo = xlt("The download failed:\n%s\n\n%s") % (str(ex), self.updateUrl)
+        return None
+      
+      content=response.content
+      hash=Crypto.Hash.SHA.new(content)
+      if hash.hexdigest() != hash:
+        self.ModuleInfo = xlt("The download failed:\nSHA1 checksum invalid.\n\n%s") % self.updateUrl
+        self['Ok'].Disable()
+        return None
+      
+      source=os.path.join(tmpDir, "Admin4-OnlineUpdate-Src.zip")
+      f=open(source, "w")
+      f.write(content)
+      f.close()
+      return source
+    
+    
+  def Execute(self):
+    tmpDir=self.prepareTmp()
+    if self['Notebook'].GetSelection():
+      self.ModuleInfo = xlt("Installing...")
+      self.DoInstall(tmpDir, self.Source)
+      updateInfo=xlt("Installed new module %s") % self.modname      
+    else:
+      self.modname = "Core"
+      if self.hasCoreUpdate and self.updateUrl != self.minorUpdateUrl:
+        source=self.DoDownload(tmpDir, self.updateUrl, self.updateZipHash)
+        if not source:
+          return False
+        self.ModuleInfo = xlt("Updating...")
+        if not self.DoInstall(tmpDir, source):
+          return False
+
+        tmpDir=self.prepareTmp()
+        
+      source=self.DoDownload(tmpDir, self.minorUpdateUrl, self.minorUpdateZipHash)
+      if not source:
+        return False
+      self.ModuleInfo = xlt("Updating...")
+      self.DoInstall(tmpDir, source)
+      updateInfo=xlt("Update installed")     
     
     dlg=wx.MessageDialog(self, xlt("New program files require restart.\nExit now?"), 
-                         xlt("Installed new module %s") % self.modname,
+                         updateInfo,
                          wx.YES_NO|wx.NO_DEFAULT)
     if dlg.ShowModal() == wx.ID_YES:
       sys.exit()
