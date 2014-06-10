@@ -8,7 +8,7 @@
 moduleinfo={ 'name': "PostgreSQL Server",
             'modulename': "PostgreSQL",
             'description': "PostgreSQL database server",
-            'version': "9.3",
+            'version': "9.4",
             'revision': "0.5.2",
             'requiredAdmVersion': "2.1.4", 
             'testedAdmVersion': "2.1.4", 
