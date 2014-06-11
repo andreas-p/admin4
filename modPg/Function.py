@@ -15,7 +15,7 @@ class Function(SchemaObject):
   typename=xlt("Function")
   shortname=xlt("Function")
   refreshOid="pro.oid"
-  favtype='v'
+  favtype='f'
 
 
   @staticmethod
