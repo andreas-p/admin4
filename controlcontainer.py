@@ -293,7 +293,13 @@ class ControlContainer():
     ctls=self._ctls
     return ctls.get(name.lower())
 
+
   def EnableControls(self, ctlList, how=True):
+    """
+    EnableControls(ctlList, how=True)
+    
+    Enables or disables the controls listed (list of names)
+    """
     if how: how=True
     else:   how=False
     if isinstance(ctlList, StringType):
@@ -307,6 +313,26 @@ class ControlContainer():
       else:
         adm.logger.debug("Control %s not found", cn)
 
+
+  def ShowControls(self, ctlList, how=True):
+    """
+    ShowControls(ctlList, how=True)
+    
+    Show or hide the controls listed (list of names)
+    """
+    if how: how=True
+    else:   how=False
+    if isinstance(ctlList, StringType):
+      ctlList=ctlList.split()
+    for cn in ctlList:
+      c=self.ctl(cn)
+      if c:
+        c.Show(how)
+        if hasattr(c, "labelCtl"):
+          c.labelCtl.Show(how)
+      else:
+        adm.logger.debug("Control %s not found", cn)
+        
   def SetUnchanged(self):
     """
     SetUnchanged()
