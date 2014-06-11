@@ -3,6 +3,9 @@ Core:
 - two-level online update (major/minor)
 - FindObject
 
+modLdap 0.95.4:
+- FindObject in database
+
 modPg 0.5.2:
 - force client_encoding to utf8
 - FindObject in database

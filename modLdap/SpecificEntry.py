@@ -266,7 +266,7 @@ class SpecificEntry(adm.NotebookPanel):
     else:
       # using max+1 method
       maxId=0
-      res=self.GetServer().SearchSubConverted("(&(objectClass=%s)(%s=*))" % (objectClass, attrName), attrName)
+      res=self.GetServer().SearchSubConverted(["objectClass=%s" % objectClass, "%s=*" % attrName], attrName)
       for _dn, info in res:
         uid=int(info[attrName][0])
         maxId = max(maxId, uid)

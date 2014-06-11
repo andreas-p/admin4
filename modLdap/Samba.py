@@ -36,7 +36,7 @@ class _SambaRidObject:
       if not domname:
         self.dialog.SetStatus(xlt("For SID creation domain name must be set first"))
         return False
-      res=self.GetServer().SearchSubConverted("(&(objectClass=sambaDomain)(sambaDomainName=%s))" % domname, "sambaAlgorithmicRidBase sambaNextRid")
+      res=self.GetServer().SearchSubConverted(["objectClass=sambaDomain", "sambaDomainName=%s" % domname], "sambaAlgorithmicRidBase sambaNextRid")
       if len(res) == 1:
         # found domain info
         dn,info=res[0]

@@ -11,7 +11,7 @@ import re
 import wx.propgrid as wxpg
 
 import logger
-from wh import xlt, YesNo, evalAsPython
+from wh import xlt, YesNo, evalAsPython, StringType
 from . import AttrVal, ConvertResult
 
 from _ldap import LdapServer, ldap
@@ -25,11 +25,14 @@ class Server(adm.ServerNode):
   shortname=xlt("LDAP Server")
   typename=xlt("LDAP Server")
   wantIconUpdate=True
+  findObjectIncremental=False
+
   panelClassDefault={
     'UserAccount': "UserAccount SambaAccount ShadowAccount Personal Contact Groups",
     'Group': "Group SambaGroupMapping",
     'SambaDomain': "SambaDomain",
     }    
+  
   def __init__(self, settings):
     adm.ServerNode.__init__(self, settings)
     self.attributes={}
@@ -87,6 +90,12 @@ class Server(adm.ServerNode):
 
   
   def SearchSubConverted(self, filter="(objectClass=*)", attrs=["*"]):
+    if isinstance(filter, list):
+      more =filter[1:]
+      filter="(%s)" % filter[0]
+      for f in more:
+        filter = "(&(%s)(%s))" & (filter, f)
+        
     res=self.connection.SearchSub(self.dn, filter, attrs)
     return ConvertResult(res)
 
@@ -108,6 +117,53 @@ class Server(adm.ServerNode):
       return True
     return False
 
+
+  def FindStringValid(self, find):
+    for f in find.split():
+      c=f.find('=')
+      if c < 1 or c > len(f)-2:
+        return False
+    return True
+  
+  def FindObject(self, tree, currentItem, patterns):
+    if isinstance(patterns, StringType):
+      patterns=patterns.split()
+    
+    cp=" ".join(patterns)
+    if not hasattr(self, 'currentPatterns') or self.currentPatterns != cp or not self.foundObjects:
+      self.currentPatterns=cp
+      match=[]
+      for p in patterns:
+        attr,_,val=p.partition('=')
+        match.append("%s=*%s*" % (attr, val))
+      res=self.SearchSubConverted(match, 'none')
+      self.foundObjects=[]
+      for dn, _ in res:
+        rdns=dn[:-len(self.dn)-1].split(',')
+        rdns.reverse()
+        self.foundObjects.append(','.join(rdns))
+      self.foundObjects.sort()
+    
+    while self.foundObjects:
+      rdns=self.foundObjects[0].split(',')
+      del self.foundObjects[0]
+
+      node=self
+      found=False
+      for rdn in rdns:
+        found=False
+        node.PopulateChildren()
+        for c in node.childnodes:
+          if c.name == rdn:
+            node=c
+            found=True
+            break
+      if found:
+        root=None
+        item=tree.Find(root, node.id)
+        return item
+        
+    return None
 
   def Split_DN(self, dnstr):
     dn_s=ldap.dn.explode_dn(dnstr.encode('utf8'))
