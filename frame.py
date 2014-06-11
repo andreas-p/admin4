@@ -154,20 +154,27 @@ class NodeTreePanel(adm.NotebookPanel):
     self.dialog.manager.Update()
 
   def OnFind(self, evt):
-    self['Find'].SetForegroundColour(wx.BLACK)
-    s,e=self['Find'].GetSelection()
-    self.OnFindNext(None)
-    self['Find'].SetFocus()
-    self['Find'].SetSelection(s,e)
+    node= self.tree.GetNode()
+    if node and node.GetServer().findObjectIncremental:
+      s,e=self['Find'].GetSelection()
+      self.OnFindNext(None)
+      self['Find'].SetFocus()
+      self['Find'].SetSelection(s,e)
+    else:
+      self['Find'].SetForegroundColour(wx.BLUE)
   
   def OnFindNext(self, evt):
+    self['Find'].SetForegroundColour(wx.BLACK)
+    find=self.Find.lower().strip()
+    if not find:
+      return
     node=self.tree.GetNode()
     if node:
       server=node.GetServer()
       if evt: startItem=self.tree.GetSelection()
       else:   startItem=server.treeitems[self.tree.name][0]
         
-      item=server.FindObject(self.tree, startItem, self.Find.lower())
+      item=server.FindObject(self.tree, startItem, find)
       if item:
         self.tree.SelectItem(item)
       else:

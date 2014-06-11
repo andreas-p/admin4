@@ -535,6 +535,8 @@ class Collection(Node):
 
 
 class ServerNode(Node):
+  findObjectIncremental=True
+  
   def __init__(self, settings, _password=None):
     Node.__init__(self, None, settings['name'])
 
