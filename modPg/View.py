@@ -19,7 +19,7 @@ class View(SchemaObject):
   @staticmethod
   def InstancesQuery(parentNode):
     sql=pgQuery("pg_class rel")
-    sql.AddCol("rel.oid, relname as name, nspname, spcname, pg_get_userbyid(relowner) AS owner, relacl as acl, relkind")
+    sql.AddCol("rel.oid, relname as name, nspname, ns.oid as nspoid, spcname, pg_get_userbyid(relowner) AS owner, relacl as acl, relkind")
     sql.AddCol("description")
     sql.AddJoin("pg_namespace ns ON ns.oid=rel.relnamespace")
     sql.AddLeft("pg_tablespace ta ON ta.oid=rel.reltablespace")

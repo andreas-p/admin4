@@ -116,6 +116,8 @@ class DatabaseObject(ServerObject):
     return self.parentNode.GetDatabase()
   
 class SchemaObject(DatabaseObject):
-  pass
+  def GetSchemaOid(self):
+    oid=self.info.get('nspoid')
+    return oid
 
   

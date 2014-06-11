@@ -21,7 +21,7 @@ class Function(SchemaObject):
   @staticmethod
   def InstancesQuery(parentNode):
     sql=pgQuery("pg_proc pro")
-    sql.AddCol("pro.oid, pg_get_userbyid(proowner) AS owner, proacl as acl, proname as name, pro.*, nspname, lanname, description")
+    sql.AddCol("pro.oid, pg_get_userbyid(proowner) AS owner, proacl as acl, proname as name, pro.*, nspname, ns.oid as nspoid, lanname, description")
     if parentNode.GetServer().version >= 8.4:
       sql.AddCol("pg_get_function_arguments(pro.oid) as arguments, pg_get_function_result(pro.oid) as result")
     sql.AddJoin("pg_language lang ON lang.oid=prolang")

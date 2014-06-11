@@ -26,7 +26,7 @@ class Table(SchemaObject):
   @staticmethod
   def InstancesQuery(parentNode):
     sql=pgQuery("pg_class rel")
-    sql.AddCol("rel.oid, relname as name, nspname, spcname, pg_get_userbyid(relowner) AS owner, relacl as acl, rel.*")
+    sql.AddCol("rel.oid, relname as name, nspname, ns.oid as nspoid, spcname, pg_get_userbyid(relowner) AS owner, relacl as acl, rel.*")
     if parentNode.GetServer().version < 8.4:
       sql.AddCol("'t' AS relpersistence")
     elif parentNode.GetServer().version < 9.1:
