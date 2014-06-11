@@ -20,7 +20,7 @@ class LdapServer:
   LdapServer()
 
   openldap interface
-  http://www.python-modLdap.org/doc/html/modLdap.html
+  http://www.python-ldap.org/doc/html/ldap.html
   """
   def __init__(self, node):
     self.lastError=None

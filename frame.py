@@ -186,6 +186,8 @@ class NodeTreePanel(adm.NotebookPanel):
       evt.Skip()
     
   def OnFindEnter(self, evt):
+    if not self['FindNext'].IsEnabled():
+      return
     s,e=self['Find'].GetSelection()
     self.OnFindNext(None)
     self['Find'].SetFocus()
