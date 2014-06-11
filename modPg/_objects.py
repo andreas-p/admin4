@@ -80,6 +80,16 @@ class ServerObject(Node):
     elif schema != 'public':
       schema=quoteIdent(schema)
     return "%s.%s" % (schema, name)
+  
+  @classmethod
+  def AddFindRestrictions(cls, sql, schemaName, schemaOid, namecol, patterns):
+    if issubclass(cls, SchemaObject):
+      if schemaName:
+        sql.AddWhere("nspname ILIKE '%%%s%%'" % schemaName)
+      elif schemaOid:
+        sql.AddWhere("n.oid=%d" % schemaOid)
+    for p in patterns:
+      sql.AddWhere("%s ILIKE '%%%s%%'" % (namecol, p))
 
 
 class DatabaseObject(ServerObject):

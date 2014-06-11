@@ -14,7 +14,20 @@ class View(SchemaObject):
   shortname=xlt("View")
   refreshOid="rel.oid"
   favtype='v'
+  relkind='v'
 
+  @staticmethod
+  def FindQuery(schemaName, schemaOid, patterns):
+    sql=pgQuery("pg_class c")
+    sql.AddCol("relkind as kind")
+    sql.AddCol("nspname")
+    sql.AddCol("relname as name")
+    sql.AddCol("n.oid as nspoid")
+    sql.AddCol("c.oid")
+    sql.AddJoin("pg_namespace n ON n.oid=relnamespace")
+    sql.AddWhere("relkind='v'")
+    SchemaObject.AddFindRestrictions(sql, schemaName, schemaOid, 'relname', patterns)
+    return sql
 
   @staticmethod
   def InstancesQuery(parentNode):

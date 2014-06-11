@@ -21,8 +21,22 @@ class Table(SchemaObject):
   shortname=xlt("Table")
   refreshOid="rel.oid"
   favtype='t'
+  relkind='r'
 
+  @staticmethod
+  def FindQuery(schemaName, schemaOid, patterns):
+    sql=pgQuery("pg_class c")
+    sql.AddCol("relkind as kind")
+    sql.AddCol("nspname")
+    sql.AddCol("relname as name")
+    sql.AddCol("n.oid as nspoid")
+    sql.AddCol("c.oid")
+    sql.AddJoin("pg_namespace n ON n.oid=relnamespace")
+    sql.AddWhere("relkind='r'")
+    SchemaObject.AddFindRestrictions(sql, schemaName, schemaOid, 'relname', patterns)
+    return sql
     
+        
   @staticmethod
   def InstancesQuery(parentNode):
     sql=pgQuery("pg_class rel")

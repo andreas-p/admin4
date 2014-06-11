@@ -6,15 +6,17 @@
 
 
 import adm
-from wh import xlt, YesNo
+from wh import xlt, YesNo, StringType
 from _pgsql import pgConnectionPool, pgQuery, pgTypeCache, psycopg2, quoteIdent, quoteValue
+from _objects import SchemaObject
 
 adminProcs=['pg_terminate_backend', 'pg_rotate_logfile', 'pg_reload_conf']
 
 class Server(adm.ServerNode):
   shortname=xlt("pgsql Server")
   typename=xlt("PostgreSQL Server")
-  
+  findObjectIncremental=False
+
 #  wantIconUpdate=True
 
   def __init__(self, settings):
@@ -161,6 +163,75 @@ class Server(adm.ServerNode):
     return missing   
 
 
+  def FindObject(self, tree, currentItem, patterns):
+    node=tree.GetNode()
+    if node == self:
+      return adm.ServerNode.FindObject(self, tree, currentItem, patterns)
+
+    if not hasattr(node, "GetDatabase"): # a collection
+      node=node.parentNode
+    db=node.GetDatabase()
+    
+    from Schema import Schema
+    if isinstance(patterns, StringType):
+      patterns=patterns.split()
+    
+    kind=None    # TODO maybe later something sensible
+
+    
+    cp=" ".join(patterns)
+    if not hasattr(self, 'currentPatterns') or self.currentPatterns != cp or not self.foundObjects:
+      self.currentPatterns=cp
+
+      if isinstance(node, SchemaObject):  schemaOid=node.GetSchemaOid()
+      elif isinstance(node, Schema):      schemaOid=node.GetOid()
+      else:                               schemaOid=None
+      
+      self.foundObjects=db.FindObject(patterns, schemaOid, kind)
+
+    nsps={}
+    kinds={}
+    for ni in self.moduleinfo()['nodes'].values():
+      cls=ni['class']
+      if hasattr(cls, 'FindQuery'):
+        kinds[cls.relkind] = cls
+    
+    db.PopulateChildren()
+    for schemas in db.childnodes:
+      if schemas.nodeclass == Schema:
+        break;
+    
+    for row in self.foundObjects:
+      del self.foundObjects[0]
+      cls=kinds[row['kind']]
+      
+      # TODO check favourite
+      
+      if issubclass(cls, SchemaObject):
+        nsp=row['nspname']
+        oid=row['oid']
+        if nsp not in nsps:
+          if not nsps:
+            schemas.PopulateChildren()
+          for schema in schemas.childnodes:
+            if schema.name == nsp:
+              nsps[nsp] = schema
+              schema.PopulateChildren()
+              break
+          schema=nsps.get(nsp)
+          if not schema:
+            return None
+          for coll in schema.childnodes:
+            if coll.nodeclass == cls:
+              coll.PopulateChildren()
+              for node in coll.childnodes:
+                if node.GetOid() == oid:
+                  root=None
+                  item=tree.Find(root, node.id)
+                  return item
+              
+    return None
+     
   def ExpandColDefs(self, cols):
     return ", ".join( [ "%s as %s" % (c[0], quoteIdent(c[1])) for c in cols])
 

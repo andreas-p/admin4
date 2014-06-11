@@ -66,6 +66,42 @@ class Database(ServerObject):
     return self.GetServer().DoConnect(self.name)
   
   
+  def FindObject(self, patterns, schemaOid, kind=None):
+    """
+    FindObject(patterns, schemaOid, kind)
+    
+    Finds all objects matching the pattern list
+    
+    if patterns[0] includes a dot, schemaOid is overridden
+    """
+    # relkind: r = ordinary table, i = index, S = sequence, v = view, m = materialized view,
+    #          c = composite type, t = TOAST table, f = foreign table
+    # P=Proc
+    queries=[]
+    if len(patterns) > 1:
+      type=patterns[0]
+      patterns=patterns[1:]
+    else:
+      type=None
+      
+    dp=patterns[0].find('.')
+    if dp>0:
+      schemaName=patterns[0][:dp]
+      patterns[0]=patterns[0][dp+1:]
+    else:
+      schemaName=None
+    
+    for ni in self.moduleinfo()['nodes'].values():
+      cls=ni['class']
+      if hasattr(cls, 'FindQuery'):
+        if not kind or kind == cls.relkind:
+          sql=cls.FindQuery(schemaName, schemaOid, patterns)
+          queries.append(sql.SelectQueryString())
+
+    result=self.GetCursor().ExecuteDictList("%s\n\nORDER BY 1, 2, 3" % "\nUNION\n".join(queries))
+    return result
+  
+  
   def GetConnection(self):
     if self.IsMaintenanceConnection():
       return self.GetServer()

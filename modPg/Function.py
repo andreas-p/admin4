@@ -16,8 +16,23 @@ class Function(SchemaObject):
   shortname=xlt("Function")
   refreshOid="pro.oid"
   favtype='f'
+  relkind='P'
 
 
+  
+  @staticmethod
+  def FindQuery(schemaName, schemaOid, patterns):
+    sql=pgQuery("pg_proc p")
+    sql.AddCol("'P' as kind")
+    sql.AddCol("nspname")
+    sql.AddCol("proname as name")
+    sql.AddCol("n.oid as nspoid")
+    sql.AddCol("p.oid")
+    sql.AddJoin("pg_namespace n ON n.oid=pronamespace")
+    SchemaObject.AddFindRestrictions(sql, schemaName, schemaOid, 'proname', patterns)
+    return sql
+    
+    
   @staticmethod
   def InstancesQuery(parentNode):
     sql=pgQuery("pg_proc pro")
