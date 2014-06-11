@@ -23,6 +23,7 @@
           <object class="sizeritem">
             <object class="wxTextCtrl" name="Find">
               <size>80,-1d</size>
+              <style>wxTE_PROCESS_ENTER</style>
             </object>
             <flag>wxALIGN_CENTRE_VERTICAL</flag>
           </object>

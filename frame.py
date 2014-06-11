@@ -143,6 +143,7 @@ class NodeTreePanel(adm.NotebookPanel):
     adm.NotebookPanel.__init__(self, dlg, dlg)
     self.Bind('FindClose', self.OnCloseFind)
     self.Bind('Find', self.OnFind)
+    self.Bind('Find', wx.EVT_TEXT_ENTER, self.OnFindEnter)
     self.Bind('FindNext', self.OnFindNext)
     
   def AddExtraControls(self, res):
@@ -156,13 +157,16 @@ class NodeTreePanel(adm.NotebookPanel):
   def OnFind(self, evt):
     node= self.tree.GetNode()
     if node and node.GetServer().findObjectIncremental:
-      s,e=self['Find'].GetSelection()
-      self.OnFindNext(None)
-      self['Find'].SetFocus()
-      self['Find'].SetSelection(s,e)
+      self.OnFindEnter(evt)
     else:
       self['Find'].SetForegroundColour(wx.BLUE)
   
+  def OnFindEnter(self, evt):
+    s,e=self['Find'].GetSelection()
+    self.OnFindNext(None)
+    self['Find'].SetFocus()
+    self['Find'].SetSelection(s,e)
+    
   def OnFindNext(self, evt):
     self['Find'].SetForegroundColour(wx.BLACK)
     find=self.Find.lower().strip()
