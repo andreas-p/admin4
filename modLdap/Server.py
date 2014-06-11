@@ -119,23 +119,34 @@ class Server(adm.ServerNode):
 
 
   def FindStringValid(self, find):
+    if find.startswith('('):
+      if not find.endswith(')'):
+        return False
+      return find.count('(') == find.count(')')
+    
     for f in find.split():
       c=f.find('=')
       if c < 1 or c > len(f)-2:
         return False
     return True
   
-  def FindObject(self, tree, currentItem, patterns):
-    if isinstance(patterns, StringType):
-      patterns=patterns.split()
+  def FindObject(self, tree, _currentItem, patterns):
+    if patterns.startswith('('):
+      cp=patterns
+    else:
+      if isinstance(patterns, StringType):
+        patterns=patterns.split()
+      cp=" ".join(patterns)
     
-    cp=" ".join(patterns)
     if not hasattr(self, 'currentPatterns') or self.currentPatterns != cp or not self.foundObjects:
       self.currentPatterns=cp
-      match=[]
-      for p in patterns:
-        attr,_,val=p.partition('=')
-        match.append("%s=*%s*" % (attr, val))
+      if cp.startswith('('):
+        match=patterns
+      else:
+        match=[]
+        for p in patterns:
+          attr,_,val=p.partition('=')
+          match.append("%s=*%s*" % (attr, val))
       res=self.SearchSubConverted(match, 'none')
       self.foundObjects=[]
       for dn, _ in res:
