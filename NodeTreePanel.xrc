@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource>
+  <object class="wxPanel" name="NodeTreePanel">
+    <object class="wxBoxSizer">
+      <orient>wxVERTICAL</orient>
+      <object class="sizeritem">
+        <object class="unknown" name="ValueGrid"/>
+        <option>1</option>
+        <flag>wxBOTTOM|wxRIGHT|wxEXPAND|wxGROW</flag>
+        <border>5</border>
+      </object>
+      <object class="sizeritem">
+        <object class="wxBoxSizer">
+          <orient>wxHORIZONTAL</orient>
+          <object class="sizeritem">
+            <object class="wxBitmapButton" name="FindClose">
+              <bitmap>close.png</bitmap>
+              <style>wxNO_BORDER</style>
+            </object>
+            <flag>wxRIGHT|wxALIGN_CENTRE_VERTICAL</flag>
+            <border>5</border>
+          </object>
+          <object class="sizeritem">
+            <object class="wxTextCtrl" name="Find">
+              <size>80,-1d</size>
+            </object>
+            <flag>wxALIGN_CENTRE_VERTICAL</flag>
+          </object>
+          <object class="sizeritem">
+            <object class="wxBitmapButton" name="FindNext">
+              <bitmap>find.png</bitmap>
+            </object>
+            <flag>wxLEFT|wxRIGHT|wxALIGN_RIGHT|wxALIGN_CENTRE_VERTICAL</flag>
+            <border>5</border>
+          </object>
+          <object class="spacer">
+            <option>1</option>
+          </object>
+        </object>
+        <flag>wxBOTTOM|wxLEFT|wxGROW</flag>
+        <border>5</border>
+      </object>
+    </object>
+  </object>
+</resource>

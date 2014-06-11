@@ -137,6 +137,44 @@ class Frame(wx.Frame, adm.MenuOwner):
       sb.PopStatusText()
 
 
+class NodeTreePanel(adm.NotebookPanel):
+  def __init__(self, dlg, name):
+    self.SetAttr('treeName', name)
+    adm.NotebookPanel.__init__(self, dlg, dlg)
+    self.Bind('FindClose', self.OnCloseFind)
+    self.Bind('Find', self.OnFind)
+    self.Bind('FindNext', self.OnFindNext)
+    
+  def AddExtraControls(self, res):
+    self.tree=NodeTreeCtrl(self, self.treeName)
+    res.AttachUnknownControl("ValueGrid", self.tree)
+    
+  def DoShow(self, how):
+    self.ShowControls("Find FindNext FindClose", how)
+    self.dialog.manager.Update()
+
+  def OnFind(self, evt):
+    self['Find'].SetForegroundColour(wx.BLACK)
+    s,e=self['Find'].GetSelection()
+    self.OnFindNext(None)
+    self['Find'].SetFocus()
+    self['Find'].SetSelection(s,e)
+  
+  def OnFindNext(self, evt):
+    node=self.tree.GetNode()
+    if node:
+      server=node.GetServer()
+      if evt: startItem=self.tree.GetSelection()
+      else:   startItem=server.treeitems[self.tree.name][0]
+        
+      item=server.FindObject(self.tree, startItem, self.Find.lower())
+      if item:
+        self.tree.SelectItem(item)
+      else:
+        self['Find'].SetForegroundColour(wx.RED)
+
+  def OnCloseFind(self, evt):
+    self.DoShow(False)
 
 class DetailFrame(Frame):
   def __init__(self, parentWin, name, args=None, title=None):
@@ -162,6 +200,7 @@ class DetailFrame(Frame):
     self.toolbar.Add(self.OnEdit, xlt("Edit"), "edit")
     self.toolbar.Add(self.OnNew, xlt("New"), "new")
     self.toolbar.Add(self.OnDelete, xlt("Delete"), "delete")
+    self.toolbar.Add(self.OnFindObject, xlt("Find"), "edit_find")
     self.toolbar.AddSeparator()
     self.standardToolsCount=self.toolbar.GetToolsCount()
     self.toolbar.Realize()
@@ -191,10 +230,15 @@ class DetailFrame(Frame):
     self.registerToggles(True, True)
     menubar.Append(menu, xlt("&View"))
 
-    _helpid=self.BindMenuId(self.OnHelp)
-
+    self.editmenu=menu=Menu(self)
+    menu.Add(self.OnEdit, xlt("Edit"), xlt("edit"))
+    menu.Add(self.OnNew, xlt("New"), xlt("new object"))
+    menu.Add(self.OnDelete, xlt("Delete"), xlt("delete object"))
+    menu.Add(self.OnFindObject, xlt("Find"), xlt("find object"))
+    menubar.Append(menu, xlt("&Edit"))
+    
+    
     self.helpmenu=menu=Menu(self)
-
     menu.Add(self.OnHelp, xlt("Help"), xlt("Show help"), wx.ID_HELP)
     menu.Add(self.OnLogging, xlt("Logging"), xlt("Show logged problems"))
     menu.Add(self.OnUpdate, xlt("Update"), xlt("Update program modules"))
@@ -211,9 +255,11 @@ class DetailFrame(Frame):
     self.manager.AddPane(self.details, wx.aui.AuiPaneInfo().Center().CloseButton(False) \
                           .Name("objectDetails").Caption(xlt("Object details")))
 
-    self.tree=NodeTreeCtrl(self, name)
+    self.nodePanel=NodeTreePanel(self, name)
+    self.tree=self.nodePanel.tree
+    self.nodePanel.DoShow(False)
     self.tree.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnTreeSelChange)
-    self.manager.AddPane(self.tree, wx.aui.AuiPaneInfo().Left().Layer(1).Floatable() \
+    self.manager.AddPane(self.nodePanel, wx.aui.AuiPaneInfo().Left().Layer(1).Floatable() \
                           .Name("objectBrowser").Caption(xlt("Object browser")) \
                           .MinSize((200,300)).BestSize((250,350)))
     
@@ -234,6 +280,10 @@ class DetailFrame(Frame):
 
     self.Bind(wx.EVT_ACTIVATE, self.OnActivate)
     self.activated=False
+    
+  def OnFindObject(self, evt):
+    self.nodePanel.DoShow(True)
+    self.nodePanel['Find'].SetFocus()
     
   def OnActivate(self, evt):
     if not self.activated:
@@ -405,9 +455,9 @@ class DetailFrame(Frame):
     self.lastNode=node
     
     if node:
-      self.toolbar.Enable(self.OnEdit, hasattr(node, "Edit"))
-      self.toolbar.Enable(self.OnDelete, hasattr(node, "Delete"))
-      self.toolbar.Enable(self.OnNew, self.getNewClass(node) != None)
+      self.EnableMenu(self.editmenu, self.OnEdit, hasattr(node, "Edit"))
+      self.EnableMenu(self.editmenu, self.OnDelete, hasattr(node, "Delete"))
+      self.EnableMenu(self.editmenu, self.OnNew, self.getNewClass(node) != None)
       for mi in node.moduleinfo()['tools']:
         en=self.menuAvailableOnNode(mi, node)
         cls=mi['class']

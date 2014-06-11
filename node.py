@@ -600,6 +600,33 @@ class ServerNode(Node):
     rc=self.DoConnect()
     return rc
 
+  
+  def FindObject(self, tree, currentItem, patterns):
+    "FindObject(self, tree, currentItem, pattern) matches children, sibling and parent+sibling recursively"
+    for item in tree.GetChildItems(currentItem):
+      found=tree.FindPattern(item, patterns)
+      if found:
+        return found
+
+    item=tree.GetNextSibling(currentItem)
+    while item:
+      found=tree.FindPattern(item, patterns)
+      if found:
+        return found
+      item=tree.GetNextSibling(item)
+      
+    parentItem=tree.GetItemParent(currentItem)
+    while parentItem:
+      if tree.GetNode(parentItem) == self:
+        return None
+      item=tree.GetNextSibling(parentItem)
+      if item:
+        found=tree.FindPattern(item, patterns)
+        if found:
+          return found
+      parentItem=tree.GetItemParent(parentItem)
+      
+    return None
 
   def ExternExecute(self, _parentWin, cmd, address, port, **kargs):
     call=self.GetCfgString(cmd)
