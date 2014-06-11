@@ -9,7 +9,7 @@
 import wx
 import adm
 import logger
-from wh import xlt, Menu
+from wh import xlt, Menu, StringType
 
 
 class TreeItemData(wx.TreeItemData):
@@ -29,6 +29,28 @@ class TreeCtrl(wx.TreeCtrl):
       self.SetFont(font)
     
 
+  def Match(self, item, patterns, case=False):
+    if isinstance(patterns, StringType):
+      patterns=patterns.split()
+    txt=self.GetItemText(item)
+    if not case:
+      txt=txt.lower()
+    found=0
+    for p in patterns:
+      if txt.find(p) >= 0:
+        found += 1
+    return found == len(patterns)
+  
+  def FindPattern(self, currentItem, patterns, case=False):
+    "Find(currentItem, pattern) matches currentItem and children against patterns"
+    if self.Match(currentItem, patterns, case):
+      return currentItem
+    for item in self.GetChildItems(currentItem):
+      found=self.FindPattern(item, patterns)
+      if found:
+        return found
+    return None
+  
   def GetNode(self, item=None):
     if not item:
       item=self.GetSelection()
