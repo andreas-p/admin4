@@ -603,6 +603,9 @@ class ServerNode(Node):
     return rc
 
   
+  def FindStringValid(self, _find):
+    return True
+  
   def FindObject(self, tree, currentItem, patterns):
     "FindObject(self, tree, currentItem, pattern) matches children, sibling and parent+sibling recursively"
     for item in tree.GetChildItems(currentItem):

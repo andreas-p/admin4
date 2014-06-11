@@ -158,14 +158,23 @@ class NodeTreePanel(adm.NotebookPanel):
   def DoShow(self, how):
     self.ShowControls("Find FindNext FindClose", how)
     self.dialog.manager.Update()
+  
 
   def OnFind(self, evt):
-    fnd=self.Find.strip()
-    self['FindNext'].Enable(fnd != "")
-    if not fnd:
+    find=self.Find.strip()
+    valid=find != ""
+    if valid:
+      node= self.tree.GetNode()
+      if node:
+        server=node.GetServer()
+        valid=server.FindStringValid(find)
+      else: valid=False
+      
+    self['FindNext'].Enable(valid)
+    if not valid:
       return
-    node= self.tree.GetNode()
-    if node and node.GetServer().findObjectIncremental:
+    
+    if server.findObjectIncremental:
       self.OnFindEnter(evt)
     else:
       self['Find'].SetForegroundColour(wx.BLUE)
