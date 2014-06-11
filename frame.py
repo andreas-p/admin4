@@ -8,7 +8,7 @@
 import wx.aui
 import adm
 import logger
-from wh import xlt, StringType, GetIcon, Menu, ToolBar, restoreSize
+from wh import xlt, StringType, GetIcon, Menu, ToolBar, restoreSize, GetBitmap, AcceleratorHelper
 from tree import NodeTreeCtrl, ServerTreeCtrl
 from notebook import Notebook
 from LoggingDialog import LoggingDialog
@@ -144,23 +144,38 @@ class NodeTreePanel(adm.NotebookPanel):
     self.Bind('FindClose', self.OnCloseFind)
     self.Bind('Find', self.OnFind)
     self.Bind('Find', wx.EVT_TEXT_ENTER, self.OnFindEnter)
+    self.Bind('Find', wx.EVT_CHAR, self.OnFindChar)
     self.Bind('FindNext', self.OnFindNext)
     
   def AddExtraControls(self, res):
     self.tree=NodeTreeCtrl(self, self.treeName)
     res.AttachUnknownControl("ValueGrid", self.tree)
+    self['FindClose'].SetBitmapCurrent(GetBitmap('close'))
+    # we'd like wx.BitmapButton.NewCloseButton here...
+    self.OnFind(None)
+    
     
   def DoShow(self, how):
     self.ShowControls("Find FindNext FindClose", how)
     self.dialog.manager.Update()
 
   def OnFind(self, evt):
+    fnd=self.Find.strip()
+    self['FindNext'].Enable(fnd != "")
+    if not fnd:
+      return
     node= self.tree.GetNode()
     if node and node.GetServer().findObjectIncremental:
       self.OnFindEnter(evt)
     else:
       self['Find'].SetForegroundColour(wx.BLUE)
   
+  def OnFindChar(self, evt):
+    if evt.KeyCode == 27:
+      self.OnCloseFind(evt)
+    else:
+      evt.Skip()
+    
   def OnFindEnter(self, evt):
     s,e=self['Find'].GetSelection()
     self.OnFindNext(None)
@@ -186,6 +201,7 @@ class NodeTreePanel(adm.NotebookPanel):
 
   def OnCloseFind(self, evt):
     self.DoShow(False)
+    self.tree.SetFocus()
 
 class DetailFrame(Frame):
   def __init__(self, parentWin, name, args=None, title=None):
@@ -282,6 +298,10 @@ class DetailFrame(Frame):
     str=adm.config.GetPerspective(self)
     if str:
       self.manager.LoadPerspective(str)
+
+    ah=AcceleratorHelper(self)
+    ah.Add(wx.ACCEL_CTRL, 'F', self.BindMenuId(self.OnFindObject))
+    ah.Realize()
 
     self.OnToggleTree()
     self.OnToggleToolBar()
