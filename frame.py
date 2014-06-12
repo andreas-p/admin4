@@ -125,7 +125,6 @@ class Frame(wx.Frame, adm.MenuOwner):
       else:
         sb.SetStatusText("", 0)
 
-
   def PushStatus(self, text, field=0):
     sb=self.GetStatusBar()
     if sb:
@@ -137,14 +136,43 @@ class Frame(wx.Frame, adm.MenuOwner):
       sb.PopStatusText()
 
 
-class NodeTreePanel(adm.NotebookPanel):
+
+
+class FindPanel(adm.NotebookPanel):
+  def __init__(self, dlg):
+    adm.NotebookPanel.__init__(self, dlg, dlg, "./FindPanel")
+    self.Bind('FindClose', self.OnFindClose)
+    self.Bind('Find', wx.EVT_CHAR, self.OnFindChar)
+    self.Bind('Find', wx.EVT_TEXT_ENTER, self.OnFindEnter)
+
+  def DoShow(self, how):
+    self.ShowControls("Find FindNext FindClose", how)
+    if hasattr(self.dialog, 'manager'):
+      self.dialog.manager.Update()
+
+  def OnFindClose(self, evt):
+    self.DoShow(False)
+
+  def OnFindChar(self, evt):
+    if evt.KeyCode == 27:
+      self.OnFindClose(evt)
+    else:
+      evt.Skip()  
+      
+  def OnFindEnter(self, evt):
+    if not self['FindNext'].IsEnabled():
+      return
+    s,e=self['Find'].GetSelection()
+    self.OnFindNext(None)
+    self['Find'].SetFocus()
+    self['Find'].SetSelection(s,e)
+
+
+class NodeTreePanel(FindPanel):
   def __init__(self, dlg, name):
     self.SetAttr('treeName', name)
-    adm.NotebookPanel.__init__(self, dlg, dlg)
-    self.Bind('FindClose', self.OnCloseFind)
+    FindPanel.__init__(self, dlg)
     self.Bind('Find', self.OnFind)
-    self.Bind('Find', wx.EVT_TEXT_ENTER, self.OnFindEnter)
-    self.Bind('Find', wx.EVT_CHAR, self.OnFindChar)
     self.Bind('FindNext', self.OnFindNext)
     
   def AddExtraControls(self, res):
@@ -154,12 +182,10 @@ class NodeTreePanel(adm.NotebookPanel):
     # we'd like wx.BitmapButton.NewCloseButton here...
     self.OnFind(None)
     
+  def OnFindClose(self, evt):
+    self.DoShow(False)
+    self.tree.SetFocus()
     
-  def DoShow(self, how):
-    self.ShowControls("Find FindNext FindClose", how)
-    self.dialog.manager.Update()
-  
-
   def OnFind(self, evt):
     find=self.Find.strip()
     valid=find != ""
@@ -178,20 +204,7 @@ class NodeTreePanel(adm.NotebookPanel):
       self.OnFindEnter(evt)
     else:
       self['Find'].SetForegroundColour(wx.BLUE)
-  
-  def OnFindChar(self, evt):
-    if evt.KeyCode == 27:
-      self.OnCloseFind(evt)
-    else:
-      evt.Skip()
-    
-  def OnFindEnter(self, evt):
-    if not self['FindNext'].IsEnabled():
-      return
-    s,e=self['Find'].GetSelection()
-    self.OnFindNext(None)
-    self['Find'].SetFocus()
-    self['Find'].SetSelection(s,e)
+
     
   def OnFindNext(self, evt):
     self['Find'].SetForegroundColour(wx.BLACK)
@@ -210,9 +223,6 @@ class NodeTreePanel(adm.NotebookPanel):
       else:
         self['Find'].SetForegroundColour(wx.RED)
 
-  def OnCloseFind(self, evt):
-    self.DoShow(False)
-    self.tree.SetFocus()
 
 class DetailFrame(Frame):
   def __init__(self, parentWin, name, args=None, title=None):
