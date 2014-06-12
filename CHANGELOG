@@ -1,3 +1,4 @@
+Changes in 2.1.5
 Core:
 - Shift key while starting suppresses auto-connect
 - two-level online update (major/minor)
