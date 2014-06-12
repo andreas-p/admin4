@@ -220,6 +220,7 @@ class NodeTreePanel(FindPanel):
       item=server.FindObject(self.tree, startItem, find)
       if item:
         self.tree.SelectItem(item)
+        self.tree.EnsureVisible(item)
       else:
         self['Find'].SetForegroundColour(wx.RED)
 
