@@ -525,6 +525,7 @@ class DetailFrame(Frame):
           server.settings['nodePath'] = nodePath
           adm.config.storeServerSettings(server, server.settings)
 
+    self.tree.SetFocus()
     if not node:
       self.SetStatus("")
       return
