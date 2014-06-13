@@ -935,6 +935,21 @@ class zonePage(adm.NotebookPage):
       self.control.AppendItem(0, xlt("Zone not available"))
       return False
     return True 
+  
+  def storeLastItem(self):
+    # TODO self.lastHost=self.control.GetFocusText()
+    lastItem=self.control.GetFocusedItem()
+    if lastItem < 0:  self.lastHost=None
+    else:             self.lastHost=self.control.GetItemText(lastItem, 0)
+
+  def restoreLastItem(self):
+    #TODO self.control.SetSelectFocus(self.lastHost)
+    if self.lastHost:
+      item=self.control.FindItem(0, self.lastHost)
+      if item >= 0:
+        self.control.Focus(item)
+        self.control.Select(item)
+
 
   def OnItemDoubleClick(self, evt):
     PageEditRecord.OnExecute(self.control, self)
@@ -1080,6 +1095,8 @@ class HostsPage(zonePage):
 
   def Display(self, node, _detached=False):
     if not node or node != self.lastNode:
+      self.storeLastItem()
+      
       if not self.prepare(node):
         return
       
@@ -1089,7 +1106,8 @@ class HostsPage(zonePage):
       self.RestoreListcols()
 
     self.OnColClick()
-
+    self.restoreLastItem()
+        
 
   def OnColClick(self, evt=None):
     if not self.lastNode.soa:
@@ -1138,7 +1156,9 @@ class CNAMEsPage(zonePage):
     if not node or node != self.lastNode:
       if not self.prepare(node):
         return
-      
+
+      self.storeLastItem()
+            
       node=self.lastNode
       self.control.AddColumn(xlt("Name"), 30)
       self.control.AddColumn(xlt("Target"), 30)
@@ -1150,6 +1170,7 @@ class CNAMEsPage(zonePage):
         rds=node.cnames[cname]
         self.control.AppendItem(icon, [cname, rds[0].target, floatToTime(rds.ttl, -1)])
 
+      self.restoreLastItem()
 
        
       
@@ -1190,6 +1211,8 @@ class PTRsPage(zonePage):
   
   def Display(self, node, _detached):
     if not node or node != self.lastNode:
+      self.storeLastItem()
+      
       if not self.prepare(node):
         return
       node=self.lastNode
@@ -1212,6 +1235,8 @@ class PTRsPage(zonePage):
 
       for ip in sorted(ips, key=(lambda x: filledIp(x[0]))):
         self.control.AppendItem(icon, list(ip))
+      
+      self.restoreLastItem()
 
 
 class OTHERsPage(zonePage):
@@ -1233,6 +1258,7 @@ class OTHERsPage(zonePage):
   
   def Display(self, node, _detached):
     if not node or node != self.lastNode:
+      self.storeLastItem()
       if not self.prepare(node):
         return
       node=self.lastNode
@@ -1262,7 +1288,7 @@ class OTHERsPage(zonePage):
             icon=0
             name=""
             dnstype=""
-
+      self.restoreLastItem()
 
 pageinfo=[HostsPage, CNAMEsPage, PTRsPage, OTHERsPage]
 nodeinfo= [ 

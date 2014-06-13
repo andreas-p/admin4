@@ -1,2 +1,3 @@
 BIND:
 PTR edit sanity
+cleanup zone: GetFocusText, SetSelectFocus
