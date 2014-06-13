@@ -108,6 +108,19 @@ class ListView(wx.ListView):
     return lst
 
 
+  def GetFocusText(self):
+    item=self.GetFocusedItem()
+    if item < 0:  return None
+    return self.GetItemText(item, 0)
+  
+  def SetSelectFocus(self, sel):
+    if sel == None: return
+    if not isinstance(sel, int):
+      sel=self.FindItem(0, sel)
+    if sel >= 0:
+      self.Focus(sel)
+      self.Select(sel)
+
   def GetSelectionKeys(self):
     lst=[]
     item=self.GetFirstSelected()
