@@ -622,7 +622,8 @@ class ServerNode(Node):
       
     parentItem=tree.GetItemParent(currentItem)
     while parentItem:
-      if tree.GetNode(parentItem) == self:
+      parentNode=tree.GetNode(parentItem)
+      if not parentNode or parentNode == self:
         return None
       item=tree.GetNextSibling(parentItem)
       if item:

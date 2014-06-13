@@ -1,5 +1,6 @@
 Core:
 - F5 refresh
+- fix in default FindObject when notFound
 
 modBind 0.98.4:
 - remember position when editing zone record
