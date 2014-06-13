@@ -274,6 +274,7 @@ if __name__ == '__main__':
       os.mkdir(distDir)
     except:
       pass
+    
     for d in data_files:
       if d[0] == '.':
         destDir = distDir
@@ -281,8 +282,9 @@ if __name__ == '__main__':
         destDir=os.path.join(distDir, d[0])
         os.mkdir(destDir)
       for file in d[1]:
-#        if not recentlyChanged or file in recentlyChanged:
           shutil.copy2(file, destDir)
+    if recentlyChanged:
+      shutil.copy2('__version.py', distDir)
     
   else:
     print "Creating package in %s" %distDir
