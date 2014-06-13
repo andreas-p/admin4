@@ -322,7 +322,8 @@ class DetailFrame(Frame):
       self.manager.LoadPerspective(str)
 
     ah=AcceleratorHelper(self)
-    ah.Add(wx.ACCEL_CTRL, 'F', self.BindMenuId(self.OnFindObject))
+    ah.Add(wx.ACCEL_CTRL, 'F', self.OnFindObject)
+    ah.Add(wx.ACCEL_NORMAL, wx.WXK_F5, self.OnRefresh)
     ah.Realize()
 
     self.OnToggleTree()
@@ -633,11 +634,19 @@ class DetachFrame(Frame):
     style=wx.MAXIMIZE_BOX|wx.RESIZE_BORDER|wx.SYSTEM_MENU|wx.CAPTION|wx.CLOSE_BOX
     adm.Frame.__init__(self, parentWin, title, style, (400,300), None)
     self.SetIcon(node.GetIcon())
+
+    ah=AcceleratorHelper(self)
+    ah.Add(wx.ACCEL_NORMAL, wx.WXK_F5, self.OnRefresh)
+    ah.Realize()
      
     self.details = Notebook(self)
     self.details.detached=True
     self.details.Set(node)
-  
+
+  def OnRefresh(self, evt):
+    self.node.Refresh()
+    self.node.PopulateChildren()
+      
   def OnClose(self, evt):
     if self.node:
       self.node.CleanupDetached()
