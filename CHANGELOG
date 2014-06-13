@@ -1,3 +1,9 @@
+Core:
+- F5 refresh
+
+modBind 0.98.4:
+- remember position when editing zone record
+
 Changes in 2.1.5
 Core:
 - Shift key while starting suppresses auto-connect
