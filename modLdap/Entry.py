@@ -490,11 +490,11 @@ class EntryPassword:
           alg="MD5"
         else:
           return None
-        hl=hashlib.new(alg, passwd)
+        hl=hashlib.new(alg, passwd.encode('utf8'))
         if salt:
           hl.update(salt)
         crypted=base64.b64encode(hl.digest() + salt)
-        return "{%s}%s" % (hash, crypted)
+        return str("{%s}%s" % (hash, crypted))
 
 
       _must,may=node.GetServer().GetClassSchemaMustMayOids(node.objectClasses)
@@ -508,7 +508,9 @@ class EntryPassword:
           chgList.append(userPassword)
         else:
           addList.append(userPassword)
-
+      else:
+        node.GetConnection().SetPassword(node.dn, passwd)
+  
       ntPasswordSchema=node.GetServer().GetAttributeSchema("sambaNTpassword")
       if ntPasswordSchema.oid in may:
         md4hash=hashlib.new('md4', passwd.encode('utf-16le')).hexdigest().upper()
@@ -519,7 +521,6 @@ class EntryPassword:
         else:
           addList.append(ntPassword)
 
-      node.GetConnection().SetPassword(node.dn, passwd)
       if chgList or addList:
         node.GetConnection().Modify(node.dn, chgList, addList)
         return True
