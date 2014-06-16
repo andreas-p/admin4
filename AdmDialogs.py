@@ -399,8 +399,9 @@ class UpdateDlg(adm.Dialog):
           el=self.onlineUpdateInfo.getElement('minorUpdateUrl')
           self.minorUpdateUrl=el.getText().strip()
           self.minorUpdateZipHash=el.getAttribute('sha1')
+          status=self.onlineUpdateInfo.getElementText('status')
 
-          msg.append(xlt("Update info as of %s:") % self.onlineUpdateInfo.getElementText('status'))
+          msg.append(xlt("Update info as of %s:") % status)
           #msg.append("")
           alerts=self.onlineUpdateInfo.getElements('alert')
           if alerts:
@@ -415,12 +416,15 @@ class UpdateDlg(adm.Dialog):
             if name == "Core":
               info = { 'app': adm.appTitle, 'old': admVersion.version, 'new': version }
               if admVersion.version < version:
-                msg.append("  Core: %(old)s can be updated to %(new)s" % info)
+                msg.append(xlt("  Core: %(old)s can be updated to %(new)s") % info)
                 haveUpdate=True
                 self.hasCoreUpdate=True
+              elif admVersion.version == version and status > admVersion.revDate:
+                msg.append(xlt("  Core: %(new)s minor update.") % info)
+                haveUpdate=True
             elif name == "Lib":
               if admVersion.libVersion < version:
-                msg=[msg[0], "There is a newer %(app)s Core version %(new)s available.\nHowever, the current version %(old)s can't update online.\nPlease download and install a full package manually." % info]
+                msg=[msg[0], xlt("There is a newer %(app)s Core version %(new)s available.\nHowever, the current version %(old)s can't update online.\nPlease download and install a full package manually.") % info]
                 if not adm.IsPackaged():
                   msg.append(xlt("In addition, the library requirements have changed;\ncheck the new documentation."))
                 self.ModuleInfo = "\n".join(msg)
@@ -432,13 +436,13 @@ class UpdateDlg(adm.Dialog):
                 info= { 'name': mod.moduleinfo['modulename'], 'old': rev, 'new': version }
                 if rev < version:
                   if self.hasCoreUpdate:
-                    msg.append("  %(name)s: %(old)s upgrade to %(new)s" % info)
+                    msg.append(xlt("  %(name)s: %(old)s upgrade to %(new)s") % info)
                   else:
-                    msg.append("Current %(name)s module revision %(old)s can be updated to  %(new)s." % info)
+                    msg.append(xlt("Current %(name)s module revision %(old)s can be updated to  %(new)s.") % info)
                     haveUpdate=True
                 elif rev > version:
                   if self.hasCoreUpdate:
-                    msg.append("  %(name)s: %(old)s DOWNGRADE to %(new)s, please check" % info)
+                    msg.append(xlt("  %(name)s: %(old)s DOWNGRADE to %(new)s, please check") % info)
               
         except Exception as ex:
           print ex
@@ -447,7 +451,7 @@ class UpdateDlg(adm.Dialog):
         if haveUpdate and canUpdate:
           msg.insert(1, xlt("An update is available."))
         else:
-          msg.append("No update available.")
+          msg.append(xlt("No update available."))
         
         self.ModuleInfo = "\n".join(msg)
         return haveUpdate and canUpdate
