@@ -88,9 +88,7 @@
                 <minsize>100,150d</minsize>
               </object>
               <object class="sizeritem">
-                <object class="wxTextCtrl" name="FilterValue">
-                  <style>wxTE_PROCESS_ENTER|wxTE_MULTILINE</style>
-                </object>
+                <object class="unknown" name="FilterValuePlaceholder"/>
                 <option>1</option>
                 <flag>wxTOP|wxEXPAND</flag>
                 <border>10</border>

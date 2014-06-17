@@ -2,6 +2,9 @@ Core:
 - F5 refresh
 - fix in default FindObject when notFound
 
+modPg 0.5.3:
+- use SqlEditor in DataTool filter
+
 modBind 0.95.5:
 - fix SSHA password unicode error
 

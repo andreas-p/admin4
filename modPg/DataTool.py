@@ -376,7 +376,7 @@ class FilterPanel(adm.NotebookPanel):
     self.Bind("LimitCheck", self.OnLimitCheck)
     self.Bind("FilterCheck", self.OnFilterCheck)
     self.Bind("FilterValidate", self.OnFilterValidate)
-    self.Bind("FilterValue", self.OnFilterValueChanged)
+    self.FilterValue.BindProcs(self.OnFilterValueChanged, None)
     self.Bind("FilterPreset", wx.EVT_COMBOBOX, self.OnPresetSelect)
     self.Bind("FilterPreset", wx.EVT_TEXT, self.OnPresetChange)
     self.Bind("FilterSave", self.OnFilterSave)
@@ -394,6 +394,11 @@ class FilterPanel(adm.NotebookPanel):
     self.dialog=dlg
     self.EnableControls("FilterPreset", dlg.querypreset_table)
     self.EnableControls("FilterSave", False)
+
+  def AddExtraControls(self, res):
+    self.FilterValue=SqlEditor(self)
+    res.AttachUnknownControl("FilterValuePlaceholder", self.FilterValue)
+    self.FilterValue.SetMarginWidth(1, 0)
 
   def OnPresetSelect(self, evt):
     preset=self.FilterPreset.strip()
@@ -451,7 +456,7 @@ class FilterPanel(adm.NotebookPanel):
       if filter:
         self.FilterCheck=True
         self.OnFilterCheck()
-        self.FilterValue=filter
+        self.FilterValue.SetText(filter)
         self.OnFilterValidate(evt)
       else:
         self.FilterCheck=False
@@ -497,7 +502,7 @@ class FilterPanel(adm.NotebookPanel):
     preset=self.FilterPreset
     if self.LimitCheck:   limit=self.LimitValue
     else:                 limit=None
-    if self.FilterCheck:  filter=self.FilterValue
+    if self.FilterCheck:  filter=self.FilterValue.GetText()
     else:                 filter=None
     sort=self['SortCols'].GetCheckedStrings()
     display=self['DisplayCols'].GetCheckedStrings()
@@ -527,7 +532,8 @@ class FilterPanel(adm.NotebookPanel):
     self.EnableControls("LimitValue", self.LimitCheck)
 
   def OnFilterCheck(self, evt=None):
-    self.EnableControls("FilterValue FilterValidate", self.FilterCheck)
+    self.EnableControls("FilterValidate", self.FilterCheck)
+    self.FilterValue.Enable(self.FilterCheck)
     self.OnFilterValueChanged(evt)
 
   def OnFilterValueChanged(self, evt):
@@ -579,7 +585,8 @@ class FilterPanel(adm.NotebookPanel):
     for colName in self['SortCols'].GetCheckedStrings():
       query.AddOrder(colName)
     if self.FilterCheck:
-      query.AddWhere(self.FilterValue.strip())
+      filter=self.FilterValue.GetText().strip()
+      query.AddWhere(filter)
     
     sql= query.SelectQueryString()
     if self.LimitCheck:
