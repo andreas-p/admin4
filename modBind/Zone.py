@@ -937,20 +937,11 @@ class zonePage(adm.NotebookPage):
     return True 
   
   def storeLastItem(self):
-    # TODO self.lastHost=self.control.GetFocusText()
-    lastItem=self.control.GetFocusedItem()
-    if lastItem < 0:  self.lastHost=None
-    else:             self.lastHost=self.control.GetItemText(lastItem, 0)
-
+    self.lastHost=self.control.GetFocusText()
+ 
   def restoreLastItem(self):
-    #TODO self.control.SetSelectFocus(self.lastHost)
-    if self.lastHost:
-      item=self.control.FindItem(0, self.lastHost)
-      if item >= 0:
-        self.control.Focus(item)
-        self.control.Select(item)
-
-
+    self.control.SetSelectFocus(self.lastHost)
+    
   def OnItemDoubleClick(self, evt):
     PageEditRecord.OnExecute(self.control, self)
 
