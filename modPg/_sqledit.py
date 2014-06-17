@@ -54,6 +54,9 @@ class SqlEditor(stc.StyledTextCtrl):
     
     self.SetKeyWords(0, ' '.join(getSqlKeywords()))
     self.SetKeyWords(4, ' '.join(colKeywords))
+    self.SetScrollWidth(100)
+    self.SetScrollWidthTracking(True)
+    
 
   
   def ShowLineNumbers(self, how):
