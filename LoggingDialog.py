@@ -30,33 +30,6 @@ class LogPanel(adm.NotebookPanel, ControlledPage):
       self['Clear'].Hide()
       
     self.control.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK, self.OnItemRightClick)
-    self.Bind('Refresh', self.OnRefresh)
-
-
-    rrc=self['Refreshrate']
-    rrc.SetRange(1, 22)
-    rr=adm.config.Read("RefreshRate", 3, self, self.panelName)
-    # 0 1 2 3 4 5 6
-    # 8 10                   *2
-    # 15 20 25 30            *5
-    # 40 50 60               *10
-    # 2m 3m 4m 5m            *60
-    # 10m 15m                *300
-    if rr == 0:
-      rr= rrc.GetMax()
-    elif rr > 300:
-      rr = 19 + (rr-300)/60
-    elif rr > 60:
-      rr = 15 + (rr-60)/30
-    elif rr > 60:
-      rr = 12 + (rr-30)/10
-    elif rr > 10:
-      rr = 8 - (rr-10)/5
-    elif rr > 6:
-      rr = 6+ (rr-6)/2
-
-    rrc.SetValue(rr)
-    rrc.Bind(wx.EVT_COMMAND_SCROLL, self.OnRefreshRate)
     
   
   def ShowPage(self, how):
@@ -65,9 +38,6 @@ class LogPanel(adm.NotebookPanel, ControlledPage):
       self.TriggerTimer()
     else:
       self.StartTimer(0)
-
-  def OnRefresh(self, evt=None):
-    self.TriggerTimer()
   
      
   def OnItemRightClick(self, evt):
@@ -77,32 +47,6 @@ class LogPanel(adm.NotebookPanel, ControlledPage):
       cm.Popup(evt)
      
   
-  def OnRefreshRate(self, evt=None):
-    rr=self.RefreshRate
-    if rr == self['RefreshRate'].GetMax():
-      rr=0
-      self.RefreshStatic=xlt("stopped")
-    else:
-      if rr > 19:
-        rr = (rr-19)*300 +300
-      elif rr > 15:
-        rr = (rr-15)*60 + 60
-      elif rr > 12:
-        rr = (rr-12)*10 + 30
-      elif rr > 8:
-        rr = (rr-8)*5 +10
-      elif rr > 6:
-        rr = (rr-6)*2 +6
-      
-      if rr < 60:
-        self.RefreshStatic=xlt("%d sec") % rr
-      else:
-        self.RefreshStatic=xlt("%d min") % (rr/60)
-    if not evt or evt.GetEventType() == wx.wxEVT_SCROLL_THUMBRELEASE:
-      adm.config.Write("RefreshRate", rr, self, self.panelName)
-      self.refreshTimeout=rr
-      self.StartTimer()
-
   def EnsureVisible(self):
     if self.control.GetItemCount():
       if not self.control.GetSelection():
