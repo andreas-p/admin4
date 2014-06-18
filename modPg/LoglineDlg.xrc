@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource>
+  <object class="wxDialog" name="LoglineDlg">
+    <title>Logline</title>
+    <size>200,200d</size>
+    <style>wxCAPTION|wxRESIZE_BORDER|wxCLOSE_BOX</style>
+    <object class="wxBoxSizer">
+      <orient>wxVERTICAL</orient>
+      <object class="sizeritem">
+        <object class="unknown" name="HtmlWindow"/>
+        <option>1</option>
+        <flag>wxLEFT|wxRIGHT|wxEXPAND</flag>
+        <border>10</border>
+        <minsize>150,100d</minsize>
+      </object>
+      <object class="sizeritem">
+        <object class="wxBoxSizer">
+          <orient>wxHORIZONTAL</orient>
+          <object class="sizeritem">
+            <object class="wxButton" name="QueryTool">
+              <label>Query</label>
+            </object>
+            <flag>wxALIGN_LEFT</flag>
+          </object>
+          <object class="spacer">
+            <option>1</option>
+          </object>
+          <object class="sizeritem">
+            <object class="wxButton" name="OK">
+              <label>OK</label>
+              <pos>100,180d</pos>
+              <default>1</default>
+            </object>
+            <flag>wxALIGN_RIGHT</flag>
+          </object>
+        </object>
+        <flag>wxTOP|wxBOTTOM|wxLEFT|wxRIGHT|wxGROW</flag>
+        <border>10</border>
+      </object>
+    </object>
+  </object>
+</resource>

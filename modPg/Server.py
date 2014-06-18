@@ -87,7 +87,7 @@ class Server(adm.ServerNode):
       
       parts=["""
         SELECT name, setting FROM pg_settings
-         WHERE name in ('autovacuum', 'log_line_prefix', 'log_destination')
+         WHERE name in ('autovacuum', 'log_line_prefix', 'log_destination', 'logging_collector', 'log_directory')
         UNION  
         SELECT 'version', version()
         UNION

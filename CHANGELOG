@@ -4,6 +4,7 @@ Core:
 
 modPg 0.5.3:
 - use SqlEditor in DataTool filter
+- ServerLog
 
 modBind 0.95.5:
 - fix SSHA password unicode error

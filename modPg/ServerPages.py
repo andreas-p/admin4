@@ -5,7 +5,7 @@
 # see LICENSE.TXT for conditions of usage
 
 import adm
-import wx
+import wx, wx.html
 import wx.propgrid as wxpg
 from page import ControlledPage
 from wh import xlt, floatToTime, floatToSize, sizeToFloat, timeToFloat, breakLines, GetBitmap
@@ -13,6 +13,7 @@ from _pgsql import quoteValue
 from Validator import Validator
 from LoggingDialog import LogPanel
 import logger
+import csv, StringIO
 
 
   
@@ -182,9 +183,14 @@ class ConnectionPage(LogPanel):
     return self['Listview'].GetSelectionKeys()
     
   def Display(self, node, _detached):
+    cursor=None
+    if node.version < 9.2:
+      pidCol="procpid"
+    else:
+      pidCol="pid"
     if node != self.lastNode:
       add=self.control.AddColumnInfo
-      add(xlt("PID"), "65535",                      colname='procpid')
+      add(xlt("PID"), "65535",                      colname=pidCol)
       add(xlt("Database"), "Postgres-DB",           colname='datname')
       add(xlt("User"), "postgres",                  colname='usename')
       add(xlt("Client"), "192.168.255.240:50333",   colname='clientaddr', proc=stripMask)
@@ -195,17 +201,16 @@ class ConnectionPage(LogPanel):
       add(xlt("Query"), 50,                         colname='current_query')
       self.RestoreListcols()
 
-      self.pid=node.GetCursor().GetPid()
+      cursor=node.GetCursor()
+      self.pid=cursor.GetPid()
       self.ignorePids=[]
       self.lastNode=node
       self.control.DeleteAllItems()
       self.TriggerTimer()
 
-    if node.version < 9.2:
-      pidCol="procpid"
-    else:
-      pidCol="pid"
-    rowset=node.GetCursor().ExecuteSet("""
+    if not cursor:
+      cursor=node.GetCursor()
+    rowset=cursor.ExecuteSet("""
     SELECT *, client_addr || ':' || client_port::text AS clientaddr, now()-query_start AS query_runtime 
       FROM pg_stat_activity
      ORDER BY %s"""  % pidCol)
@@ -223,6 +228,7 @@ class ConnectionPage(LogPanel):
         icon=dbIcon
       rows.append( (row, icon))
     self.control.Fill(rows, pidCol)
+    cursor=None
 
 
 class ServerSetting(adm.CheckedDialog):
@@ -329,6 +335,243 @@ class ServerSetting(adm.CheckedDialog):
       self.page.DoReload()
     return True  
   
+
+class LoggingPage(adm.NotebookPanel, ControlledPage):
+  name=xlt("Serverlog")
+#  menus=[AlterConfigValue]
+  availableOn="Server"
+  order=840
+
+  def __init__(self, notebook):
+    adm.NotebookPanel.__init__(self, notebook, notebook)
+    self.lastNode=None
+    self.panelName="ServerLog"
+    self.SetOwner(notebook)
+    self.control=self['LogLines']
+    self.Bind('Refresh', self.OnRefresh)
+    self.Bind('Rotate', self.OnRotate)
+    self.Bind('Logfile', self.OnSelectLogfile)
+    self.Bind('LogLines', wx.EVT_LIST_ITEM_ACTIVATED, self.OnLoglinesDclick)
+    self.RestoreListcols()
+
+  logColNames=[ 'log_datetime',
+                'log_time',     # shortened version of log_datetime
+                'user_name',
+                'database_name',
+                'process_id',
+                'connection_from',
+                'session_id',
+                'session_line_num',
+                'command_tag',
+                'session_start_datetime',
+                'session_start_time',   # shortened version of session_start_datetime
+                'virtual_transaction_id',
+                'transaction_id',
+                'error_severity',
+                'sql_state_code',
+                'message',
+                'detail',
+                'hint',
+                'internal_query',
+                'internal_query_pos',
+                'context',
+                'query',
+                'query_pos',
+                'location',
+                'application_name']
+  
+  logColInfo={  'log_datetime':           (xlt("Log time"), "2012-02-02 20:20:20.999 MEST"),
+                'log_time':               (xlt("Log time"), "20:20:20.999", True),
+                'user_name':              (xlt("User"), "postgres123"),
+                'database_name':          (xlt("Database"), "postgres123"),
+                'process_id':             (xlt("PID"), "12345"),
+                'connection_from':        (xlt("From"), "192.168.100.100:7777"),
+                'session_id':             (xlt("Session"), "5a5b5c5d.6543"),
+                'session_line_num':       (xlt("Session line"), "1234"),
+                'command_tag':            (xlt("Tag"), "some command tag"),
+                'session_start_datetime': (xlt("Start"), "2012-02-02 20:20:20.999 MEST", True),
+                'session_start_time':     (xlt("Start"), "10:10:10.999"),
+                'virtual_transaction_id': (xlt("Virt XactID"), "12345"),
+                'transaction_id':         (xlt("XactID"), "12345"),
+                'error_severity':         (xlt("Severity"), "NOTICE"),
+                'sql_state_code':         (xlt("SQL State"), "00000"),
+                'message':                (xlt("Message"), 50),
+                'detail':                 (xlt("Detail"), 50),
+                'hint':                   (xlt("Hint"), 50),
+                'internal_query':         (xlt("Internal Query"), 50),
+                'internal_query_pos':     (xlt("Internal pos"), "1234"),
+                'context':                (xlt("Context"), 40),
+                'query':                  (xlt("Query"), 50),
+                'query_pos':              (xlt("Query pos"), "1234"),
+                'location':               (xlt("Location"), 30),
+                'application_name':       (xlt("Application"), 30)
+              }
+  
+  displayCols=['log_time', 'database_name', 'process_id', 'error_severity', 'message']
+  
+  
+  def Display(self, node, _detached):
+    logfile=self['LogFile']
+    if self.lastNode != node:
+      self.lastNode=node
+      self.control.ClearAll()
+      self.log=[]
+      self.EnableControls('Rotate', node.GetValue('pg_rotate_logfile'))
+      
+      logdes=node.GetValue('log_destination')
+      if node.GetValue('logging_collector') !='on':
+        errText=xlt("logging_collector not enabled")
+      elif node.GetValue('log_filename' != 'postgresql-%%Y-%%m-%%d-%%H%%M%%S'):
+        errText=xlt("non-default log_filename")
+      elif not logdes or logdes.find('csvlog') < 0:
+        errText=(xlt("no csv log_destination")) 
+      else:
+        errText=None
+      if errText:
+        logfile.Disable()
+        self.control.AddColumn("")
+        self.control.InsertStringItem(0, errText, -1)
+        return
+
+      logfile.Clear()
+      logfile.Enable()
+      logfile.Append(xlt("Current log"))
+      logfile.SetSelection(0)
+      
+      for cn in self.displayCols:
+        ci=self.logColInfo.get(cn)
+        text=ci[0]
+        collen=ci[1]
+        self.control.AddColumnInfo(xlt(text), collen, cn)
+      self.lastLogfile=None
+      self.TriggerTimer()
+    
+    # periodic read starts here 
+    cursor=self.lastNode.GetCursor()
+    logfile=self['LogFile']
+    dir=cursor.ExecuteList("SELECT pg_ls_dir('%s')" % self.lastNode.GetValue('log_directory'))
+    dir.sort()
+    for fn in dir:
+      if fn.endswith('.csv'):
+        if logfile.FindString(fn) < 0:
+          logfile.Insert(fn, 1)
+    
+    if logfile.GetCount() < 2:
+      return
+    if not self.lastLogfile:
+      self.OnSelectLogfile(None)
+    
+    
+    log=""
+    while True:
+      fn="%s/%s" % (self.lastNode.GetValue('log_directory'), self.lastLogfile)
+      
+      while True:
+        res=cursor.ExecuteSingle("SELECT pg_read_file('%s', %d, %d)" % (fn, self.lastLogpos, 50000))
+        if res:
+          log += res
+          self.lastLogpos += len(res)
+        else:
+          break
+      if logfile.GetSelection():
+        break
+      
+      current=logfile.FindString(self.lastLogfile)
+      if current == 1:
+        break
+      
+      self.lastLogpos=0
+      self.lastLogfile = logfile.GetString(current-1)
+
+
+    c=csv.reader(StringIO.StringIO(log), delimiter=',', quotechar='"')
+    
+    startdatetimepos=self.logColNames.index('session_start_datetime')
+    severitypos=self.logColNames.index('error_severity')
+    for linecols in c:
+      time=linecols[0].split()[1] # time only
+      linecols.insert(1, time)
+      
+      time=linecols[startdatetimepos].split()[1] # time only
+      linecols.insert(startdatetimepos+1, time)
+      
+      self.log.append(linecols)
+      
+      vals=[]
+      for colname in self.displayCols:
+        colnum=self.logColNames.index(colname)
+        vals.append(linecols[colnum].decode('utf-8'))
+      icon=node.GetImageId(linecols[severitypos])
+      self.control.AppendItem(icon, vals)
+        
+  def OnSelectLogfile(self, evt):
+    logfile=self['LogFile']
+    if logfile.GetSelection() == 0:
+      self.lastLogfile=logfile.GetString(1)
+    else:
+      self.lastLogfile=logfile.GetStringSelection()
+    
+    self.lastLogpos=0
+    self['LogLines'].DeleteAllItems()
+    self.log=[]
+    self.OnRefresh()
+    
+  class LoglineDlg(adm.Dialog):
+    def __init__(self, parentWin, server, logline):
+      adm.Dialog.__init__(self, parentWin)
+      self.logline=logline
+      self.server=server
+      self.Bind('QueryTool', self.OnQueryTool)
+      
+    def AddExtraControls(self, res):
+      self.browser=wx.html.HtmlWindow(self)
+      res.AttachUnknownControl("HtmlWindow", self.browser)
+        
+    def getVal(self, name):
+      return self.logline[LoggingPage.logColNames.index(name)].decode('utf-8')
+    
+    def Go(self):
+      lines=[]
+      lines.append("<html><body><table>")
+      def add(name, txt):
+        val=self.getVal(name)
+        if val != "":
+          val=val.replace('\n', '<br/>')
+          lines.append("<tr><td>%s</td><td>%s</td></tr>" % (txt, val))
+
+      self.SetTitle(self.logline[0])
+      for name in LoggingPage.logColNames:
+        ci=LoggingPage.logColInfo.get(name)
+        if not ci or (len(ci) > 2 and ci[2]): 
+          continue
+        add(name, xlt(ci[0]))
+      lines.append("</table></body></html>")
+      self.browser.SetPage("\n".join(lines))
+      self.query=self.getVal('query')
+      self.EnableControls("QueryTool", self.query)
+      
+    def OnQueryTool(self, evt):
+      from QueryTool import QueryFrame
+      params={'dbname': self.getVal('database_name'), 'query': self.query, 'errline': self.getVal('query_pos'), 'message': self.getVal('message'), 'hint': self.getVal('hint')}
+      
+      frame=QueryFrame(adm.GetCurrentFrame(self), self.server, params)
+      #self.Reparent(frame)
+      self.Show()
+      
+    #def Execute(self):
+    #  return True
+
+  def Copy(self, evt):
+    lines=self.control.GetSelection()
+    
+  def OnLoglinesDclick(self, evt):
+    dlg=self.LoglineDlg(self.owner, self.lastNode, self.log[evt.GetIndex()])
+    dlg.Go()
+    dlg.Show()
+    
+  def OnRotate(self, evt):
+    self.lastNode.GetCursor().ExecuteSingle("SELECT %s()" % self.lastNode.GetValue('pg_rotate_logfile'))
+    pass
 
 class SettingsPage(adm.NotebookPanel, ControlledPage):
   name=xlt("Settings")
@@ -505,5 +748,5 @@ class SettingsPage(adm.NotebookPanel, ControlledPage):
       dlg=ServerSetting(self.lastNode, self, cfg)
       dlg.GoModal()
     
-pageinfo = [StatisticsPage, ConnectionPage, SettingsPage]
+pageinfo = [StatisticsPage, ConnectionPage, LoggingPage, SettingsPage]
   

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource>
+  <object class="wxPanel" name="LoggingPage">
+    <object class="wxBoxSizer">
+      <orient>wxVERTICAL</orient>
+      <object class="sizeritem">
+        <object class="whListView" name="LogLines"/>
+        <option>1</option>
+        <flag>wxBOTTOM|wxRIGHT|wxEXPAND|wxGROW</flag>
+        <border>5</border>
+      </object>
+      <object class="sizeritem">
+        <object class="wxFlexGridSizer">
+          <object class="sizeritem">
+            <object class="wxStaticText">
+              <label>Refresh Rate</label>
+            </object>
+            <flag>wxALIGN_CENTRE_VERTICAL</flag>
+          </object>
+          <object class="sizeritem">
+            <object class="wxSlider" name="RefreshRate">
+              <value></value>
+              <min></min>
+              <max></max>
+            </object>
+            <flag>wxALIGN_CENTRE_VERTICAL</flag>
+            <minsize>50,-1d</minsize>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText" name="RefreshStatic">
+              <label>2 seconds</label>
+            </object>
+            <flag>wxALIGN_CENTRE_VERTICAL</flag>
+          </object>
+          <object class="sizeritem">
+            <object class="wxComboBox" name="LogFile">
+              <content/>
+              <style>wxCB_READONLY|wxCB_DROPDOWN</style>
+            </object>
+            <option>1</option>
+            <flag>wxEXPAND</flag>
+          </object>
+          <object class="spacer">
+            <flag>wxEXPAND|wxGROW</flag>
+          </object>
+          <object class="sizeritem">
+            <object class="wxButton" name="Rotate">
+              <label>Rotate</label>
+              <style></style>
+            </object>
+            <flag>wxALIGN_CENTRE_VERTICAL</flag>
+          </object>
+          <object class="sizeritem">
+            <object class="wxButton" name="Refresh">
+              <label>Refresh</label>
+            </object>
+            <flag>wxRIGHT|wxALIGN_CENTRE_VERTICAL</flag>
+          </object>
+          <cols>7</cols>
+          <hgap>10</hgap>
+          <growablecols>3</growablecols>
+        </object>
+        <flag>wxEXPAND</flag>
+      </object>
+    </object>
+  </object>
+</resource>

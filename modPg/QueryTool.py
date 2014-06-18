@@ -115,7 +115,7 @@ class SqlResultGrid(Grid):
     
 
 class QueryFrame(SqlFrame):
-  def __init__(self, parentWin, node):
+  def __init__(self, parentWin, node, params={}):
     SqlFrame.__init__(self, parentWin, xlt("Query Tool"), "SqlQuery")
 
     self.server=node.GetServer()
@@ -127,10 +127,12 @@ class QueryFrame(SqlFrame):
     else:
       self.snippet_table=None
 
-    if hasattr(node, "GetDatabase"):
-      dbName=node.GetDatabase().name
-    else:
-      dbName=self.server.maintDb
+    dbName=params.get('dbname')
+    if not dbName:
+      if hasattr(node, "GetDatabase"):
+        dbName=node.GetDatabase().name
+      else:
+        dbName=self.server.maintDb
     self.worker=None
     self.sqlChanged=False
     self.previousCols=[]
@@ -269,6 +271,23 @@ class QueryFrame(SqlFrame):
     self.OnToggleToolBar()
     self.OnToggleStatusBar()
     self.updateMenu()
+    query=params.get('query')
+    if query:
+      self.editor.SetText(query)
+      pos=params.get('errline', -1)
+      if pos:
+        line=self.editor.LineFromPosition(int(pos))
+        self.editor.MarkerSet(line)
+      msg=params.get('message')
+      if msg:
+        self.messages.AppendText(msg)
+        hint=params.get('hint')
+        if hint:
+          self.messages.AppendText("\n\nHINT:\n")
+          self.messages.AppendText(hint)
+        self.output.SetSelection(1)
+    self.Show()
+    self.editor.SetFocus()
 
 
   def SetTitle(self, dbName):
@@ -595,8 +614,7 @@ class QueryTool:
   
   @staticmethod
   def OnExecute(parentWin, node):
-    frame=QueryFrame(parentWin, node)
-    frame.Show()
+    _frame=QueryFrame(parentWin, node)
 
 
 nodeinfo=[]
