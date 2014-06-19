@@ -86,7 +86,12 @@ class Server(adm.ServerNode):
     if not db and not self.connection:
       self.connection = conn
       self.version=conn.ServerVersion()
-      
+      self.RereadServerInfo()
+        
+    return conn
+  
+
+  def RereadServerInfo(self):
       parts=["""
         SELECT name, setting FROM pg_settings
          WHERE name in ('autovacuum', 'log_line_prefix', 'log_destination', 'logging_collector', 'log_directory', 'data_directory', 'config_file')
@@ -103,7 +108,7 @@ class Server(adm.ServerNode):
         UNION
         SELECT 'fav_table', relname FROM pg_class JOIN pg_namespace nsp ON nsp.oid=relnamespace 
          WHERE nspname=%(adminspace)s AND relname=%(fav_table)s
-        """ % {'datname': quoteValue(dbname), 
+        """ % {'datname': quoteValue(self.maintDb), 
          'adminspace': quoteValue(self.GetPreference("AdminNamespace")),
          'fav_table': quoteValue("Admin_Fav_%s" % self.user),
          'adminprocs': ", ".join(map(lambda p: "'%s'" % p, adminProcs))
@@ -117,7 +122,7 @@ class Server(adm.ServerNode):
           if iq:
             parts.append(iq)
       query="\nUNION\n".join(parts)
-      self.info=conn.GetCursor().ExecuteDict(query)
+      self.info=self.connection.GetCursor().ExecuteDict(query)
 
       self.adminspace=self.info.get('adminspace')
       fav_table=self.info.get('fav_table')
@@ -125,9 +130,6 @@ class Server(adm.ServerNode):
         self.fav_table="%s.%s" % (quoteIdent(self.adminspace), quoteIdent(fav_table))
       else:
         self.fav_table=None
-        
-    return conn
-  
 
   
   def GetConnectableDbs(self):
@@ -408,6 +410,8 @@ CREATE TABLE %(adminspace)s.%(fav_table)s
       cls=menu['class']
       if hasattr(cls, 'DoInstrument'):
         cls.DoInstrument(server)
+    
+    server.RereadServerInfo()
     return True
     
     

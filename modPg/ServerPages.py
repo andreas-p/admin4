@@ -331,7 +331,7 @@ class ServerSetting(adm.CheckedDialog):
     self.SetStatus(xlt("Setting value..."))
     if self.page.lastNode.version < 9.4:
       cfg={}
-      file=cursor.ExecuteSingle("SELECT pg_read_file('postgresql.auto.conf')")
+      file=cursor.ExecuteSingle("SELECT pg_read_file('postgresql.auto.conf', 0, 999999)")
       for line in file.splitlines():
         if line.startswith('#') or not line.strip() or line == InstrumentConfig.autoconfLine:
           continue
@@ -683,7 +683,7 @@ class SettingsPage(adm.NotebookPanel, ControlledPage):
         try:
           cursor=node.GetCursor()
           cursor.SetThrowSqlException(False)
-          confFile=cursor.ExecuteSingle("SELECT pg_read_file('postgresql.auto.conf')")
+          confFile=cursor.ExecuteSingle("SELECT pg_read_file('postgresql.auto.conf', 0, 999999)")
           for line in confFile.splitlines():
             if line.startswith('#'):
               continue
@@ -846,26 +846,44 @@ class InstrumentConfig:
   def DoInstrument(server):
     if server.version >= 8.1 and server.version < 9.:
       if not server.GetValue('adminpack'):
-        if not server.GetValue('adminpack-extension'):
-          # TODO no CREATE EXTENSION
-          return False
-        server.GetCursor().ExecuteSingle("CREATE EXTENSION adminpack")
+        if server.GetValue('adminpack-extension'):
+          server.GetCursor().ExecuteSingle("CREATE EXTENSION adminpack")
+        else:
+          cursor=server.GetCursor()
+          cursor.ExecuteSingle("""
+                CREATE OR REPLACE FUNCTION pg_catalog.pg_file_write(text, text, bool)
+                RETURNS bigint
+                AS '$libdir/adminpack', 'pg_file_write'
+                LANGUAGE C VOLATILE STRICT;
+                
+                CREATE OR REPLACE FUNCTION pg_catalog.pg_file_rename(text, text, text)
+                RETURNS bool
+                AS '$libdir/adminpack', 'pg_file_rename'
+                LANGUAGE C VOLATILE;
+                
+                CREATE OR REPLACE FUNCTION pg_catalog.pg_file_unlink(text)
+                RETURNS bool
+                AS '$libdir/adminpack', 'pg_file_unlink'
+                LANGUAGE C VOLATILE STRICT;
+                """)
           
+      if not server.GetValue('postgresql.auto.conf'):
+        cursor=server.GetCursor()
+        cursor.ExecuteSingle("SELECT pg_file_write('postgresql.auto.conf', %s, false)" % quoteValue(InstrumentConfig.autoconfHeader, cursor))
+
       if not server.GetValue('admin4.instrumentation'):
         dataDir=server.GetValue("data_directory")
         autoconfPath="%s/postgresql.auto.conf" % dataDir
         cursor=server.GetCursor()
         
-        if not server.GetValue('postgresql.auto.conf'):
-          cursor.ExecuteSingle("SELECT pg_file_write('postgresql.auto.conf', %s, false)" % quoteValue(InstrumentConfig.autoconfHeader, cursor))
         
         cfgFile=server.GetValue('config_file')
         if cfgFile.startswith(dataDir):
           cfgFile=cfgFile[len(dataDir)+1:]
-          cfg=cursor.ExecuteSingle("SELECT pg_read_file('%s')" % cfgFile)
+          cfg=cursor.ExecuteSingle("SELECT pg_read_file('%s', 0, 999999)" % cfgFile)
                                    
           if not cfg.strip().endswith("include '%s'" % autoconfPath):
-            cfg += "\n\n# Admin4 config file\n#include '%s'\n" % autoconfPath
+            cfg += "\n\n# Admin4 config file\ninclude '%s'\n" % autoconfPath
             cursor.ExecuteSingle("""
                 SELECT pg_file_unlink('%(cfg)s.bak');
                 SELECT pg_file_write('%(cfg)s.tmp', %(content)s, false);
