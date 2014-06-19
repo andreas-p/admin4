@@ -167,7 +167,7 @@ class Database(ServerObject):
         self.AddProperty(xlt("Installed Extensions"), ext)
         avext=self.info.get('available_extensions')
         if avext:
-          avext=".".join(avext)
+          avext=", ".join(avext)
         self.AddProperty(xlt("Available Extensions"), avext)
       self.AddProperty(xlt("Description"), self.info['description'])
     return self.properties
