@@ -288,6 +288,8 @@ class ServerSetting(adm.CheckedDialog):
     unit=self.vals['unit']
     if unit:
       self.ValueLabel="%s (%s)" % (self.ValueLabel, unit)
+      
+    self.canWrite = self.page.lastNode.version >= 9.4 or self.page.lastNode.GetValue('admin4.instrumentation')
 
     self.Name=name
     self.Category=self.vals['category']
@@ -301,7 +303,7 @@ class ServerSetting(adm.CheckedDialog):
     else:
       self.SetVal(self.vals['setting'])
     
-    if self.page.lastNode.version < 9.4 or context == 'internal':
+    if not self.canWrite or context == 'internal':
       self.EnableControls("VALUE OK Reset Reload", False)
 
   
@@ -314,7 +316,7 @@ class ServerSetting(adm.CheckedDialog):
     if self.type == 'bool':
       self['value'].SetLabel(self.GetVal())
     ok=True
-    ok=self.CheckValid(ok, self.page.lastNode.version>=9.4, xlt("Can edit server versions 9.4 and up only."))
+    ok=self.CheckValid(ok, self.canWrite, xlt("Can save to instrumented servers only."))
     ok=self.CheckValid(ok, self.vals['context'] != 'internal', xlt("Internal setting; cannot be edited."))
     minVal=self.vals['min_val']
     ok=self.CheckValid(ok, minVal==None or self.value.GetValue() >=minVal, xlt("Must be %s or more") % minVal)
@@ -328,7 +330,28 @@ class ServerSetting(adm.CheckedDialog):
     val=self.GetVal()
     cursor=self.server.GetCursor()
     self.SetStatus(xlt("Setting value..."))
-    cursor.ExecuteSingle("ALTER SYSTEM SET %s=%s" % (name, quoteValue(val, cursor)))
+    if self.page.lastNode.version < 9.4:
+      cfg={}
+      file=cursor.ExecuteSingle("SELECT pg_read_file('postgresql.auto.conf')")
+      for line in file.splitlines():
+        if line.startswith('#') or not line.strip() or line == InstrumentConfig.autoconfLine:
+          continue
+        n,_,v = line.partition('=')
+        cfg[n]=v
+      cfg[name]="'%s'" % val
+      lines=[InstrumentConfig.autoconfHeader]
+      for name, val in cfg.items():
+        lines.append("%s=%s" % (name, val))
+      lines.append("")
+      
+      cursor.ExecuteSingle("""
+                SELECT pg_file_unlink('postgresql.auto.conf.bak');
+                SELECT pg_file_write('postgresql.auto.conf.tmp', %s, false);
+                SELECT pg_file_rename('postgresql.auto.conf.tmp', 'postgresql.auto.conf', 'postgresql.auto.conf.bak');
+                """ % quoteValue("\n".join(lines)))
+    else:
+      cursor.ExecuteSingle("ALTER SYSTEM SET %s=%s" % (name, quoteValue(val, cursor)))
+      
     self.page.SetProperty(name, val)
 
     if self.Reload:
@@ -416,9 +439,10 @@ class LoggingPage(adm.NotebookPanel, ControlledPage):
       self.lastNode=node
       self.control.ClearAll()
       self.log=[]
-      self.EnableControls('Rotate', node.GetValue('pg_rotate_logfile'))
       
       logdes=node.GetValue('log_destination')
+      if not node.GetValue('pg_rotate_logfile'):
+        errText=xlt("Server version too old; not supported")
       if node.GetValue('logging_collector') !='on':
         errText=xlt("logging_collector not enabled")
       elif node.GetValue('log_filename' != 'postgresql-%%Y-%%m-%%d-%%H%%M%%S'):
@@ -431,6 +455,7 @@ class LoggingPage(adm.NotebookPanel, ControlledPage):
         logfile.Disable()
         self.control.AddColumn("")
         self.control.InsertStringItem(0, errText, -1)
+        self.EnableControls('Rotate', False)
         return
 
       logfile.Clear()
@@ -501,7 +526,17 @@ class LoggingPage(adm.NotebookPanel, ControlledPage):
       for colname in self.displayCols:
         colnum=self.logColNames.index(colname)
         vals.append(linecols[colnum].decode('utf-8'))
-      icon=node.GetImageId(linecols[severitypos])
+      severity=linecols[severitypos]
+
+      if severity.startswith('DEBUG'):
+        severity='DEBUG'
+      elif severity in ['FATAL', 'PANIC']:
+        severity='FATAL'
+      elif severity in ['WARNING', 'ERROR']:
+        severity='ERROR'
+      else:
+        severity='LOG'
+      icon=node.GetImageId(severity)
       self.control.AppendItem(icon, vals)
         
   def OnSelectLogfile(self, evt):
@@ -570,7 +605,7 @@ class LoggingPage(adm.NotebookPanel, ControlledPage):
     dlg.Show()
     
   def OnRotate(self, evt):
-    self.lastNode.GetCursor().ExecuteSingle("SELECT %s()" % self.lastNode.GetValue('pg_rotate_logfile'))
+    self.lastNode.GetCursor().ExecuteSingle("SELECT pg_rotate_logfile()")
     pass
 
 class SettingsPage(adm.NotebookPanel, ControlledPage):
@@ -632,7 +667,7 @@ class SettingsPage(adm.NotebookPanel, ControlledPage):
     
     if node != self.lastNode:
       self.changedConfig={}
-      if node.version >= 9.4:
+      if node.GetValue('postgresql.auto.conf'):
         try:
           cursor=node.GetCursor()
           cursor.SetThrowSqlException(False)
@@ -713,7 +748,9 @@ class SettingsPage(adm.NotebookPanel, ControlledPage):
     lst=[]
     for name, value in self.changedConfig.items():
       if self.currentConfig[name]['setting'] != value:
-        lst.append("%s=%s" % (name, value))
+        s="%s=%s" % (name, value)
+        if s != InstrumentConfig.autoconfLine:
+          lst.append(s)
     if lst:
       txt=xlt("The following settings have been changed:\n\n   %s\n\nApply?") % "\n  ".join(lst)
     else:
@@ -747,6 +784,79 @@ class SettingsPage(adm.NotebookPanel, ControlledPage):
     if cfg:
       dlg=ServerSetting(self.lastNode, self, cfg)
       dlg.GoModal()
-    
-pageinfo = [StatisticsPage, ConnectionPage, LoggingPage, SettingsPage]
+
+
+class InstrumentConfig:  
+  @staticmethod
+  def OnExecute(): # never executed
+    pass
   
+  @staticmethod
+  def GetInstrumentQuery(server):
+    if server.version >= 8.1 and server.version < 9.4:
+      sql="""SELECT 'admin4.instrumentation', 'ok' FROM pg_settings WHERE name='custom_variable_classes' and setting='admin4'
+             UNION
+             SELECT 'postgresql.auto.conf', CASE WHEN 'postgresql.auto.conf' IN 
+                   (SELECT pg_ls_dir(setting) FROM pg_settings where name='data_directory') THEN 'ok' ELSE '' END
+             UNION
+             SELECT 'adminpack', 'adminpack' FROM pg_proc
+              WHERE proname='pg_file_write' AND pronamespace=11"""
+      if server.version >= 9.1:
+        sql += """UNION
+              SELECT 'adminpack-extension', 'adminpack-extension'
+                FROM pg_available_extensions
+               WHERE name='adminpack'"""
+             
+      return sql
+
+  @staticmethod
+  def GetMissingInstrumentation(server):
+    if server.version < 9.4:
+      if server.version >= 9.1 and not server.GetValue('adminpack-extension'):
+        return 'adminpack-extension'
+      for name in ['adminpack', 'postgresql.auto.conf', 'admin4.instrumentation']:
+        if not server.GetValue(name):
+          return name
+  
+  autoconfLine="custom_variable_classes='admin4'"
+  autoconfHeader="""
+# Admin4 configuration additions
+# do not edit!
+%s
+""" % autoconfLine
+  @staticmethod
+  def DoInstrument(server):
+    if server.version >= 8.1 and server.version < 9.:
+      if not server.GetValue('adminpack'):
+        if not server.GetValue('adminpack-extension'):
+          # TODO no CREATE EXTENSION
+          return False
+        server.GetCursor().ExecuteSingle("CREATE EXTENSION adminpack")
+          
+      if not server.GetValue('admin4.instrumentation'):
+        dataDir=server.GetValue("data_directory")
+        autoconfPath="%s/postgresql.auto.conf" % dataDir
+        cursor=server.GetCursor()
+        
+        if not server.GetValue('postgresql.auto.conf'):
+          cursor.ExecuteSingle("SELECT pg_file_write('postgresql.auto.conf', %s, false)" % quoteValue(InstrumentConfig.autoconfHeader, cursor))
+        
+        cfgFile=server.GetValue('config_file')
+        if cfgFile.startswith(dataDir):
+          cfgFile=cfgFile[len(dataDir)+1:]
+          cfg=cursor.ExecuteSingle("SELECT pg_read_file('%s')" % cfgFile)
+                                   
+          if not cfg.strip().endswith("include '%s'" % autoconfPath):
+            cfg += "\n\n# Admin4 config file\n#include '%s'\n" % autoconfPath
+            cursor.ExecuteSingle("""
+                SELECT pg_file_unlink('%(cfg)s.bak');
+                SELECT pg_file_write('%(cfg)s.tmp', %(content)s, false);
+                SELECT pg_file_rename('%(cfg)s.tmp', '%(cfg)s', '%(cfg)s.bak');
+                SELECT pg_reload_conf();
+                """ % {'cfg': cfgFile, 'content': quoteValue(cfg, cursor) } )
+    return True
+
+
+
+pageinfo = [StatisticsPage, ConnectionPage, LoggingPage, SettingsPage]
+menuinfo=[{"class": InstrumentConfig } ]

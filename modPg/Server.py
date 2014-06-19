@@ -25,6 +25,7 @@ class Server(adm.ServerNode):
     self.version=None
     self.connectableDbs=None
     self.typeCache=None
+    self.info=None
 #    self.timeout=settings.get('querytimeout', standardTimeout)
 
       
@@ -84,18 +85,19 @@ class Server(adm.ServerNode):
     
     if not db and not self.connection:
       self.connection = conn
+      self.version=conn.ServerVersion()
       
       parts=["""
         SELECT name, setting FROM pg_settings
-         WHERE name in ('autovacuum', 'log_line_prefix', 'log_destination', 'logging_collector', 'log_directory')
+         WHERE name in ('autovacuum', 'log_line_prefix', 'log_destination', 'logging_collector', 'log_directory', 'data_directory', 'config_file')
         UNION  
         SELECT 'version', version()
         UNION
-        SELECT 'lastsysoid', datlastsysoid::text from pg_database
+        SELECT 'lastsysoid', datlastsysoid::text FROM pg_database
          WHERE datname=%(datname)s
         UNION
-        SELECT proname, proname from pg_proc
-         WHERE proname in ( %(adminprocs)s ) 
+        SELECT proname, proname FROM pg_proc
+         WHERE proname IN ( %(adminprocs)s ) AND pronamespace=11 
         UNION
         SELECT 'adminspace', nspname FROM pg_namespace WHERE nspname=%(adminspace)s
         UNION
@@ -108,14 +110,15 @@ class Server(adm.ServerNode):
          }]
 
       # check instrumentation of tools
-      for tool in self.moduleinfo().get('tools', []):
-        cls=tool['class']
+      for menu in self.moduleinfo().get('menus', []):
+        cls=menu['class']
         if hasattr(cls, 'GetInstrumentQuery'):
-          parts.append(cls.GetInstrumentQuery(self))
+          iq=cls.GetInstrumentQuery(self)
+          if iq:
+            parts.append(iq)
       query="\nUNION\n".join(parts)
       self.info=conn.GetCursor().ExecuteDict(query)
 
-      self.version=conn.ServerVersion()
       self.adminspace=self.info.get('adminspace')
       fav_table=self.info.get('fav_table')
       if fav_table:
@@ -151,8 +154,8 @@ class Server(adm.ServerNode):
     if not self.fav_table:
       missing.append('fav_table')
     
-    for tool in self.moduleinfo().get('tools', []):
-      cls=tool['class']
+    for menu in self.moduleinfo().get('menus', []):
+      cls=menu['class']
       if hasattr(cls, 'GetMissingInstrumentation'):
         mi=cls.GetMissingInstrumentation(self)
         if mi:
@@ -401,8 +404,8 @@ CREATE TABLE %(adminspace)s.%(fav_table)s
         'fav_table': fav_table })
       server.fav_table="%s.%s" % (adsQuoted, fav_table)
 
-    for tool in server.moduleinfo().get('tools', []):
-      cls=tool['class']
+    for menu in server.moduleinfo().get('menus', []):
+      cls=menu['class']
       if hasattr(cls, 'DoInstrument'):
         cls.DoInstrument(server)
     return True
