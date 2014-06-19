@@ -12,7 +12,8 @@ from wh import xlt, StringType, GetIcon, Menu, ToolBar, restoreSize, GetBitmap, 
 from tree import NodeTreeCtrl, ServerTreeCtrl
 from notebook import Notebook
 from LoggingDialog import LoggingDialog
-from AdmDialogs import PreferencesDlg, AboutDlg, UpdateDlg
+from AdmDialogs import PreferencesDlg, AboutDlg
+from Update import UpdateDlg
 
 class Frame(wx.Frame, adm.MenuOwner):
   def __init__(self, parentWin, title, style, _size, _pos):
