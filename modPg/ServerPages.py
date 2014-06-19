@@ -15,7 +15,6 @@ from LoggingDialog import LogPanel
 import logger
 import csv, StringIO
 
-
   
 def prettyTime(val):
   if not val:
@@ -622,15 +621,23 @@ class SettingsPage(adm.NotebookPanel, ControlledPage):
   def __init__(self, notebook):
     adm.NotebookPanel.__init__(self, notebook, notebook)
     self.lastNode=None
+    self.grid.Bind(wxpg.EVT_PG_DOUBLE_CLICK, self.OnItemDoubleClick)
+    self.Bind('Apply', self.OnApply)
+    self.Bind('Find', self.OnFind)
+    self.grid.Bind(wxpg.EVT_PG_SELECTED, self.OnSelChanging)
+    self.lastFindProperty=None
 
   def AddExtraControls(self, res):
     self.grid=wxpg.PropertyGrid(self)
     res.AttachUnknownControl("ValueGrid", self.grid)
-    self.grid.Bind(wxpg.EVT_PG_DOUBLE_CLICK, self.OnItemDoubleClick)
-    self.Bind('Apply', self.OnApply)
-    self.Bind('Find', self.OnFind)
-    self.grid.Bind(wx.EVT_MOTION, self.OnMouseMove)
     
+
+  def OnSelChanging(self, evt):
+    if self.lastFindProperty:
+      self.grid.SetPropertyColoursToDefault(self.lastFindProperty)
+      self.grid.RefreshProperty(self.grid.GetProperty(self.lastFindProperty))
+      self.lastFindProperty=None
+  
   def OnMouseMove(self, evt):
     txt=""
     pos=self.grid.HitTest(evt.GetPosition())
@@ -735,7 +742,8 @@ class SettingsPage(adm.NotebookPanel, ControlledPage):
         self.grid.Append(prop)
         self.grid.SetPropertyImage(name, icon)
         self.grid.SetPropertyValue(name, setting)
-        self.grid.SetPropertyReadOnly(prop, True) 
+        self.grid.SetPropertyReadOnly(prop, True)
+      self.grid.SetSplitterLeft() 
 
   def SetProperty(self, name, value):
     self.changedConfig[name]=value
@@ -768,12 +776,17 @@ class SettingsPage(adm.NotebookPanel, ControlledPage):
       self.Display(node, False)
 
   def OnFind(self, evt):
+    self.OnSelChanging(None)
+    self.grid.SetSelection([])
     name=self.Find
     if not name: return
     
     for prop in self.currentConfig.keys():
       if prop.find(name) >= 0:
-        self.grid.SelectProperty(prop)
+        self.lastFindProperty=prop
+        self.grid.SetPropertyBackgroundColour(prop, wx.SystemSettings_GetColour(wx.SYS_COLOUR_HIGHLIGHT))
+        self.grid.SetPropertyTextColour(prop, wx.SystemSettings_GetColour(wx.SYS_COLOUR_HIGHLIGHTTEXT))
+        self.grid.EnsureVisible(prop)
         self['Find'].SetForegroundColour(wx.BLACK)
         return
     self['Find'].SetForegroundColour(wx.RED)
