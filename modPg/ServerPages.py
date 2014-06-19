@@ -513,6 +513,7 @@ class LoggingPage(adm.NotebookPanel, ControlledPage):
     
     startdatetimepos=self.logColNames.index('session_start_datetime')
     severitypos=self.logColNames.index('error_severity')
+    statepos=self.logColNames.index('sql_state_code')
     for linecols in c:
       time=linecols[0].split()[1] # time only
       linecols.insert(1, time)
@@ -535,7 +536,11 @@ class LoggingPage(adm.NotebookPanel, ControlledPage):
       elif severity in ['WARNING', 'ERROR']:
         severity='ERROR'
       else:
-        severity='LOG'
+        sqlstate=linecols[statepos]
+        if sqlstate > "1":
+          severity="ERROR"
+        else:
+          severity='LOG'
       icon=node.GetImageId(severity)
       self.control.AppendItem(icon, vals)
         
@@ -593,8 +598,8 @@ class LoggingPage(adm.NotebookPanel, ControlledPage):
       #self.Reparent(frame)
       self.Show()
       
-    #def Execute(self):
-    #  return True
+    def Execute(self):
+      return True
 
   def Copy(self, evt):
     lines=self.control.GetSelection()
