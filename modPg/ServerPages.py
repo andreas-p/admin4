@@ -5,15 +5,15 @@
 # see LICENSE.TXT for conditions of usage
 
 import adm
-import wx, wx.html
+import wx.html
 import wx.propgrid as wxpg
 from page import ControlledPage
-from wh import xlt, floatToTime, floatToSize, sizeToFloat, timeToFloat, breakLines, GetBitmap
+from wh import xlt, floatToTime, floatToSize, sizeToFloat, timeToFloat, breakLines, GetBitmap, Menu
 from _pgsql import quoteValue
 from Validator import Validator
 from LoggingDialog import LogPanel
 import logger
-import csv, StringIO
+import csv, cStringIO
 
   
 def prettyTime(val):
@@ -370,11 +370,13 @@ class LoggingPage(adm.NotebookPanel, ControlledPage):
     self.panelName="ServerLog"
     self.SetOwner(notebook)
     self.control=self['LogLines']
+    self.control.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.OnLoglinesDclick)
+    self.control.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK, self.OnLoglineRightClick)
     self.Bind('Refresh', self.OnRefresh)
     self.Bind('Rotate', self.OnRotate)
     self.Bind('Logfile', self.OnSelectLogfile)
-    self.Bind('LogLines', wx.EVT_LIST_ITEM_ACTIVATED, self.OnLoglinesDclick)
     self.RestoreListcols()
+
 
   logColNames=[ 'log_datetime',
                 'log_time',     # shortened version of log_datetime
@@ -401,6 +403,10 @@ class LoggingPage(adm.NotebookPanel, ControlledPage):
                 'query_pos',
                 'location',
                 'application_name']
+  
+  @staticmethod
+  def getIndex(toFind):
+    return LoggingPage.logColNames.index(toFind)
   
   logColInfo={  'log_datetime':           (xlt("Log time"), "2012-02-02 20:20:20.999 MEST"),
                 'log_time':               (xlt("Log time"), "20:20:20.999", True),
@@ -508,11 +514,11 @@ class LoggingPage(adm.NotebookPanel, ControlledPage):
       self.lastLogfile = logfile.GetString(current-1)
 
 
-    c=csv.reader(StringIO.StringIO(log), delimiter=',', quotechar='"')
+    c=csv.reader(cStringIO.StringIO(log), delimiter=',', quotechar='"')
     
-    startdatetimepos=self.logColNames.index('session_start_datetime')
-    severitypos=self.logColNames.index('error_severity')
-    statepos=self.logColNames.index('sql_state_code')
+    startdatetimepos=self.getIndex('session_start_datetime')
+    severitypos=self.getIndex('error_severity')
+    statepos=self.getIndex('sql_state_code')
     for linecols in c:
       time=linecols[0].split()[1] # time only
       linecols.insert(1, time)
@@ -524,7 +530,7 @@ class LoggingPage(adm.NotebookPanel, ControlledPage):
       
       vals=[]
       for colname in self.displayCols:
-        colnum=self.logColNames.index(colname)
+        colnum=self.getIndex(colname)
         vals.append(linecols[colnum].decode('utf-8'))
       severity=linecols[severitypos]
 
@@ -554,6 +560,20 @@ class LoggingPage(adm.NotebookPanel, ControlledPage):
     self['LogLines'].DeleteAllItems()
     self.log=[]
     self.OnRefresh()
+ 
+  @staticmethod   
+  def ShowQueryTool(parent, server, line):
+    from QueryTool import QueryFrame
+    params={'dbname': line[LoggingPage.getIndex('database_name')], 
+            'query': line[LoggingPage.getIndex('query')], 
+            'errline': line[LoggingPage.getIndex('query_pos')], 
+            'message': line[LoggingPage.getIndex('message')], 
+            'hint': line[LoggingPage.getIndex('hint')]}
+    
+    frame=QueryFrame(adm.GetCurrentFrame(parent), server, params)
+    return frame
+
+    
     
   class LoglineDlg(adm.Dialog):
     def __init__(self, parentWin, server, logline):
@@ -567,7 +587,7 @@ class LoggingPage(adm.NotebookPanel, ControlledPage):
       res.AttachUnknownControl("HtmlWindow", self.browser)
         
     def getVal(self, name):
-      return self.logline[LoggingPage.logColNames.index(name)].decode('utf-8')
+      return self.logline[LoggingPage.getIndex(name)].decode('utf-8')
     
     def Go(self):
       lines=[]
@@ -576,7 +596,7 @@ class LoggingPage(adm.NotebookPanel, ControlledPage):
         val=self.getVal(name)
         if val != "":
           val=val.replace('\n', '<br/>')
-          lines.append("<tr><td>%s</td><td>%s</td></tr>" % (txt, val))
+          lines.append("<tr><td><b>%s</b></td><td>%s</td></tr>" % (txt, val))
 
       self.SetTitle(self.logline[0])
       for name in LoggingPage.logColNames:
@@ -590,21 +610,49 @@ class LoggingPage(adm.NotebookPanel, ControlledPage):
       self.EnableControls("QueryTool", self.query)
       
     def OnQueryTool(self, evt):
-      from QueryTool import QueryFrame
-      params={'dbname': self.getVal('database_name'), 'query': self.query, 'errline': self.getVal('query_pos'), 'message': self.getVal('message'), 'hint': self.getVal('hint')}
-      
-      frame=QueryFrame(adm.GetCurrentFrame(self), self.server, params)
-      #self.Reparent(frame)
-      self.Show()
+      LoggingPage.ShowQueryTool(self, self.server, self.logline)
+      self.Close()
       
     def Execute(self):
       return True
-
-  def Copy(self, evt):
-    lines=self.control.GetSelection()
     
+  def OnLoglineRightClick(self, evt):
+    cm=Menu(adm.GetCurrentFrame(self))
+    sel=self.control.GetSelection()
+    if not sel:
+      sel=[evt.GetIndex()]
+      self.control.SetSelection(sel)
+    cm.Add(self.OnCopy, xlt("Copy"), xlt("Copy line to clipboard"))
+    
+    q=self.log[sel[0]][self.getIndex('query')]
+    if q:
+      cm.Add(self.OnQuery, xlt("Query"), xlt("Execute query"))
+    cm.Add(self.OnLoglinesDclick, xlt("Details"), xlt("Show details"))
+    cm.Popup(evt)
+
+  def OnQuery(self, evt):
+    index=self.control.GetSelection()[0]
+    logline=self.log[index]
+    LoggingPage.ShowQueryTool(self, self.lastNode, logline)
+  
+  def OnCopy(self, evt):
+    lines=self.control.GetSelection()
+    if lines:
+      sio=cStringIO.StringIO()
+      cwr=csv.writer(sio, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+      
+      cwr.writerow(self.logColNames)
+      for i in lines:
+        cwr.writerow(self.log[i])
+      
+      data=sio.getvalue().decode('utf-8')
+      adm.SetClipboard(data)
+      
   def OnLoglinesDclick(self, evt):
-    dlg=self.LoglineDlg(self.owner, self.lastNode, self.log[evt.GetIndex()])
+    if hasattr(evt, 'GetIndex'):  index=evt.GetIndex()
+    else:                         index=self.control.GetSelection()[0]
+    
+    dlg=self.LoglineDlg(self.owner, self.lastNode, self.log[index])
     dlg.Go()
     dlg.Show()
     

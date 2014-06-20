@@ -5,7 +5,7 @@ Core:
 modPg 0.5.3:
 - use SqlEditor in DataTool filter
 - ServerLog
-- Config page: better visualization of found entry
+- Config page: better visualization of found entry, supports 8.1+
 
 modBind 0.95.5:
 - fix SSHA password unicode error
