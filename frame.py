@@ -293,9 +293,7 @@ class DetailFrame(Frame):
     menu.Add(self.OnLogging, xlt("Logging"), xlt("Show logged problems"))
     menu.Add(self.OnUpdate, xlt("Update"), xlt("Update program modules"))
     menu.Add(self.OnAbout, xlt("About"), xlt("About %s") % adm.appTitle, wx.ID_ABOUT, adm.app.SetMacAboutMenuItemId)
-
     menubar.Append(menu, xlt("&Help"))
-
 
     self.SetMenuBar(menubar)
 
@@ -398,9 +396,9 @@ class DetailFrame(Frame):
     else:
       return self.tree.GetNode()
 
-  def OnHelp(self, ev):
-    pass
-
+  def OnHelp(self, evt):
+    wx.LaunchDefaultBrowser("http://www.admin4.org/docs")
+    
   def OnPreferences(self, evt):
     dlg=PreferencesDlg(self)
     dlg.Go()

@@ -645,6 +645,10 @@ class DataFrame(SqlFrame):
     menu.Add(self.OnUndo, xlt("&Undo"), xlt("discard last editing"))
     menubar.Append(menu, xlt("&Edit"))
 
+    self.helpmenu=menu=Menu(self)
+    menu.Add(self.OnHelp, xlt("Help"), xlt("Show help"), wx.ID_HELP)
+    menubar.Append(menu, xlt("&Help"))
+
     self.EnableMenu(self.datamenu, self.OnCancelRefresh, False)
     self.SetMenuBar(menubar)
 
@@ -689,6 +693,8 @@ class DataFrame(SqlFrame):
                 "Caution: Don't mess with table and column names!\nYou may experience unwanted behaviour or data loss."), 
                                               self.filter.GetQuery()))
 
+  def OnHelp(self, evt):
+    wx.LaunchDefaultBrowser("http://www.admin4.org/docs/pgsql/datatool")
     
   def OnAuiCloseEvent(self, evt):
     if evt.GetPane().name == "filter":

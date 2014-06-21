@@ -216,6 +216,10 @@ class QueryFrame(SqlFrame):
     menu.Add(self.OnCancelQuery, xlt("Cancel"), xlt("Cancel query execution"))
     menubar.Append(menu, xlt("&Query"))
     
+    self.helpmenu=menu=Menu(self)
+    menu.Add(self.OnHelp, xlt("Help"), xlt("Show help"), wx.ID_HELP)
+    menubar.Append(menu, xlt("&Help"))
+        
     self.EnableMenu(self.querymenu, self.OnCancelQuery, False)
     self.SetMenuBar(menubar)
     
@@ -295,6 +299,10 @@ class QueryFrame(SqlFrame):
     adm.Frame.SetTitle(self, title)
 
 
+  def OnHelp(self, evt):
+    wx.LaunchDefaultBrowser("http://www.admin4.org/docs/pgsql/querytool")
+    
+    
   def OnClose(self, evt):
     self.OnCancelQuery(None)
     for i in range(self.databases.GetCount()):

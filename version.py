@@ -39,7 +39,7 @@ except:
 
 libVersion="2.1.4"
 
-description="4th generation\nAdministration Tool\n"
+description="4th generation\nAdministration Tool\n\nHelp and manual: http://www.admin4.org/docs"
 vendor="PSE"
 vendorDisplay="PSE Consulting"
 copyright="(c) 2013-2014 PSE Consulting Andreas Pflug"
