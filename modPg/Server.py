@@ -45,12 +45,16 @@ class Server(adm.ServerNode):
   def IsConnected(self, _deep=False):
     return self.connection != None
 
-  def GetDsn(self, dbname, application):
+  def GetDsn(self, dbname, application, user=None, password=''):
+    if not user:
+      user=self.user
+      password=self.password
+      
     params= [('host', self.address),
             ('port', self.port),
             ('dbname', dbname),
-            ('user', self.user),
-            ('password', self.password),
+            ('user', user),
+            ('password', password),
             ('connect_timeout', 3),
             ('client_encoding', 'UTF8'),
             ('application_name', application)

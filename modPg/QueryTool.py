@@ -162,6 +162,7 @@ class QueryFrame(SqlFrame):
     BUTTONOFFS=30
     self.databases=cbClass(toolbar, size=(size+BUTTONOFFS, -1))
     self.databases.Append(allDbs)
+    self.databases.Append(xlt("Connect..."))
 
     self.databases.SetStringSelection(dbName)
     self.OnChangeDatabase()
@@ -315,16 +316,46 @@ class QueryFrame(SqlFrame):
     
   def OnChangeDatabase(self, evt=None):
     i=self.databases.GetSelection()
-    if i >= 0:
+    if i == self.databases.GetCount()-1:
+      class ConnectDlg(adm.CheckedDialog):
+        def __init__(self, frame):
+          adm.CheckedDialog.__init__(self, frame)
+          self.frame=frame
+        
+        def Go(self):
+          self['Database'].AppendItems(self.frame.server.GetConnectableDbs())
+          self['Database'].SetStringSelection(self.frame.server.maintDb)
+        
+        def Execute(self):
+          user=dlg.User
+          if user:  dbName="%s@%s" % (user, self.Database)
+          else:     dbName=self.Database
+          if self.frame.databases.FindString(dbName) < 0:
+            try:
+              conn = pgConnection(self.frame.server.GetDsn(self.Database, self.frame.application, user, self.password))
+              self.frame.lastDatabaseSelection=self.frame.databases.GetCount()-1
+              self.frame.databases.Insert(dbName, self.frame.lastDatabaseSelection, conn)
+            except Exception as e:
+              self.SetStatus(str(e))
+              return False
+            
+          return True
+          
+      dlg=ConnectDlg(self)
+      dlg.GoModal()
+      self.databases.SetSelection(self.lastDatabaseSelection)
+      return
+    elif i >= 0:
       dbName=self.databases.GetString(i)
       self.conn = self.databases.GetClientData(i)
       if not self.conn:
         try:
           self.conn = pgConnection(self.server.GetDsn(dbName, self.application))
+          self.databases.SetClientData(i, self.conn)
         except Exception as e:
           print str(e)
-        self.databases.SetClientData(i, self.conn)
       self.SetTitle(dbName)
+    self.lastDatabaseSelection=i
         
 
   def updateMenu(self, ctl=None):
