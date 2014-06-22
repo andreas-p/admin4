@@ -219,11 +219,13 @@ class SnippetTree(DragTreeCtrl):
     cm.Popup(evt)
   
   def ExecuteDrag(self, targetItem):
-    targetSnippet=self.GetNode(targetItem)
+    if targetItem:  targetSnippet=self.GetNode(targetItem)
+    else:           targetSnippet=None
+      
     snippet=self.GetNode(self.currentItem)
+    parentItem=self.GetRootItem()
+    image=self.GetItemImage(snippet.treeitem)
     if self.currentItem != targetItem and targetSnippet != snippet:
-      parentItem=self.GetRootItem()
-      image=self.GetItemImage(snippet.treeitem)
       self.Delete(snippet.treeitem)
       if targetSnippet:
         if targetSnippet.IsGroup():
@@ -243,7 +245,10 @@ class SnippetTree(DragTreeCtrl):
           item=self.InsertItem(parentItem, targetItem, self.getSnippetName(snippet), image=image, data=TreeItemData(snippet))
           snippet.treeitem = item
           targetSnippet=None
-
+      else:
+          item=self.AppendItem(parentItem, self.getSnippetName(snippet), image=image, data=TreeItemData(snippet))
+          snippet.treeitem = item
+          snippet.parent=0
       if targetSnippet:
         self.AppendSnippet(snippet, None, parentItem)
       self.updateSnippet(snippet)
