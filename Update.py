@@ -10,16 +10,46 @@ import adm, logger
 import version as admVersion
 from wh import xlt, copytree
 from xmlhelp import Document as XmlDocument
+import time, threading
 
 try:
   import Crypto.PublicKey.RSA, Crypto.Hash.SHA, Crypto.Signature.PKCS1_v1_5
 except:
   Crypto=None
 
+class UpdateThread(threading.Thread):
+  
+  def __init__(self, frame):
+    self.frame=frame
+    threading.Thread.__init__(self)
+    
+  def run(self):
+    update=OnlineUpdate()
+    if update.IsValid():
+      adm.updateInfo=update
+      if update.UpdateAvailable():
+        wx.CallAfter(self.frame.OnUpdate)
+    elif update.exception:
+      wx.CallAfter(wx.MessageBox,
+                   xlt("Connection error while trying to retrieve update information from the update server.\nCheck network connectivity and proxy settings!"), 
+                   xlt("Communication error"), wx.ICON_EXCLAMATION)
+       
+  
+def CheckAutoUpdate(frame):
+  if adm.updateCheckPeriod:
+    lastUpdate=adm.config.Read('LastUpdateCheck', 0)
+    if not lastUpdate or lastUpdate+adm.updateCheckPeriod*24*60*60 < time.time():
+      thread=UpdateThread(frame)
+      thread.start()
+
+
 class OnlineUpdate:
-  def __init__(self, timeout=5):
+  def __init__(self):
+    timeout=5
     self.info=None
     self.message=None
+    self.exception=None
+    
     if not Crypto:
       self.message=xlt("No Crypto lib available.")
       return
@@ -33,7 +63,7 @@ class OnlineUpdate:
       signature=sigres.content
       
     except Exception as ex:
-      print ex
+      self.exception = ex
       self.message=xlt("Online update check failed.\n\nError reported:\n  %s") % str(ex)
       return
 
@@ -52,6 +82,7 @@ class OnlineUpdate:
         return
     
     self.info=XmlDocument.parse(xmlText)
+    adm.config.Write('LastUpdateCheck', time.time())
   
   def IsValid(self):
     return self.info != None
@@ -69,7 +100,6 @@ class UpdateDlg(adm.Dialog):
     self.SetTitle(xlt("Update %s modules") % adm.appTitle)
 
     self.onlineUpdateInfo=None
-    self.onlineTimeout=5
 
     self.Bind("Source")
     self.Bind("Search", self.OnSearch)
@@ -85,16 +115,21 @@ class UpdateDlg(adm.Dialog):
       self.ModuleInfo=xlt("Update not possible:\nProgram directory cannot be written.")
       self['Ok'].Disable()
     else:
+      self.DoCheckUpdate()
       self.Check()
   
        
   def OnCheckUpdate(self, evt):
-    update=OnlineUpdate(self.onlineTimeout)
-    self.onlineUpdateInfo = update.info
-    if update.IsValid():
-      self.OnCheck()
-    else:
-      self.ModuleInfo=update.message
+    self.ModuleInfo=xlt("Checking...")
+    wx.Yield()
+    adm.updateInfo=OnlineUpdate()
+    self.DoCheckUpdate()
+  
+  def DoCheckUpdate(self):
+    if adm.updateInfo:
+      self.onlineUpdateInfo = adm.updateInfo.info
+      if not adm.updateInfo.IsValid():
+        self.ModuleInfo=adm.updateInfo.message
     self.OnCheck()
 
    

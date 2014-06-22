@@ -13,7 +13,7 @@ from tree import NodeTreeCtrl, ServerTreeCtrl
 from notebook import Notebook
 from LoggingDialog import LoggingDialog
 from AdmDialogs import PreferencesDlg, AboutDlg
-from Update import UpdateDlg
+from Update import UpdateDlg, CheckAutoUpdate
 
 class Frame(wx.Frame, adm.MenuOwner):
   def __init__(self, parentWin, title, style, _size, _pos):
@@ -343,6 +343,9 @@ class DetailFrame(Frame):
       self.activated=True
       if not wx.GetKeyState(wx.WXK_SHIFT):
         self.AutoConnect(evt)
+
+      CheckAutoUpdate(self)
+      
     evt.Skip()
     
   def AutoConnect(self, evt):
@@ -385,10 +388,9 @@ class DetailFrame(Frame):
     dlg.Go()
     dlg.Show()
 
-  def OnUpdate(self, evt):
+  def OnUpdate(self, evt=None):
     dlg=UpdateDlg(self)
-    dlg.Go()
-    dlg.ShowModal()
+    dlg.GoModal()
     
   def GetNode(self):
     if self.currentNode:

@@ -13,6 +13,7 @@
             <object class="wxStaticText">
               <label>Confirm deletes</label>
             </object>
+            <flag>wxALIGN_CENTRE_VERTICAL</flag>
           </object>
           <object class="sizeritem">
             <object class="wxCheckBox" name="ConfirmDeletes">
@@ -22,18 +23,18 @@
           </object>
           <object class="sizeritem">
             <object class="wxStaticText">
-              <label>Monthly check for updates</label>
+              <label>check for updates</label>
             </object>
+            <flag>wxALIGN_CENTRE_VERTICAL</flag>
           </object>
           <object class="sizeritem">
-            <object class="wxCheckBox" name="MonthlyChecks">
-              <label></label>
-            </object>
+            <object class="whComboBox" name="UpdateCheckPeriod"/>
           </object>
           <object class="sizeritem">
             <object class="wxStaticText">
               <label>Proxy</label>
             </object>
+            <flag>wxALIGN_CENTRE_VERTICAL</flag>
           </object>
           <object class="sizeritem">
             <object class="wxTextCtrl" name="Proxy"/>

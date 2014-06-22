@@ -32,9 +32,10 @@ app=None
 appname=None
 appTitle=None
 mainframe=None
+updateInfo=None
 
 confirmDeletes=True
-monthlyChecks=True
+updateCheckPeriod=7
 proxy=None
 
 config=None

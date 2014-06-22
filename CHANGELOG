@@ -1,6 +1,8 @@
+Changes in 2.1.6
 Core:
 - F5 refresh
 - fix in default FindObject when notFound
+- periodic automatic update
 
 modPg 0.5.3:
 - use SqlEditor in DataTool filter

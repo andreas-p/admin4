@@ -178,22 +178,24 @@ class Preferences(adm.NotebookPanel):
   
   def Go(self):
     self.ConfirmDeletes=adm.confirmDeletes
-    self.MonthlyChecks=adm.monthlyChecks
     self.Proxy=adm.proxy
+    self['UpdateCheckPeriod'].Append( [ (1, xlt("daily")), (7, xlt('weekly')), (30, xlt('monthly')), (0, xlt('never')) ] )
+    self.UpdateCheckPeriod=adm.updateCheckPeriod
+    
 
   def Save(self):
     adm.confirmDeletes=self.ConfirmDeletes
-    adm.monthyChecks=self.MonthlyChecks
+    adm.updateCheckPeriod=self.UpdateCheckPeriod
     adm.proxy=self.Proxy
     adm.config.Write("ConfirmDeletes", adm.confirmDeletes)
-    adm.config.Write("MonthlyChecks", adm.monthlyChecks)
+    adm.config.Write("UpdateCheckPeriod", adm.updateCheckPeriod)
     adm.config.Write("Proxy", adm.proxy)
     return True
 
   @staticmethod
   def Init():
     adm.confirmDeletes=adm.config.Read("ConfirmDeletes", True)
-    adm.monthlyChecks=adm.config.Read("MonthlyChecks", True)
+    adm.updateCheckPeriod=adm.config.Read("UpdateCheckPeriod", 7)
     adm.proxy=adm.config.Read("Proxy")
 
 
