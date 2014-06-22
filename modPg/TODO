@@ -5,14 +5,10 @@ Browser:
 - Edit Table:
   - Table, Column
 
-EditGrid
-- Drag/drop not from MouseDown
-- FK drilldown
-- OnFilterValidate and executeQuery catch error w/o logging
-
 DataGrid
+- Drag/drop not from MouseDown for wx>3.0
+- OnFilterValidate and executeQuery catch error w/o logging
 - FK drilldown
-- filter presets
 
 ShowBusy abort enable
 

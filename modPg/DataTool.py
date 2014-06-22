@@ -381,6 +381,7 @@ class FilterPanel(adm.NotebookPanel):
     self.Bind("FilterPreset", wx.EVT_TEXT, self.OnPresetChange)
     self.Bind("FilterSave", self.OnFilterSave)
     self['SortCols'].Bind(wx.EVT_LISTBOX_DCLICK, self.OnDclickSort)
+    # TODO unfortunately we need 3.x here
     if True: # wx.Platform == "__WXMAC__" and wx.VERSION < (3,0):
       event=wx.EVT_LEFT_DOWN
     else:
