@@ -341,10 +341,11 @@ class DetailFrame(Frame):
   def OnActivate(self, evt):
     if not self.activated:
       self.activated=True
+      CheckAutoUpdate(self)
+      
       if not wx.GetKeyState(wx.WXK_SHIFT):
         self.AutoConnect(evt)
 
-      CheckAutoUpdate(self)
       
     evt.Skip()
     
