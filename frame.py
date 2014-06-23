@@ -374,7 +374,7 @@ class DetailFrame(Frame):
       self.viewmenu.Check(self.OnToggleTree, False)
   
   def OnQuit(self, evt):
-    self.tree.Unbind(wx.EVT_TREE_SEL_CHANGED, self.GetMenuId(self.OnTreeSelChange)) # this is for Win C++ dtor
+    self.details=None # this is for Win C++ dtor
     self.Close()
 
   def OnToggleTree(self, evt=None):
@@ -476,6 +476,8 @@ class DetailFrame(Frame):
     
           
   def OnTreeSelChange(self, evt):
+    if not self.details:
+      return
     item=evt.GetItem()
     if item != self.tree.GetSelection():
       self.tree.SelectItem(item)
