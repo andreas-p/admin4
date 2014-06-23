@@ -128,9 +128,10 @@ class UpdateDlg(adm.Dialog):
   def DoCheckUpdate(self):
     if adm.updateInfo:
       self.onlineUpdateInfo = adm.updateInfo.info
-      if not adm.updateInfo.IsValid():
-        self.ModuleInfo=adm.updateInfo.message
     self.OnCheck()
+    if adm.updateInfo and not adm.updateInfo.IsValid():
+      self.ModuleInfo=adm.updateInfo.message
+
 
    
   def OnSearch(self, evt):
@@ -148,6 +149,7 @@ class UpdateDlg(adm.Dialog):
       modSrc=None
       canInstall=True
       self.ModuleInfo = xlt("Please select module update ZIP file or directory.")
+      adm.updateInfo=None
   
       fnp=os.path.basename(self.Source).split('-')
       self.modid=fnp[0]
@@ -291,7 +293,8 @@ class UpdateDlg(adm.Dialog):
           self.updateUrl=el.getText().strip()
           self.updateZipHash=el.getAttribute('sha1')
           el=self.onlineUpdateInfo.getElement('minorUpdateUrl')
-          self.minorUpdateUrl=el.getText().strip()
+          if el:  self.minorUpdateUrl=el.getText().strip()
+          else:   self.minorUpdateUrl=None
           self.minorUpdateZipHash=el.getAttribute('sha1')
           status=self.onlineUpdateInfo.getElementText('status')
 
@@ -350,7 +353,8 @@ class UpdateDlg(adm.Dialog):
         self.ModuleInfo = "\n".join(msg)
         return haveUpdate and canUpdate
       else:
-        self.ModuleInfo = ""
+        if not adm.updateInfo:
+          self.ModuleInfo=xlt("Press '%s' to get current update information." % self['CheckUpdate'].GetLabel())
         return False
   
   
@@ -418,7 +422,7 @@ class UpdateDlg(adm.Dialog):
       updateInfo=xlt("Installed new module %s") % self.modname      
     else:
       self.modname = "Core"
-      if self.hasCoreUpdate and self.updateUrl != self.minorUpdateUrl:
+      if self.hasCoreUpdate and self.minorUpdateUrl and self.updateUrl != self.minorUpdateUrl:
         source=self.DoDownload(tmpDir, self.updateUrl, self.updateZipHash)
         if not source:
           return False
