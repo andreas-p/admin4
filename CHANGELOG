@@ -9,7 +9,7 @@ modPg 0.5.3:
 - ServerLog
 - Config page: better visualization of found entry, supports 8.1+
 
-modBind 0.95.5:
+modLdap 0.95.5:
 - fix SSHA password unicode error
 
 modBind 0.98.4:
