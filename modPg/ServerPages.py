@@ -892,7 +892,7 @@ class InstrumentConfig:
 """ % autoconfLine
   @staticmethod
   def DoInstrument(server):
-    if server.version >= 8.1 and server.version < 9.:
+    if server.version >= 8.1 and server.version < 9.4:
       if not server.GetValue('adminpack'):
         if server.GetValue('adminpack-extension'):
           server.GetCursor().ExecuteSingle("CREATE EXTENSION adminpack")
