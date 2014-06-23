@@ -11,7 +11,7 @@ def GetPrerequisites(info=False):
   try:
     import psycopg2
     if psycopg2.__version__ > "2.4":
-      return "psycopg2"
+      return "psycopg2 csv"
     else:
       if info:
         print "psycopg2 too old"
