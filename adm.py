@@ -266,7 +266,10 @@ def GetCurrentFrame(wnd=None):
   return wnd
 
 def SetStatus(text=None):
-  GetCurrentFrame().SetStatus(text)
+  frame=GetCurrentFrame()
+  if not frame:
+    frame=mainframe
+  frame.SetStatus(text)
 
 def GetCurrentTree(wnd=None):
   while wnd:
