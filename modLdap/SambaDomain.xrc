@@ -42,7 +42,7 @@
             </object>
           </object>
           <object class="sizeritem">
-            <object class="wxTextCtrl" name="ldap:label=algRidLabel:sambaAlgorithmicRidBase">
+            <object class="wxTextCtrl" name="ldap:label=algRidLabel:sambaAlgorithmicRidBase-uint">
               <size>40,-1d</size>
             </object>
           </object>
