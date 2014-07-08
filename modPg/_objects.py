@@ -117,7 +117,9 @@ class DatabaseObject(ServerObject):
     sql=self.InstancesQuery(self.parentNode)
     sql.AddWhere("%s=%d" % (self.refreshOid, self.GetOid()))
     set=self.parentNode.GetConnection().GetCursor().ExecuteSet(sql.SelectQueryString())
-    self.info = set.Next().getDict()
+    n=set.Next()
+    if n: self.info = n.getDict()
+    else: n={}
     self.DoRefresh()
     
   def GetDatabase(self):
