@@ -45,7 +45,7 @@ def CheckAutoUpdate(frame):
 
 class OnlineUpdate:
   def __init__(self):
-    timeout=5
+    self.onlineTimeout=5
     self.info=None
     self.message=None
     self.exception=None
@@ -55,10 +55,10 @@ class OnlineUpdate:
       return
     try:
       # no need to use SSL here; we'll verify the update.xml later
-      response=requests.get("http://www.admin4.org/update.xml", timeout=timeout, proxies=adm.GetProxies())
+      response=requests.get("http://www.admin4.org/update.xml", timeout=self.onlineTimeout, proxies=adm.GetProxies())
       response.raise_for_status()
       xmlText=response.text
-      sigres=requests.get("http://www.admin4.org/update.sign", timeout=timeout, proxies=adm.GetProxies())
+      sigres=requests.get("http://www.admin4.org/update.sign", timeout=self.onlineTimeout, proxies=adm.GetProxies())
       sigres.raise_for_status()
       signature=sigres.content
       
