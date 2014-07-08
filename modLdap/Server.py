@@ -94,7 +94,7 @@ class Server(adm.ServerNode):
       more =filter[1:]
       filter="(%s)" % filter[0]
       for f in more:
-        filter = "(&(%s)(%s))" & (filter, f)
+        filter = "(&%s(%s))" % (filter, f)
         
     res=self.connection.SearchSub(self.dn, filter, attrs)
     return ConvertResult(res)
