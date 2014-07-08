@@ -1,3 +1,7 @@
+modLdap 0.95.6:
+- fixes for uid/gid/rid generation
+- User with sambaAcctFlag [U]
+
 Changes in 2.1.6
 Core:
 - F5 refresh

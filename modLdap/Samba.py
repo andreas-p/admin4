@@ -226,6 +226,7 @@ class SambaAccount(SpecificEntry, _SambaRidObject):
       self.flags=""
     setFlag('D', not self.AccountEnabled)
     setFlag('X', self.PasswordNeverExpires)
+    setFlag('U', True)
     self.dialog.SetValue("sambaAcctFlags", "[%s]" % self.flags, self)
 
     if self.CantChangePassword:
