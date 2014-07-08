@@ -17,6 +17,8 @@ try:
 except:
   Crypto=None
 
+onlineTimeout=5
+
 class UpdateThread(threading.Thread):
   
   def __init__(self, frame):
@@ -45,7 +47,6 @@ def CheckAutoUpdate(frame):
 
 class OnlineUpdate:
   def __init__(self):
-    self.onlineTimeout=5
     self.info=None
     self.message=None
     self.exception=None
@@ -55,10 +56,10 @@ class OnlineUpdate:
       return
     try:
       # no need to use SSL here; we'll verify the update.xml later
-      response=requests.get("http://www.admin4.org/update.xml", timeout=self.onlineTimeout, proxies=adm.GetProxies())
+      response=requests.get("http://www.admin4.org/update.xml", timeout=onlineTimeout, proxies=adm.GetProxies())
       response.raise_for_status()
       xmlText=response.text
-      sigres=requests.get("http://www.admin4.org/update.sign", timeout=self.onlineTimeout, proxies=adm.GetProxies())
+      sigres=requests.get("http://www.admin4.org/update.sign", timeout=onlineTimeout, proxies=adm.GetProxies())
       sigres.raise_for_status()
       signature=sigres.content
       
@@ -342,7 +343,7 @@ class UpdateDlg(adm.Dialog):
                     msg.append(xlt("  %(name)s: %(old)s DOWNGRADE to %(new)s, please check") % info)
               
         except Exception as ex:
-          print ex
+          logger.exception("Online update information invalid", str(ex))
           msg=[xlt("Online update information invalid.")]
           return False
         if haveUpdate and canUpdate:
@@ -394,16 +395,17 @@ class UpdateDlg(adm.Dialog):
   def DoDownload(self, tmpDir, url, hash):
       self.ModuleInfo = xlt("Downloading...\n\n%s") % url
       try:
-        response=requests.get(url, timeout=self.onlineTimeout*5, proxies=adm.GetProxies())
+        response=requests.get(url, timeout=onlineTimeout*5, proxies=adm.GetProxies())
         response.raise_for_status()
       except Exception as ex:
-        self.ModuleInfo = xlt("The download failed:\n%s\n\n%s") % (str(ex), self.updateUrl)
+        self.ModuleInfo = xlt("The download failed:\n%s\n\n%s") % (str(ex), url)
         return None
       
       content=response.content
-      hash=Crypto.Hash.SHA.new(content)
-      if hash.hexdigest() != hash:
-        self.ModuleInfo = xlt("The download failed:\nSHA1 checksum invalid.\n\n%s") % self.updateUrl
+      hashResult=Crypto.Hash.SHA.new(content).hexdigest()
+      
+      if hashResult != hash:
+        self.ModuleInfo = xlt("The download failed:\nSHA1 checksum invalid.\n\n%s") % url
         self['Ok'].Disable()
         return None
       

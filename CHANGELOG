@@ -1,6 +1,12 @@
+Changes in 2.1.7
+Core:
+- Fix in Update Download SHA calculation
+
 modLdap 0.95.6:
 - fixes for uid/gid/rid generation
 - User with sambaAcctFlag [U]
+
+
 
 Changes in 2.1.6
 Core:
