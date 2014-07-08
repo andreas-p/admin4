@@ -249,7 +249,14 @@ class SpecificEntry(adm.NotebookPanel):
       if not dn:
         sdn=self.dialog.GetAttrValue("sambaDomainName")
         if sdn:
-          dn="sambaDomainName=%s,%s" % (sdn[0], self.GetServer().dn)
+          if not hasattr(self, 'smbDomains'):
+            self.smbDomains={}
+          dn=self.smbDomains.get(sdn[0])
+          if not dn:
+            res=self.GetServer().SearchSubConverted(["objectClass=sambaDomain", "sambaDomainName=%s" % sdn[0] ])
+            if res:
+              dn=res[0][0]
+              self.smbDomains[sdn[0]] = dn
         else:
           self.dialog.SetStatus(xlt("Either sambaUnixIdPoolDN must be configured or a samba domain specified."))
           return
