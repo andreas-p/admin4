@@ -99,15 +99,16 @@ class Groups(SpecificEntry):
     for dn, info in self.GetConnection().SearchSub(baseDn, "(%s)" % clsFilter, "* structuralObjectClass"):
       self.allGroups[dn] = Groups.GroupInfo(dn, info)
 
-    userFilter="|(member=%s)(uniquemember=%s)" % (self.dialog.dn, self.dialog.dn)
-    if uidVal:
-      userFilter="|(%s)(memberuid=%s)" % (userFilter, uidVal.GetValue()[0])
-
-    filter="(&(%s)(%s))" % (clsFilter, userFilter)
-    for res in self.GetConnection().SearchSub(baseDn, filter, "dn"):
-      dn=res[0].decode('utf8')
-      self.memberOf.append(dn)
-      self.addMember(dn)
+    if self.dialog.dn:
+      userFilter="|(member=%s)(uniquemember=%s)" % (self.dialog.dn, self.dialog.dn)
+      if uidVal:
+        userFilter="|(%s)(memberuid=%s)" % (userFilter, uidVal.GetValue()[0])
+  
+      filter="(&(%s)(%s))" % (clsFilter, userFilter)
+      for res in self.GetConnection().SearchSub(baseDn, filter, "dn"):
+        dn=res[0].decode('utf8')
+        self.memberOf.append(dn)
+        self.addMember(dn)
 
 
 
@@ -190,10 +191,11 @@ class Members(SpecificEntry):
 SpecificEntry.AddClass(Members)
 
 
-class GroupOfNames(SpecificEntry):
-  canClasses="groupOfUniqueNames"
-SpecificEntry.AddClass(GroupOfNames)
-Entry.addNewEntryClass(GroupOfNames)
+# TODO
+#class GroupOfNames(SpecificEntry):
+#  canClasses="groupOfUniqueNames"
+#SpecificEntry.AddClass(GroupOfNames)
+#Entry.addNewEntryClass(GroupOfNames)
 
 class Group(SpecificEntry):
   name=xlt("Posix Group")

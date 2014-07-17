@@ -12,7 +12,17 @@
             </object>
           </object>
           <object class="sizeritem">
-            <object class="wxTextCtrl" name="must:rdn:cn:label=UidLabel:Uid">
+            <object class="wxTextCtrl" name="must:rdn:copy=cn:label=UidLabel:Uid">
+              <size>80,-1d</size>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText" name="CnLabel">
+              <label>Common Name</label>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxTextCtrl" name="ldaplabel=CnLabel:cn">
               <size>80,-1d</size>
             </object>
           </object>

@@ -186,6 +186,7 @@
           </object>
           <object class="sizeritem">
             <object class="wxTextCtrl" name="label=kickoffLabel:sambaKickoffTime-int_ts">
+              <value>2038-01-19 04:14:07</value>
               <size>80,-1d</size>
             </object>
           </object>

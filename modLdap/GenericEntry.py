@@ -289,6 +289,7 @@ class GenericEntry(adm.NotebookPanel):
     property=attrval.items.get(self.grid)
     if property:
       self.grid.DeleteProperty(property)
+      del attrval.items[self.grid]
 
 
   def SetValue(self, attrval):

@@ -10,6 +10,8 @@ from SpecificEntry import SpecificEntry
 from Entry import Entry
 from wh import xlt
 
+SAMBANEVER=int('0x7fffffff', 16)
+
 class _SambaRidObject:
   def __init__(self):
     self.Bind("RidGen", self.OnRidGen)
@@ -230,7 +232,7 @@ class SambaAccount(SpecificEntry, _SambaRidObject):
     self.dialog.SetValue("sambaAcctFlags", "[%s]" % self.flags, self)
 
     if self.CantChangePassword:
-      self.dialog.SetValue("sambaPwdCanChange", 2147480000, self)
+      self.dialog.SetValue("sambaPwdCanChange", SAMBANEVER, self)
     else:
       self.dialog.DelValue("sambaPwdCanChange", self)
       if self.MustChangePassword:

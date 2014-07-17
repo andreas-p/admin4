@@ -1,3 +1,6 @@
+modLdap 0.95.7:
+- fix crash when a duplicated attribute is deleted
+
 Changes in 2.1.7
 Core:
 - Fix in Update Download SHA calculation

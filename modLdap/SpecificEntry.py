@@ -133,8 +133,8 @@ class SpecificEntry(adm.NotebookPanel):
       ctl=ev
     else:
       ctl=ev.GetEventObject()
-    if ctl:
 
+    if ctl:
       value=self._getattr(ctl)
       if "rdn" in ctl.flags:
         rdn="%s=%s" % (self.GetServer().GetName(ctl.ldapOid), value)
@@ -143,10 +143,13 @@ class SpecificEntry(adm.NotebookPanel):
         if "multi" in ctl.flags:
           value = value.splitlines()
         self.dialog.SetValue(ctl.ldapOid, value, self)
+        for flag in ctl.flags:
+          if flag.startswith('copy='):
+            var=flag[5:]
+            self.dialog.SetValue(var, value, self)
       else:
         self.dialog.DelValue(ctl.ldapOid, self)
-      if "cn" in ctl.flags:
-        self.dialog.SetValue("cn", value, self)
+      
 
       self.dialog.OnCheck()
 
@@ -174,7 +177,9 @@ class SpecificEntry(adm.NotebookPanel):
   def DelValue(self, attrVal):
     ctl=attrVal.items.get(self)
     if ctl:
-      self._setattr(ctl, None)
+      val=self._getattr(ctl)
+      if val:
+        self._setattr(ctl, None)
 
   allSpecificClasses={}
 

@@ -304,7 +304,8 @@ class Entry(adm.Node):
         for panel in self.panels:
           if panel != originPanel:
             panel.DelValue(attrval)
-        del self.attribs[oid]
+        try: del self.attribs[oid]
+        except: pass
 
 
     def SetValue(self, oid, value, originPanel=None):
@@ -521,6 +522,14 @@ class EntryPassword:
         else:
           addList.append(ntPassword)
 
+      smbLastPwdSet=node.GetServer().GetAttributeSchema("sambaPwdLastSet")
+      if smbLastPwdSet.oid in may:
+        import time
+        lastSet=AttrVal(None, str(int(time.time())), smbLastPwdSet)
+        if smbLastPwdSet.oid in node.attribs:
+          chgList.append(lastSet)
+        else:
+          addList.append(lastSet)
       if chgList or addList:
         node.GetConnection().Modify(node.dn, chgList, addList)
         return True
