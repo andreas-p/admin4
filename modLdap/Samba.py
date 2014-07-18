@@ -49,6 +49,10 @@ class _SambaRidObject:
           ridbase=int(rb[0]) +ridOffs
           posixNumber=self.dialog.GetAttrValue(posixAttr)
           if not posixNumber:
+            if not self.GetIdFromMax("posixAccount", posixAttr):
+              return False
+            posixNumber=self.dialog.GetAttrValue(posixAttr)
+          if not posixNumber:
             self.dialog.SetStatus(xlt("For sambaAlgorithmicRidBase SID creation POSIX %s must be set first") % posixAttr)
             return False
           rid=posixNumber*2+ridbase
@@ -130,9 +134,19 @@ class SambaAccount(SpecificEntry, _SambaRidObject):
     SpecificEntry.__init__(self, dlg, notebook, resname)
     _SambaRidObject.__init__(self)
     self.Bind("sambaDomainName", self.OnChangeDomain)
+    self.Bind("sambaSamAccount", self.OnCheckSamba)
     self.Bind("CantChangePassword PasswordNeverExpires MustChangePassword AccountEnabled", self.OnCheckboxes)
 
 
+  def OnCheckSamba(self, evt):
+    self.OnCheckObjectClass(evt)
+    if self.sambaSamAccount:
+      if not self.dialog.HasObjectClass('posixAccount'):
+        self.dialog.SetObjectClass('posixAccount')
+        if not self.dialog.GetAttrValue('gidNumber'):
+          self.dialog.SetValue('gidNumber', 513)
+    
+    
   def Go(self):
     self.initDomains()
 
@@ -178,6 +192,7 @@ class SambaAccount(SpecificEntry, _SambaRidObject):
         self['sambaPrimaryGroupSID'].AppendKey(sid, info['cn'][0])
 
     self.dialog.SetValue("sambaDomainName", self.sambaDomainName)
+    self.dialog.sambaDomainName=self.domainName
     if self.sambaRid:
       self.OnRidChange(ev)
     elif ev:
@@ -334,6 +349,7 @@ class SambaGroupMapping(SpecificEntry, _SambaRidObject):
 
   def OnChangeDomain(self, ev=None):
     self.sambaDomainName=self['sambadomainsid'].GetValue()
+    self.dialog.sambaDomainName=self.sambaDomainName
 
     if self.sambaRid:
       self.OnRidChange(ev)

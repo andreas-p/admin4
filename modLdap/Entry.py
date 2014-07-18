@@ -289,6 +289,13 @@ class Entry(adm.Node):
         panel.Go()
 
 
+    def SetObjectClass(self, objectClassName):
+      for panel in self.panels:
+        for ctl in panel._ctls.values():
+          if ctl.name == objectClassName and 'objectclass' in ctl.flags:
+            ctl.SetValue(True)
+            panel.OnCheckObjectClass(ctl)
+            
     def DelValue(self, oid, originPanel=None):
       attrval=self.attribs.get(oid)
       if not attrval:

@@ -38,6 +38,7 @@ class SpecificEntry(adm.NotebookPanel):
           if "modLdap" in ctl.flags:
             ctl.ldapOid=None
             logger.debug("No OID found for %s", ctl.name)
+    self.smbDomains={}
 
 
   def OnCheckObjectClass(self, ev):
@@ -252,16 +253,13 @@ class SpecificEntry(adm.NotebookPanel):
       # using SambaUnixIdPool
       dn=self.GetServer().GetSambaUnixIdPoolDN()
       if not dn:
-        sdn=self.dialog.GetAttrValue("sambaDomainName")
-        if sdn:
-          if not hasattr(self, 'smbDomains'):
-            self.smbDomains={}
-          dn=self.smbDomains.get(sdn[0])
+        if hasattr(self.dialog, "sambaDomainName"):
+          dn=self.smbDomains.get(self.dialog.sambaDomainName)
           if not dn:
-            res=self.GetServer().SearchSubConverted(["objectClass=sambaDomain", "sambaDomainName=%s" % sdn[0] ])
+            res=self.GetServer().SearchSubConverted(["objectClass=sambaDomain", "sambaDomainName=%s" % self.dialog.sambaDomainName ])
             if res:
               dn=res[0][0]
-              self.smbDomains[sdn[0]] = dn
+              self.smbDomains[self.dialog.sambaDomainName] = dn
         else:
           self.dialog.SetStatus(xlt("Either sambaUnixIdPoolDN must be configured or a samba domain specified."))
           return
