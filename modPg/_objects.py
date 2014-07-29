@@ -7,7 +7,20 @@
 
 from node import Node, Collection, NodeId
 from _pgsql import quoteIdent, quoteValue
+from wh import shlexSplit
 
+rightString={'r': "SELECT",
+               'w': "UPDATE",
+               'a': "INSERT",
+               'd': "DELETE",
+               'D': "TRUNCATE",
+               'x': "REFERENCES",
+               't': "TRIGGER",
+               'X': "EXECUTE",
+               'U': "USAGE",
+               'C': "CREATE",
+               'c': "CONNECT",
+               'T': "TEMPORARY" }
 
 class ServerObject(Node):
   def __init__(self, parentNode, name):
@@ -44,8 +57,28 @@ class ServerObject(Node):
     val=cursor.ExecuteSingle(cmd, args)
     return val
   
-  def GrantSql(self):
+               
+  def GrantCommentSql(self):
     str=""
+    acl=self.info.get('acl')
+    if acl:
+      for grant in shlexSplit(acl[1:-1], ','):
+        if grant.startswith('='):
+          user="public"
+          rest=grant[1:]
+        else:
+          user, rest=shlexSplit(grant, '=')
+          user=quoteIdent(user)
+        rights=shlexSplit(rest, '/')[0]
+        if rights == self.allGrants:
+          rights="ALL"
+        else:
+          rightlist=[]
+          for right in rights:
+            rightlist.append(rightString[right])
+          rights=",".join(rightlist)
+        str += "GRANT %s ON %s TO %s\n" % (rights, self.ObjectSql(), user)
+      
     des=self.info.get('description')
     if des:
       str += "\nCOMMENT ON %s IS %s\n" % (self.ObjectSql(), quoteValue(des)) 
@@ -58,7 +91,13 @@ class ServerObject(Node):
     return ""
   
   def ObjectSql(self):
-    return "%s %s" % (self.TypeSql(), self.NameSql())
+    return "%s %s" % (self.GrantTypeSql(), self.NameSql())
+  
+  
+  def GrantTypeSql(self):
+    if hasattr(self, 'grantTypename'):
+      return self.grantTypename.upper()
+    return self.TypeSql()
   
   def TypeSql(self):
     return self.typename.upper()

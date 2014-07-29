@@ -12,7 +12,9 @@ from wh import xlt
 class View(SchemaObject):
   typename=xlt("View")
   shortname=xlt("View")
+  grantTypename='TABLE'
   refreshOid="rel.oid"
+  allGrants='arwdDxt'
   favtype='v'
   relkind='v'
 
@@ -70,7 +72,7 @@ class View(SchemaObject):
     return "CREATE OR REPLACE %(object)s %(tablespace)s AS\n%(def)s\n%(grant)s" % {
                'object': self.ObjectSql(),
                'tablespace': self.TablespaceSql(), 
-               'def': definition, 'grant': self.GrantSql() }
+               'def': definition, 'grant': self.GrantCommentSql() }
   
 
   def GetProperties(self):

@@ -7,9 +7,9 @@
 
 import adm
 from wh import xlt
-from node import NodeId, NodeType
 from Schema import Schema
 from Table import Table
+from Sequence import Sequence
 from View import View
 from Function import Function
 
@@ -84,7 +84,6 @@ class Favourite(adm.Node):
           if t:
             instances.append(t)
         
-
         for schema in coll.childnodes:
           views=schema.GetCollection(View)
           for oid in db.favourites:
@@ -97,6 +96,13 @@ class Favourite(adm.Node):
             f=funcs.FindNode(Function, str(oid))
             if f:
               instances.append(f)
+
+        for schema in coll.childnodes:
+          sequences=schema.GetCollection(Sequence)
+          for oid in db.favourites:
+            s=sequences.FindNode(Sequence, str(oid))
+            if s:
+              instances.append(s)
 
     return instances
   

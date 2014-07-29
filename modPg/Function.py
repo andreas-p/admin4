@@ -15,6 +15,7 @@ class Function(SchemaObject):
   typename=xlt("Function")
   shortname=xlt("Function")
   refreshOid="pro.oid"
+  allGrants='X'
   favtype='f'
   relkind='P'
 
@@ -67,7 +68,7 @@ class Function(SchemaObject):
       self.info['definition']=definition
     return "%(def)s\n%(grant)s" % {
                'object': self.ObjectSql(),
-               'def': definition, 'grant': self.GrantSql() }
+               'def': definition, 'grant': self.GrantCommentSql() }
   
 
   def GetProperties(self):

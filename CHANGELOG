@@ -1,5 +1,17 @@
+Core:
+- shlexSplit
+
+modPg 0.5.4:
+- Sequences
+- GrantCommentSql
+
 modLdap 0.95.7:
 - fix crash when a duplicated attribute is deleted
+- smoother automatic RID generation
+- SambaAccount includes PosixAccount
+- fix SambaGroup
+
+
 
 Changes in 2.1.7
 Core:

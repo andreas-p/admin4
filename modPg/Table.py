@@ -20,6 +20,7 @@ class Table(SchemaObject):
   typename=xlt("Table")
   shortname=xlt("Table")
   refreshOid="rel.oid"
+  allGrants="arwdDxt"
   favtype='t'
   relkind='r'
 
