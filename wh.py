@@ -7,6 +7,8 @@
 import wx.grid
 import os, time, datetime, shutil 
 from ast import literal_eval
+from shlex import shlex
+
 import logger
 loaddir=None
 
@@ -484,6 +486,18 @@ def xlt(s): # translate
   return t
 
 
+def shlexSplit(str, sep):
+  """
+  shlexSplit(str, sep)
+  
+  split string by separator, observing quotes
+  """
+  lex=shlex(str, posix=True)
+  lex.whitespace=sep
+  lex.commenters=''
+  lex.whitespace_split=True
+  return list(lex)
+  
 def copytree(src, dst, symlinks=False, ignore=None, replace=True):
   """
   this is mostly a copy of shutil.copytree, except it will optionally
