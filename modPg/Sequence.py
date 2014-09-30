@@ -7,6 +7,7 @@
 from _objects import SchemaObject
 from _pgsql import pgQuery
 from wh import xlt
+import adm
 
 
 
@@ -96,5 +97,19 @@ class Sequence(SchemaObject):
       self.AddProperty(xlt("Description"), self.info['description'])
       
     return self.properties
+  
+  
+  class Dlg(adm.PropertyDialog):
+  
+    def Go(self):
+      pass
+     
+    def Check(self):
+      ok=True
+      if not self.node:
+        pass
+      
+      return ok
+  
   
 nodeinfo= [ { "class" : Sequence, "parents": ["Schema"], "sort": 70, "collection": "Sequences", "pages": ["SqlPage"] } ]    
