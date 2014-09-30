@@ -86,23 +86,26 @@ class Favourite(adm.Node):
         
         for schema in coll.childnodes:
           views=schema.GetCollection(View)
-          for oid in db.favourites:
-            v=views.FindNode(View, str(oid))
-            if v:
-              instances.append(v)
+          if views:
+            for oid in db.favourites:
+              v=views.FindNode(View, str(oid))
+              if v:
+                instances.append(v)
         for schema in coll.childnodes:
           funcs=schema.GetCollection(Function)
-          for oid in db.favourites:
-            f=funcs.FindNode(Function, str(oid))
-            if f:
-              instances.append(f)
+          if funcs:
+            for oid in db.favourites:
+              f=funcs.FindNode(Function, str(oid))
+              if f:
+                instances.append(f)
 
         for schema in coll.childnodes:
           sequences=schema.GetCollection(Sequence)
-          for oid in db.favourites:
-            s=sequences.FindNode(Sequence, str(oid))
-            if s:
-              instances.append(s)
+          if sequences:
+            for oid in db.favourites:
+              s=sequences.FindNode(Sequence, str(oid))
+              if s:
+                instances.append(s)
 
     return instances
   
