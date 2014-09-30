@@ -289,6 +289,7 @@ class UpdateDlg(adm.Dialog):
         canUpdate=True
         haveUpdate=False
         self.hasCoreUpdate=False
+        alerts=None
         try:
           el=self.onlineUpdateInfo.getElement('updateUrl')
           self.updateUrl=el.getText().strip()
@@ -302,10 +303,6 @@ class UpdateDlg(adm.Dialog):
           msg.append(xlt("Update info as of %s:") % status)
           #msg.append("")
           alerts=self.onlineUpdateInfo.getElements('alert')
-          if alerts:
-            alert=alerts[0].getText()
-            if alert.strip():
-              msg.append(alert)
           modules=self.onlineUpdateInfo.getElements('module')
           
           for module in modules:
@@ -346,6 +343,11 @@ class UpdateDlg(adm.Dialog):
           logger.exception("Online update information invalid", str(ex))
           msg=[xlt("Online update information invalid.")]
           return False
+        if alerts and haveUpdate:
+          alert=alerts[0].getText()
+          if alert.strip():
+            msg.append(alert)
+            
         if haveUpdate and canUpdate:
           msg.insert(1, xlt("An update is available."))
         else:
