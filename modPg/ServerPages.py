@@ -78,7 +78,7 @@ class StatisticsPage(adm.NotebookPage):
 def _getSelectedPids(page):
   pids=page.GetSelected()
   try:
-    pids.remove(str(page.pid))
+    pass # pids.remove(str(page.pid))
   except:
     pass
   return pids
