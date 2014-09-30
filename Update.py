@@ -340,8 +340,9 @@ class UpdateDlg(adm.Dialog):
                     msg.append(xlt("  %(name)s: %(old)s DOWNGRADE to %(new)s, please check") % info)
               
         except Exception as ex:
-          logger.exception("Online update information invalid", str(ex))
+          logger.exception("Online update information invalid: %s", str(ex))
           msg=[xlt("Online update information invalid.")]
+          self.ModuleInfo = "\n".join(msg)
           return False
         if alerts and haveUpdate:
           alert=alerts[0].getText()
