@@ -1,9 +1,11 @@
+Changes in 2.1.8
 Core:
 - shlexSplit
 
 modPg 0.5.4:
-- Sequences
+- minimal Sequence support
 - GrantCommentSql
+- Favourites fix
 
 modLdap 0.95.7:
 - fix crash when a duplicated attribute is deleted
