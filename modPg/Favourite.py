@@ -73,39 +73,46 @@ class Favourite(adm.Node):
     instances=[]
     db=parentNode.parentNode
     if db.favourites:
+      schemaOids=db.GetCursor().ExecuteList("SELECT DISTINCT relnamespace FROM pg_class WHERE oid IN (%s)" % ",".join(map(str, db.favourites)))
       coll=db.GetCollection(Schema)
       coll.PopulateChildren()
-
+      schemanodes=[]
+      schemaOids=db.GetCursor().ExecuteList("SELECT DISTINCT relnamespace FROM pg_class WHERE oid IN (%s)" % ",".join(map(str, db.favourites)))
       for schema in coll.childnodes:
-        schema.PopulateChildren()
+        if schema.GetOid() in schemaOids:
+          schemanodes.append(schema)
+          schema.PopulateChildren()
+
+      for schema in schemanodes:
         tables=schema.GetCollection(Table)
         for oid in db.favourites:
           t=tables.FindNode(Table, str(oid))
           if t:
             instances.append(t)
         
-        for schema in coll.childnodes:
-          views=schema.GetCollection(View)
-          if views:
-            for oid in db.favourites:
-              v=views.FindNode(View, str(oid))
-              if v:
-                instances.append(v)
-        for schema in coll.childnodes:
-          funcs=schema.GetCollection(Function)
-          if funcs:
-            for oid in db.favourites:
-              f=funcs.FindNode(Function, str(oid))
-              if f:
-                instances.append(f)
+      for schema in schemanodes:
+        views=schema.GetCollection(View)
+        if views:
+          for oid in db.favourites:
+            v=views.FindNode(View, str(oid))
+            if v:
+              instances.append(v)
 
-        for schema in coll.childnodes:
-          sequences=schema.GetCollection(Sequence)
-          if sequences:
-            for oid in db.favourites:
-              s=sequences.FindNode(Sequence, str(oid))
-              if s:
-                instances.append(s)
+      for schema in schemanodes:
+        funcs=schema.GetCollection(Function)
+        if funcs:
+          for oid in db.favourites:
+            f=funcs.FindNode(Function, str(oid))
+            if f:
+              instances.append(f)
+      
+      for schema in schemanodes:
+        sequences=schema.GetCollection(Sequence)
+        if sequences:
+          for oid in db.favourites:
+            s=sequences.FindNode(Sequence, str(oid))
+            if s:
+              instances.append(s)
 
     return instances
   
