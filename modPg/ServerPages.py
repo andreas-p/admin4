@@ -860,13 +860,17 @@ class InstrumentConfig:
   @staticmethod
   def GetInstrumentQuery(server):
     if server.version >= 8.1 and server.version < 9.4:
-      sql="""SELECT 'admin4.instrumentation', 'ok' FROM pg_settings WHERE name='custom_variable_classes' and setting='admin4'
-             UNION
-             SELECT 'postgresql.auto.conf', CASE WHEN 'postgresql.auto.conf' IN 
-                   (SELECT pg_ls_dir(setting) FROM pg_settings where name='data_directory') THEN 'ok' ELSE '' END
-             UNION
-             SELECT 'adminpack', 'adminpack' FROM pg_proc
-              WHERE proname='pg_file_write' AND pronamespace=11"""
+      sql="""
+               SELECT 'admin4.instrumentation', 'ok'
+               FROM pg_settings 
+               WHERE name = 'config_file'
+                 AND pg_read_file(setting, -30, 30) LIKE '%postgresql.auto.conf%'\n
+               UNION
+               SELECT 'postgresql.auto.conf', CASE WHEN 'postgresql.auto.conf' IN 
+                     (SELECT pg_ls_dir(setting) FROM pg_settings where name='data_directory') THEN 'ok' ELSE '' END
+               UNION
+               SELECT 'adminpack', 'adminpack' FROM pg_proc
+                WHERE proname='pg_file_write' AND pronamespace=11"""
       if server.version >= 9.1:
         sql += """UNION
               SELECT 'adminpack-extension', 'adminpack-extension'
