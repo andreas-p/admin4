@@ -370,8 +370,8 @@ class UpdateDlg(adm.Dialog):
         zip.extractall(tmpDir)
         zip.close()
       except Exception as _e:
-        self.ModuleInfo = xlt("Error extracting\n%s") % self.Source
-        logger.exception("Error extracting %s", self.Source)
+        self.ModuleInfo = xlt("Error extracting\n%s") % source
+        logger.exception("Error extracting %s", source)
         return False
 
       source = os.path.join(tmpDir, zipDir)
@@ -413,7 +413,7 @@ class UpdateDlg(adm.Dialog):
         return None
       
       source=os.path.join(tmpDir, "Admin4-OnlineUpdate-Src.zip")
-      f=open(source, "w")
+      f=open(source, "wb")
       f.write(content)
       f.close()
       return source
