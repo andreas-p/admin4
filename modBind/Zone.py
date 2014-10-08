@@ -8,7 +8,8 @@ import adm, wx, wx.grid as wxGrid
 import logger
 import time
 from Validator import Validator
-from wh import xlt, floatToTime, timeToFloat, Menu
+from wh import xlt, floatToTime, timeToFloat, Menu, shlexSplit, removeSmartQuote,\
+  quoteIfNeeded
 from _dns import Rdataset, Rdata, RdataClass, rdatatype, rdataclass, rcode
 from _dns import Name, DnsName, DnsAbsName, DnsRevName, DnsRevAddress, DnsSupportedTypes, checkIpAddress
 from Server import Server
@@ -570,7 +571,7 @@ class SingleValRecords(Record):
       for rd in self.rds:
         value=eval("rd.%s" % rd.__slots__[0])
         if isinstance(value, list):
-          value=" ".join(value)
+          value=" ".join(map(quoteIfNeeded, value))
         vlist.append(str(value))
       self.value="\n".join(vlist)
     else:
@@ -600,7 +601,8 @@ class SingleValRecords(Record):
       if not value:
         continue
       if self.dataclass == list:
-        data=value.split(' ')
+        value=removeSmartQuote(value)
+        data=shlexSplit(value, ' ')
       else:
         data=self.dataclass(value)
       if not rds:

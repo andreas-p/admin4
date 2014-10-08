@@ -1,3 +1,16 @@
+Changes
+
+Core: 
+- removeSmartQuote, quoteIfNeeded
+
+modPg 0.5.5:
+- optimize Favourites speed
+
+modBind 0.98.5:
+- Allow values with spaces as single string using quotes
+
+
+
 Changes in 2.1.8
 Core:
 - shlexSplit

@@ -28,6 +28,7 @@
               <pos>50,5d</pos>
               <size>80,-1d</size>
             </object>
+            <flag>wxGROW</flag>
           </object>
           <object class="sizeritem">
             <object class="wxStaticText">
@@ -41,8 +42,9 @@
           </object>
           <vgap>10</vgap>
           <hgap>10</hgap>
+          <growablecols>1</growablecols>
         </object>
-        <flag>wxALL</flag>
+        <flag>wxALL|wxEXPAND|wxGROW</flag>
         <border>10</border>
       </object>
       <object class="sizeritem">
@@ -74,5 +76,6 @@
         <border>10</border>
       </object>
     </object>
+    <style>wxCAPTION|wxRESIZE_BORDER|wxCLOSE_BOX</style>
   </object>
 </resource>

@@ -77,6 +77,6 @@
       </object>
     </object>
     <size>150,110d</size>
-    <style>wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER</style>
+    <style>wxCAPTION|wxRESIZE_BORDER|wxCLOSE_BOX</style>
   </object>
 </resource>
