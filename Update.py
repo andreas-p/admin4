@@ -295,9 +295,12 @@ class UpdateDlg(adm.Dialog):
           self.updateUrl=el.getText().strip()
           self.updateZipHash=el.getAttribute('sha1')
           el=self.onlineUpdateInfo.getElement('minorUpdateUrl')
-          if el:  self.minorUpdateUrl=el.getText().strip()
-          else:   self.minorUpdateUrl=None
-          self.minorUpdateZipHash=el.getAttribute('sha1')
+          if el:
+            self.minorUpdateUrl=el.getText().strip()
+            self.minorUpdateZipHash=el.getAttribute('sha1')
+          else:
+            self.minorUpdateUrl=self.updateUrl
+            self.minorUpdateZipHash=self.updateZipHash
           status=self.onlineUpdateInfo.getElementText('status')
 
           msg.append(xlt("Update info as of %s:") % status)
