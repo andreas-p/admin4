@@ -9,6 +9,8 @@ modPg 0.5.5:
 modBind 0.98.5:
 - Allow values with spaces as single string using quotes
 
+modLdap 0.95.8:
+- fix Samba code
 
 
 Changes in 2.1.8

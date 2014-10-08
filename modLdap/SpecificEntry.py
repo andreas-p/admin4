@@ -105,7 +105,8 @@ class SpecificEntry(adm.NotebookPanel):
                 ctl.labelCtl.Disable()
 
         elif "objectclass" in ctl.flags:
-          ctl.SetValue(self.dialog.HasObjectClass(ctl.name))
+          hasClass=self.dialog.HasObjectClass(ctl.name)
+          ctl.SetValue(hasClass)
           self.OnCheckObjectClass(ctl)
 
 

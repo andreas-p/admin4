@@ -155,7 +155,7 @@ class SambaAccount(SpecificEntry, _SambaRidObject):
       return
 
     if self.dialog.node and self.sambaDomainName:
-      if self.sambaSid:
+      if len(self.sambaSid) > 15:
         ss=self.sambaSid.split('-')
         self.sambaDomainSid="-".join(ss[:1])
         self.sambaRid = ss[7]
@@ -192,7 +192,7 @@ class SambaAccount(SpecificEntry, _SambaRidObject):
         self['sambaPrimaryGroupSID'].AppendKey(sid, info['cn'][0])
 
     self.dialog.SetValue("sambaDomainName", self.sambaDomainName)
-    self.dialog.sambaDomainName=self.domainName
+    self.dialog.sambaDomainName=self.sambaDomainName
     if self.sambaRid:
       self.OnRidChange(ev)
     elif ev:
