@@ -486,6 +486,26 @@ def xlt(s): # translate
   return t
 
 
+def removeSmartQuote(txt):
+  """
+  removeSmartQuote(txt):
+  
+  Changes typographic quotation marks back to straight ones
+  """
+  return txt.replace(unichr(0x201c), '"').replace(unichr(0x201d), '"').replace(unichr(0x2018), "'").replace(unichr(0x2019), "'")
+
+
+def quoteIfNeeded(txt, quoteChar='"'):
+  """
+  quoteIfNeededtxt)
+  
+  surrounds txt with quotes if txt includes spaces or the quote char
+  """
+  if txt.find(quoteChar) or txt.find(' '):
+    return "%s%s%s" % (quoteChar, txt.replace(quoteChar, "\\%s" % quoteChar), quoteChar)
+  return txt
+
+  
 def shlexSplit(str, sep):
   """
   shlexSplit(str, sep)
