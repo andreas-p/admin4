@@ -1,6 +1,10 @@
 Changes:
 Core:
-- use wx 3.0.1 on Windows
+- prepare to use wx 3.0.1.1 on Windows
+- fix png iCCS msgbox
+
+modLdap 0.95.9:
+- ldap group member candidate fix
 
 Changes in 2.1.9
 Core: 
