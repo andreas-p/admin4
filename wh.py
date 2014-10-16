@@ -361,7 +361,8 @@ def GetBitmap(name, module=None):
   for ext in ["png"]:
     fn="%s.%s" % (name, ext)
     if os.path.exists(fn):
-      return wx.Bitmap(fn)
+      with wx.LogNull():
+        return wx.Bitmap(fn)
 
   for ext in ["xpm"]:
     fn="%s.%s" % (name, ext)
@@ -525,46 +526,47 @@ def copytree(src, dst, symlinks=False, ignore=None, replace=True):
   """
   names = os.listdir(src)
   if ignore is not None:
-      ignored_names = ignore(src, names)
+    ignored_names = ignore(src, names)
   else:
-      ignored_names = set()
+    ignored_names = set()
 
   if not replace or not os.path.exists(dst):
     os.makedirs(dst)
 
   errors = []
   for name in names:
-      if name in ignored_names:
-          continue
-      srcname = os.path.join(src, name)
-      dstname = os.path.join(dst, name)
-      try:
-          if symlinks and os.path.islink(srcname):
-              linkto = os.readlink(srcname)
-              os.symlink(linkto, dstname)
-          elif os.path.isdir(srcname):
-              copytree(srcname, dstname, symlinks, ignore, replace)
-          else:
-              # Will raise a SpecialFileError for unsupported file types
-              if replace and os.path.exists(dstname):
-                os.unlink(dstname)
-              shutil.copy2(srcname, dstname)
-      # catch the Error from the recursive copytree so that we can
-      # continue with other files
-      except shutil.Error, err:
-          errors.extend(err.args[0])
-      except EnvironmentError, why:
-          errors.append((srcname, dstname, str(why)))
-  try:
-      shutil.copystat(src, dst)
-  except OSError, why:
-      if shutil.WindowsError is not None and isinstance(why, shutil.WindowsError):
-          # Copying file access times may fail on Windows
-          pass
+    if name in ignored_names:
+      continue
+    srcname = os.path.join(src, name)
+    dstname = os.path.join(dst, name)
+    try:
+      if symlinks and os.path.islink(srcname):
+        linkto = os.readlink(srcname) # @UndefinedVariable
+        os.symlink(linkto, dstname)   # @UndefinedVariable 
+      elif os.path.isdir(srcname):
+        copytree(srcname, dstname, symlinks, ignore, replace)
       else:
-          errors.append((src, dst, str(why)))
+        # Will raise a SpecialFileError for unsupported file types
+        if replace and os.path.exists(dstname):
+          os.unlink(dstname)
+        shutil.copy2(srcname, dstname)
+    # catch the Error from the recursive copytree so that we can
+    # continue with other files
+    except shutil.Error, err:
+      errors.extend(err.args[0])
+    except EnvironmentError, why:
+      errors.append((srcname, dstname, str(why)))
+  try:
+    shutil.copystat(src, dst)
+  except OSError, why:
+    if shutil.WindowsError is not None and isinstance(why, shutil.WindowsError):
+      # Copying file access times may fail on Windows
+      pass
+    else:
+      errors.append((src, dst, str(why)))
   if errors:
-      raise shutil.Error, errors
+    raise shutil.Error, errors
+
 
 class ParamDict(dict):
   def __init__(self, str=None):
