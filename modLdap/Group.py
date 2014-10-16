@@ -280,10 +280,19 @@ class Group(SpecificEntry):
 
     candidates=[]
     for _dn, info in res:
-      name=info.get("displayName", info.get("cn"))[0]
       uid=info['uid'][0]
+      name=info.get("displayName")
+      if not name:
+        name=info.get('cn')
+      if name:
+        name=name[0]
       if lv.FindItem(-1, uid) < 0:
-        candidates.append("%s %s" % (uid, name))
+        if uid == name:
+          candidates.append(uid)
+        else:
+          candidates.append("%s %s" % (uid, name))
+    candidates.sort(key=unicode.lower)
+    
     dlg=wx.MultiChoiceDialog(self, xlt("Add member"), xlt("Add member to group"), candidates)
     if dlg.ShowModal() == wx.ID_OK:
       uids=[]
