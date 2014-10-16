@@ -1,5 +1,8 @@
-Changes in 2.1.9
+Changes:
+Core:
+- use wx 3.0.1 on Windows
 
+Changes in 2.1.9
 Core: 
 - Fix binary download in online update
 - removeSmartQuote, quoteIfNeeded

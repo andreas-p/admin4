@@ -8,24 +8,28 @@
 import sys
 if not hasattr(sys, 'frozen'):
   import wxversion
-  import platform
-  if platform.system() == "Windows":
-    wxversion._EM_DEBUG=True
-    try:
-      # the initial 3.0 release has a defective wx.propgrid module on windows
-      wxversion.ensureMinimal("3.0.0")
-    except:
-      wxversion.select("2.9.4")
-  elif platform.system() == "Darwin":
-    try:
-      # the initial 3.0 release has a defective wx.Dialog.ShowModal behavior
-      wxversion._EM_DEBUG=True
-      wxversion.ensureMinimal("3.0.0")
-    except:
-      wxversion.select("2.9.4")
+  import os, platform
+  wxversion._EM_DEBUG=True
+  
+  if platform.system() == "Darwin":
+    wxversion.select('2.9.4')
   else:
-    wxversion.select("3.0")
-
+    wxversion.ensureMinimal("3.0")
+  
+    if platform.system() == "Windows":
+      minVersion="3.0.1.1"
+      for iv in wxversion._find_installed():
+        ver=os.path.basename(iv.pathname).split('-')[1]
+        if ver >= minVersion:
+          break
+        if ver >= '3.0':
+          for f in os.listdir(iv.pathname):
+            if f.endswith('.egg-info'):
+              ver=f.split('-')[1]
+              if ver >= minVersion:
+                break
+              else:
+                raise wxversion.VersionError('wxPython minimum usable version is %s' % minVersion)
 
 try:
   from __version import *
