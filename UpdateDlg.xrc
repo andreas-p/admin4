@@ -3,7 +3,7 @@
   <object class="wxDialog" name="UpdateDlg">
     <title>Update</title>
     <centered>1</centered>
-    <style>wxCAPTION|wxCLOSE_BOX</style>
+    <style>wxCAPTION|wxRESIZE_BORDER|wxCLOSE_BOX</style>
     <object class="wxBoxSizer">
       <orient>wxVERTICAL</orient>
       <object class="sizeritem">
@@ -74,13 +74,15 @@
           <orient>wxVERTICAL</orient>
           <object class="sizeritem">
             <object class="wxTextCtrl" name="ModuleInfo">
-              <size>150, 55d</size>
+              <size>150, 85d</size>
               <style>wxTE_MULTILINE|wxTE_READONLY</style>
             </object>
+            <option>1</option>
             <flag>wxEXPAND</flag>
             <minsize>150, 55d</minsize>
           </object>
         </object>
+        <option>1</option>
         <flag>wxBOTTOM|wxLEFT|wxRIGHT|wxGROW</flag>
         <border>10</border>
       </object>
