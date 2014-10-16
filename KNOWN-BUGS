@@ -6,6 +6,7 @@ Mac OSX
 - http://trac.wxwidgets.org/ticket/16204  ShowModal regression in 3.0 (still present in 3.0.1.1)
 - http://trac.wxwidgets.org/ticket/16268  no wx.CANCEL_DEFAULT (OSX restriction)
 - http://trac.wxwidgets.org/ticket/14523  Installation needs signing (fixed in 3.0.1.1)
+- wxTreeCtrl.EnsureVisible not working on with 2.9.4 (3.0.1 not tested)
 
 psycopg2
 - doesn't handle unicode as expected, http://initd.org/psycopg/docs/usage.html#unicode-handling won't work
