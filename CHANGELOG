@@ -6,6 +6,10 @@ Core:
 modLdap 0.95.9:
 - ldap group member candidate fix
 
+modPg 0.5.6:
+- sslmode in connectString was missing
+
+
 Changes in 2.1.9
 Core: 
 - Fix binary download in online update

@@ -56,6 +56,7 @@ class Server(adm.ServerNode):
             ('user', user),
             ('password', password),
             ('connect_timeout', 3),
+            ('sslmode', self.settings['security']),
             ('client_encoding', 'UTF8'),
             ('application_name', application)
             ]
