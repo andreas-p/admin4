@@ -2,6 +2,8 @@ Changes:
 Core:
 - prepare to use wx 3.0.1.1 on Windows
 - fix png iCCS msgbox
+- fix shlexSplit with None Argument
+- remove module load restriction from config
 
 modLdap 0.95.9:
 - ldap group member candidate fix

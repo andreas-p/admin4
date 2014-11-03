@@ -513,6 +513,8 @@ def shlexSplit(str, sep):
   
   split string by separator, observing quotes
   """
+  if not str:
+    return []
   lex=shlex(str, posix=True)
   lex.whitespace=sep
   lex.commenters=''

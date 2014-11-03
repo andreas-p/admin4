@@ -290,8 +290,8 @@ def main(argv):
     app.SetVendorDisplayName(vendorDisplay)
 
   
-  if not modules:
-    modules=adm.config.Read("Modules", [])
+#  if not modules:
+#    modules=adm.config.Read("Modules", [])
   if not modules:
     dot=adm.appname.find('-')
     if dot>0:
