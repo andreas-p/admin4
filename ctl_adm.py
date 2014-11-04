@@ -292,7 +292,7 @@ class ListView(wx.ListView):
       val=list(val)
 
     for col in range(len(val)):
-      self.SetItemText(row, col, unicode(val[col]))
+      self.SetStringItem(row, col, unicode(val[col]))
     if image != None:
       self.SetItemImage(row, image)
 
