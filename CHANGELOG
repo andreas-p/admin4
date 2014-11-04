@@ -11,6 +11,9 @@ modLdap 0.95.9:
 modPg 0.5.6:
 - sslmode in connectString was missing
 
+modImap 0.5.0:
+- new
+
 
 Changes in 2.1.9
 Core: 

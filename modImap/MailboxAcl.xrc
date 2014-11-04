@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource>
+  <object class="wxDialog" name="MailboxAcl">
+    <title></title>
+    <object class="wxBoxSizer">
+      <orient>wxVERTICAL</orient>
+      <object class="sizeritem">
+        <object class="wxFlexGridSizer">
+          <object class="sizeritem">
+            <object class="wxStaticText">
+              <label>User</label>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxComboBox" name="User">
+              <content/>
+            </object>
+          </object>
+          <cols>2</cols>
+          <rows>2</rows>
+          <object class="sizeritem">
+            <object class="wxBoxSizer">
+              <orient>wxVERTICAL</orient>
+              <object class="sizeritem">
+                <object class="wxStaticText">
+                  <label>Rights</label>
+                </object>
+              </object>
+              <object class="spacer">
+                <option>1</option>
+                <flag>wxEXPAND</flag>
+              </object>
+              <object class="sizeritem">
+                <object class="wxButton" name="RoRights">
+                  <label>Read only</label>
+                </object>
+                <flag>wxTOP</flag>
+                <border>5d</border>
+              </object>
+              <object class="sizeritem">
+                <object class="wxButton" name="RwRights">
+                  <label>Read/write</label>
+                </object>
+                <flag>wxTOP</flag>
+                <border>5d</border>
+              </object>
+              <object class="sizeritem">
+                <object class="wxButton" name="AllRights">
+                  <label>All</label>
+                </object>
+                <flag>wxTOP</flag>
+                <border>5d</border>
+              </object>
+              <object class="sizeritem">
+                <object class="wxButton" name="NoRights">
+                  <label>None</label>
+                </object>
+                <flag>wxTOP</flag>
+                <border>5d</border>
+              </object>
+            </object>
+            <option>1</option>
+            <flag>wxEXPAND</flag>
+          </object>
+          <object class="sizeritem">
+            <object class="wxCheckListBox" name="Rights">
+              <content/>
+              <size>120,150d</size>
+            </object>
+            <option>1</option>
+            <flag>wxEXPAND|wxGROW</flag>
+          </object>
+          <vgap>5d</vgap>
+          <hgap>5d</hgap>
+          <growablerows>1</growablerows>
+          <growablecols>1</growablecols>
+        </object>
+        <option>1</option>
+        <flag>wxTOP|wxLEFT|wxRIGHT|wxEXPAND</flag>
+        <border>5d</border>
+      </object>
+      <object class="sizeritem">
+        <object class="wxBoxSizer">
+          <orient>wxHORIZONTAL</orient>
+          <object class="spacer">
+            <option>1</option>
+            <flag>wxEXPAND</flag>
+          </object>
+          <object class="sizeritem">
+            <object class="wxButton" name="Cancel">
+              <label>Cancel</label>
+              <pos>40,130d</pos>
+              <size>45,-1d</size>
+            </object>
+            <flag>wxRIGHT</flag>
+            <border>10</border>
+          </object>
+          <object class="sizeritem">
+            <object class="wxButton" name="OK">
+              <label>OK</label>
+              <pos>95,130d</pos>
+              <size>45,-1d</size>
+            </object>
+          </object>
+        </object>
+        <flag>wxTOP|wxBOTTOM|wxRIGHT|wxEXPAND</flag>
+        <border>10</border>
+      </object>
+      <object class="sizeritem">
+        <object class="unknown" name="StatusBar"/>
+      </object>
+    </object>
+    <style>wxCAPTION|wxCLOSE_BOX</style>
+  </object>
+</resource>
