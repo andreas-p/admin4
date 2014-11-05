@@ -13,13 +13,20 @@ class Mailbox(adm.Node):
   typename="IMAP Mailbox"
   shortname="Mailbox"
   
+
+  def splitMbInfo(self, line):
+    parts=shlexSplit(line, ' ')
+    separator=parts[-2]
+    mailbox=parts[-1]
+    flags=parts[:-2]
+    flags[0] = flags[0][1:]
+    flags[-1] = flags[-1][:-1]
+    return (mailbox, separator, flags)
   
-  def __init__(self, parentNode, name, separator, flags):
-    super(Mailbox, self).__init__(parentNode, name)
-    self.flags=flags
-    self.separator=separator
-    self.mailboxPath=name
-    parts=shlexSplit(name, self.separator)
+  def __init__(self, parentNode, line):
+    self.mailboxPath, self.separator, self.flags = self.splitMbInfo(line)
+    super(Mailbox, self).__init__(parentNode, self.mailboxPath)
+    parts=shlexSplit(self.mailboxPath, self.separator)
     if len(parts) > 1:
       self.name=parts[-1]
       if len(parts) == 2 and parts[0] == "user":
@@ -28,10 +35,12 @@ class Mailbox(adm.Node):
 
   def GetIcon(self):
     
-    if "Noselect" in self.flags:  icon="MailboxNoselect"
+    if 'Noselect' in self.flags:  icon="MailboxNoselect"
     else:                         icon="Mailbox"
     return self.GetImageId(icon)
     
+  def MayHaveChildren(self):
+    return 'HasChildren' in self.flags
 
   @staticmethod 
   def GetInstances(parentNode):
@@ -44,21 +53,19 @@ class Mailbox(adm.Node):
     mblist=parentNode.GetConnection().List("", pattern)
     if mblist:
       for line in mblist:
-        parts=shlexSplit(line, ' ')
-        separator=parts[-2]
-        mailbox=parts[-1]
-        flags=parts[:-2]
-        flags[0] = flags[0][1:]
-        flags[-1] = flags[-1][:-1]
-        instances.append(Mailbox(parentNode, mailbox, separator, flags))
+        instances.append(Mailbox(parentNode, line))
 
     return instances
   
 
-  def RefreshVolatile(self, _force=False):
+  def RefreshVolatile(self, force=False):
     self.acl=self.GetConnection().GetAcl(self.mailboxPath)
     self.annotations=self.GetConnection().GetAnnotations(self.mailboxPath)
     self.myrights=self.GetConnection().MyRights(self.mailboxPath)
+    if force:
+      mblist=self.GetConnection().List("", self.mailboxPath)
+      if mblist:
+        _, self.separator, self.flags = self.splitMbInfo(mblist[0])
 
 
   def GetProperties(self):
@@ -313,6 +320,8 @@ class Mailbox(adm.Node):
           # delete remaining acls
           ok=c.DelAcl(mailboxPath, user)
           if not ok:  return False
+        if self.node:
+          self.parentNode.Refresh()
       return ok
       
   @staticmethod
