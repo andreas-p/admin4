@@ -9,6 +9,7 @@ import ssl
 import imaplib
 import adm
 from wh import shlexSplit
+import logger
 
 imaplib.Commands['STARTTLS'] ='NONAUTH'
 #imaplib.Commands['ID'] ='NONAUTH'
@@ -162,6 +163,34 @@ class ImapServer(imaplib.IMAP4_SSL):
     rc= self.getresult(self.delete(mailbox))
     return rc
 
+  def Reconstruct(self, mailbox, recursive):
+    if recursive:
+      res=self.xatom("RECONSTRUCT", self._quote(mailbox), "RECURSIVE")
+    else:
+      res=self.xatom("RECONSTRUCT", self._quote(mailbox))
+    print res
+    return self.getresult(res)
+  
+  
+  def GetQuota(self, mailbox):
+    res=self.getresult(self.getquotaroot(mailbox))
+    quotas={}
+    if res and len(res) == 2:
+      for quota in res[1]:
+        parts=shlexSplit(quota, ' ')
+        if len(parts) > 3:
+          root=parts[0]
+          resource=parts[-3][1:]
+          filled=int(parts[-2])
+          total=int(parts[-1][:-1])
+          if resource == 'STORAGE':
+            filled *= 1024
+            total *= 1024
+          quotas[resource] = (root, filled, total)
+        return quotas
+    return None
+  
+  
   def List(self, directory, pattern):
     res=self.getresult(self.list(directory, pattern))
     if res and len(res) == 1 and res[0] == None:

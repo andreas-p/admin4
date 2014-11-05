@@ -6,7 +6,7 @@
 
 
 import adm
-from wh import shlexSplit, xlt, Menu
+from wh import shlexSplit, xlt, Menu, floatToSize
 import wx
 
 class Mailbox(adm.Node):
@@ -63,6 +63,7 @@ class Mailbox(adm.Node):
     self.acl=self.GetConnection().GetAcl(self.mailboxPath)
     self.annotations=self.GetConnection().GetAnnotations(self.mailboxPath)
     self.myrights=self.GetConnection().MyRights(self.mailboxPath)
+    self.quota = self.GetConnection().GetQuota(self.mailboxPath)
     if force:
       mblist=self.GetConnection().List("", self.mailboxPath)
       if mblist:
@@ -84,14 +85,26 @@ class Mailbox(adm.Node):
       sz=self.annotations.Get('/size')
       if sz != None:
         self.AddSizeProperty(xlt("Size"), sz)
-
-      self.AddProperty(xlt("Last update"), self.annotations.Get('/lastupdate'))
-      chk=(self.annotations.Get('/check') ==  "true")
-      self.AddYesNoProperty(xlt("Check"), chk)
-      if chk:
-        self.AddProperty(xlt("Check period"), self.annotations.Get('/checkperiod'))
       
-          
+      lu=self.annotations.Get('/lastupdate')
+      if lu:
+        self.AddProperty(xlt("Last update"), lu.strip())
+# need that?
+#      chk=(self.annotations.Get('/check') ==  "true")
+#      self.AddYesNoProperty(xlt("Check"), chk)
+#      if chk:
+#        self.AddProperty(xlt("Check period"), self.annotations.Get('/checkperiod'))
+
+      if self.quota:
+        items=[]
+        for resource, quota in self.quota.items():
+          root, filled, total = quota
+          if root == self.mailboxPath:
+            items.append(xlt("%s: %s of %s") % (resource, floatToSize(filled, 1024), floatToSize(total, 1024)))
+          else:
+            items.append(xlt("%s: %s of %s  (root %s)") % (resource, floatToSize(filled, 1024), floatToSize(total, 1024), root) )
+        self.AddChildrenProperty(items, xlt("Quota"), -1)
+
       if self.acl:
         imageid=self.GetImageId("User")
         for user, acl in self.acl.items():
@@ -316,11 +329,16 @@ class Mailbox(adm.Node):
           else:
             # add ACL
             ok=c.SetAcl(mailboxPath, user, acl)
-          if not ok:  return False
+          if not ok:
+            break
         for user in self.oldAcl:
           # delete remaining acls
           ok=c.DelAcl(mailboxPath, user)
-          if not ok:  return False
+          if not ok:  break
+        if not ok:
+          self.SetStatus("Save error: %s" % self.GetServer().GetLastError())
+          return False
+        
         if self.node:
           self.parentNode.Refresh()
       return ok
@@ -335,7 +353,24 @@ class Mailbox(adm.Node):
   def Delete(self):
     rc=self.GetConnection().DeleteMailbox(self.mailboxPath)
     return rc != None
+
+class MailboxReconstruct:
+  name=xlt("Reconstruct")
+  help=xlt("Reconstruct mailbox")
   
+  @staticmethod
+  def CheckEnabled(node):
+    return 'Noselect' not in node.flags
+  
+  @staticmethod
+  def OnExecute(_parentWin, node):
+    recursive=True # TODO ask
+    return node.GetConnection().Reconstruct(node.mailboxPath, recursive) != None
+
+  
+menuinfo=[
+# TODO not working?        {'class': MailboxReconstruct, 'nodeclasses': Mailbox, 'sort': 20 },
+        ]
   
 nodeinfo= [ 
            { "class": Mailbox, "parents": ["Server", "Mailbox"], "sort": 10, "pages": "" },

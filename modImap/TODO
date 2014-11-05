@@ -1,10 +1,6 @@
 - set acl to x before deleting (checkbox)
 
-if requested:
-- quota support
-
+- setquota
 
 no plans:
 - get/set other mailbox and server annotations
-- 
-RECONSTRUCT mailbox [RECURSIVE]
