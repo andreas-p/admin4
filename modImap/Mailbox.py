@@ -24,13 +24,14 @@ class Mailbox(adm.Node):
     return (mailbox, separator, flags)
   
   def __init__(self, parentNode, line):
-    self.mailboxPath, self.separator, self.flags = self.splitMbInfo(line)
-    super(Mailbox, self).__init__(parentNode, self.mailboxPath)
+    name, self.separator, self.flags = self.splitMbInfo(line)
+    self.mailboxPath=name
     parts=shlexSplit(self.mailboxPath, self.separator)
     if len(parts) > 1:
-      self.name=parts[-1]
-      if len(parts) == 2 and parts[0] == "user":
-        self.GetServer().userList.append(self.name)
+      name=parts[-1]
+    super(Mailbox, self).__init__(parentNode, name)
+    if len(parts) == 2 and parts[0] == "user":
+      self.GetServer().userList.append(name)
 
 
   def GetIcon(self):
