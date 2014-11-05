@@ -3,6 +3,7 @@ Core:
 - prepare to use wx 3.0.1.1 on Windows
 - fix png iCCS msgbox
 - fix shlexSplit with None Argument
+- fix node Delete handling in frame 
 - remove module load restriction from config
 - imaplib added (lib 2.1.9)
 

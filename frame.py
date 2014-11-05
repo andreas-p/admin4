@@ -454,8 +454,10 @@ class DetailFrame(Frame):
 
       if node.Delete():
         node.RemoveFromTree()
-      self.SetStatus(xlt("%s \"%s\" deleted.") % (node.typename, node.name))
-
+        self.SetStatus(xlt("%s \"%s\" deleted.") % (node.typename, node.name))
+      else:
+        self.SetStatus(xlt("%s \"%s\" NOT deleted: %s.") % (node.typename, node.name, node.GetServer().GetLastError()))
+        
   def OnDisconnect(self, evt):
     node=self.tree.GetNode()
     if node and hasattr(node, "Disconnect"):
