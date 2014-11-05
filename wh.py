@@ -834,31 +834,37 @@ def prettySize(val):
     val=sizeToFloat(val)
   return floatToSize(val)
 
-def floatToSize(val):
-    if not val:
-      return "0"
+def floatToSize(val, resolution=0):
+  """
+  string floatToSize(val, resolution=0)
+  
+  formats and decorates <val>. <resolution> controls the decimal point.
+  """
+  if not val:
+    return "0"
 
-    unit=""
-    val = float(val)/ 1024.
-    if val < 2048:
-      unit="KiB"
+  unit=""
+  orgVal = float(val)
+  val = orgVal / 1024.
+  if val < 2048:
+    unit="KiB"
+  else:
+    val /= 1024.
+    if val < 1500:
+      unit="MiB"
     else:
       val /= 1024.
       if val < 1500:
-        unit="MiB"
+        unit="GiB"
       else:
         val /= 1024.
-        if val < 1500:
-          unit="GiB"
-        else:
-          val /= 1024.
-          unit="TiB"
-    if val < 15:
-      return "%0.02f %s" % (val, unit)
-    elif val < 150:
-      return "%0.01f %s" % (val, unit)
-    else:
-      return "%0.0f %s" % (val, unit)
+        unit="TiB"
+  if val < 15 and orgVal >= resolution*100:
+    return "%0.02f %s" % (val, unit)
+  elif val < 150 and val >= resolution*10:
+    return "%0.01f %s" % (val, unit)
+  else:
+    return "%0.0f %s" % (val, unit)
 
 
   
