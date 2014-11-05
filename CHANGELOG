@@ -4,6 +4,7 @@ Core:
 - fix png iCCS msgbox
 - fix shlexSplit with None Argument
 - remove module load restriction from config
+- imaplib added (lib 2.1.9)
 
 modLdap 0.95.9:
 - ldap group member candidate fix
