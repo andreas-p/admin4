@@ -4,6 +4,7 @@ Core:
 - fix png iCCS msgbox
 - fix shlexSplit with None Argument
 - fix node Delete handling in frame 
+- check node MayHaveChildren in tree.Refresh()
 - remove module load restriction from config
 - imaplib added (lib 2.1.9)
 

@@ -166,7 +166,7 @@ class NodeTreeCtrl(TreeCtrl):
     if node.treeitems.get(self.name) == None:
       node.treeitems[self.name] = []
     node.treeitems[self.name].append(item)
-    if self.autoChildren and node.MayHaveChildren():
+    if node.MayHaveChildren():
       self.SetItemHasChildren(item, True)
     for child in node.childnodes:
       self.Append(item, child)
@@ -197,6 +197,8 @@ class NodeTreeCtrl(TreeCtrl):
 
     self.SetItemText(item, node.GetLabelText())
     self.SetItemImage(item, node.GetIcon())
+    self.SetItemHasChildren(item, node.MayHaveChildren())
+      
     if item == self.GetSelection():
       fr=self.GetFrame()
       if fr and hasattr(fr, "details"):
