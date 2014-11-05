@@ -106,8 +106,8 @@
         <flag>wxTOP|wxBOTTOM|wxRIGHT|wxEXPAND</flag>
         <border>10</border>
       </object>
-      <object class="sizeritem">
-        <object class="unknown" name="StatusBar"/>
+      <object class="spacer">
+        <size>12,12d</size>
       </object>
     </object>
     <style>wxCAPTION|wxCLOSE_BOX</style>

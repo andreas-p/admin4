@@ -155,10 +155,12 @@ class ImapServer(imaplib.IMAP4_SSL):
     return self.getresult(self.create(mailbox))
   
   def RenameMailbox(self, oldmailbox, newmailbox):
-    self.getresult(self.rename(oldmailbox, newmailbox))
+    rc= self.getresult(self.rename(oldmailbox, newmailbox))
+    return rc
 
   def DeleteMailbox(self, mailbox):
-    self.getresult(self.delete(mailbox))
+    rc= self.getresult(self.delete(mailbox))
+    return rc
 
   def List(self, directory, pattern):
     res=self.getresult(self.list(directory, pattern))

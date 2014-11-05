@@ -6,7 +6,7 @@
 
 
 import adm
-from wh import shlexSplit, xlt
+from wh import shlexSplit, xlt, Menu
 import wx
 
 class Mailbox(adm.Node):
@@ -25,6 +25,13 @@ class Mailbox(adm.Node):
       if len(parts) == 2 and parts[0] == "user":
         self.GetServer().userList.append(self.name)
 
+
+  def GetIcon(self):
+    
+    if "Noselect" in self.flags:  icon="MailboxNoselect"
+    else:                         icon="Mailbox"
+    return self.GetImageId(icon)
+    
 
   @staticmethod 
   def GetInstances(parentNode):
@@ -94,23 +101,31 @@ class Mailbox(adm.Node):
                 'i': (xlt("insert"), xlt("add messages to mailbox")),
                 'p': (xlt("post"), xlt("send mail to submission address")),
                 'k': (xlt("create mailbox"), xlt("create mailbox or use as move mailbox target parent mailbox")),
-                'x': (xlt("delete mailbox"), xlt("delete mailbox or source parent for move operation")),
+                'x': (xlt("delete mailbox"), xlt("delete or move mailbox")),
                 't': (xlt("delete message"), xlt("set deleted flag")),
                 'e': (xlt("expunge"), xlt("expunge deleted messages from mailbox when closing")),
                 'a': (xlt("administer"), xlt("administer mailbox acl")),
-                'c': (xlt("create (obsolete)"), xlt("obsolete/implementation dependent for k or kx")),
-                'd': (xlt("delete (obsolete)"), xlt("obsolete/implementation dependent for xte or te")),
+                'c': (xlt("    create (obsolete)"), xlt("obsolete/implementation dependent for k or kx")),
+                'd': (xlt("    delete (obsolete)"), xlt("obsolete/implementation dependent for xte or te")),
                }
 
     rightList="lrswipkxteacd"
     
-    def Go(self, user=None, acl=None):
+    def Go(self, user=None, acl=None, knownUsers=None):
       self.User=user
+      self.knownUsers=knownUsers
+      self.statusbar.Show()
       if user:  self['User'].Disable()
       else:
-        self.Bind('User')
-        for user in self.node.GetServer().userList:
+        self.Bind('User Rights')
+#        self['Rights'].Bind(wx.EVT_CHECKLISTBOX, self.OnCheck)
+        sv=self.node.GetServer()
+        if sv.user not in sv.userList:
+          self['User'].Append(sv.user)
+           
+        for user in sv.userList:
           self['User'].Append(user)
+        self.SetUnchanged()
       
       self.Bind('RoRights', self.OnRoClick)
       self.Bind('RwRights', self.OnRwClick)
@@ -120,9 +135,10 @@ class Mailbox(adm.Node):
 
       
       for right in self.rightList:
-        i=self['Rights'].Append(xlt(self.rightDict[right][0]))
+        i=self['Rights'].Append("%s   %s" % (right, xlt(self.rightDict[right][0])))
         if acl and right in acl:
           self['Rights'].Check(i)
+      self.OnCheck()
 
     def OnMouseMoveRights(self, evt):
       pt=evt.GetPosition() - self['Rights'].GetPosition()
@@ -156,6 +172,9 @@ class Mailbox(adm.Node):
     def Check(self):
       user=self.User
       ok=self.CheckValid(True, user, xlt("No user selected"))
+      ok=self.CheckValid(ok, user not in self.knownUsers, xlt("User already has an acl"))
+      if self['User'].IsEnabled():
+        ok = self.CheckValid(ok, self['Rights'].GetChecked(), xlt("Select at least one right"))
       return ok
     
     def GetAcl(self):
@@ -171,7 +190,8 @@ class Mailbox(adm.Node):
       adm.PropertyDialog.__init__(self, parentWin, node, parentNode)
       self.Bind("MailboxName Comment")
       self['ACL'].Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.OnClickAcl)
-      self.Bind('AddAcl', self.OnClickAdd)
+      self['ACL'].Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK, self.OnRightClickAcl)
+      self.Bind('AddAcl', self.OnAddAcl)
       
     def Go(self):
       self['ACL'].CreateColumns(xlt("User"), xlt("ACL"), 15)
@@ -188,23 +208,55 @@ class Mailbox(adm.Node):
       self.SetUnchanged()
 
 
-    def OnClickAdd(self, evt):
-      self.OnClickAcl(None)
+    def OnRightClickAcl(self, evt):
+      cm=Menu(self)
+      cm.Add(self.OnAddAcl, xlt("Add"), xlt("Add user with rights"))
+      sel=self['ACL'].GetSelection()
+      if len(sel) == 1:
+        cm.Add(self.OnEditAcl, xlt("Edit"), xlt("Edit user's acl"))
+      if len(sel):
+        cm.Add(self.OnDelAcl, xlt("Delete"), xlt("Delete user acl"))
+      cm.Popup(evt)
+    
+    
+    def OnDelAcl(self, evt):
+      sel=self['ACL'].GetSelection()
+      sel.sort(reverse=True)
+      
+      for index in sel:
+        self['ACL'].DeleteItem(index)
+      self.OnCheck()
+        
+    
+    def OnEditAcl(self, evt):
+      sel=self['ACL'].GetSelection()
+      if len(sel) == 1:
+        self.editAcl(sel[0])
+      
+    def OnAddAcl(self, evt):
+      self.editAcl()
     
     def OnClickAcl(self, evt):
+        index=evt.Index
+        self.editAcl(index)
+
+    def editAcl(self, index=-1):
       dlg=Mailbox.MailboxAcl(self, self.parentNode)
       
       lbAcl=self['ACL']
-      if evt:
-        index=evt.Index
+      if index >= 0:
         user=lbAcl.GetItemText(index, 0)
         acl=lbAcl.GetItemText(index, 1)
         dlg.Go(user, acl)
       else:
-        dlg.Go()
+        lst=[]
+        for i in range(lbAcl.GetItemCount()):
+          lst.append(lbAcl.GetItemText(i, 0))
+        dlg.Go(None, None, lst)
+        
       if dlg.ShowModal() == wx.ID_OK:
+        acl=dlg.GetAcl()
         if index >= 0:
-          acl=dlg.GetAcl()
           if acl:
             lbAcl.SetStringItem(index, 1, acl)
           else:
@@ -212,7 +264,7 @@ class Mailbox(adm.Node):
         elif acl:
           lbAcl.AppendItem(-1, [dlg.User, acl])
 
-        self.OnCheck(evt)
+        self.OnCheck()
     
     def Check(self):
       ok=self.CheckValid(True, self.MailboxName, xlt("Name cannot be empty"))
@@ -231,7 +283,8 @@ class Mailbox(adm.Node):
           else:
             mailboxPath=self.MailboxName
           ok=c.RenameMailbox(self.node.mailboxPath, mailboxPath)  
-          
+          if ok:
+            self.refreshNode = self.node.parentNode
       else:
         if isinstance(self.parentNode, Mailbox):
           mailboxPath="%s%s%s" % (self.parentNode.mailboxPath, self.parentNode.separator, self.MailboxName)
@@ -270,8 +323,10 @@ class Mailbox(adm.Node):
     adm.DisplayDialog(self.Dlg, parentWin, self)
 
   def Delete(self):
-    return self.GetConnection().DeleteMailbox(self.mailboxPath)
-      
+    rc=self.GetConnection().DeleteMailbox(self.mailboxPath)
+    return rc != None
+  
+  
 nodeinfo= [ 
            { "class": Mailbox, "parents": ["Server", "Mailbox"], "sort": 10, "pages": "" },
            ]
