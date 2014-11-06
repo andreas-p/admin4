@@ -86,10 +86,7 @@ class Mailbox(adm.Node):
 
       self.AddProperty(xlt("My rights"), self.myrights)
       self.AddProperty(xlt("Comment"), self.annotations.Get('/comment'))
-      sz=self.annotations.Get('/size')
-      if sz != None:
-        self.AddSizeProperty(xlt("Size"), sz)
-      
+
       lu=self.annotations.Get('/lastupdate')
       if lu:
         self.AddProperty(xlt("Last update"), prettyDate(Internaldate2tuple(lu)))
@@ -99,6 +96,9 @@ class Mailbox(adm.Node):
 #      if chk:
 #        self.AddProperty(xlt("Check period"), self.annotations.Get('/checkperiod'))
 
+      sz=self.annotations.Get('/size')
+      if sz != None:
+        self.AddSizeProperty(xlt("Size"), sz)
       if self.quota:
         items=[]
         for resource, quota in self.quota.items():
