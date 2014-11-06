@@ -132,8 +132,8 @@ class NodeTreeCtrl(TreeCtrl):
     if node:
       node.RefreshVolatile()
       w=self.GetFrame()
-      cm=w.GetContextMenu(node)
       node.GetProperties()
+      cm=w.GetContextMenu(node)
       cm.Popup(evt)
 
   

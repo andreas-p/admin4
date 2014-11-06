@@ -602,7 +602,8 @@ class DetailFrame(Frame):
     contextMenu.AppendOneMenu(newmenu, xlt("New Object"), xlt("Creates a new object"))
 
     if hasattr(node, "Delete"):
-      contextMenu.Add(self.OnDelete, xlt("Delete %s") % node.shortname, xlt("Delete %s %s") % (node.typename,node.name))
+      if not hasattr(node, "deleteDisable") or not node.deleteDisable:
+        contextMenu.Add(self.OnDelete, xlt("Delete %s") % node.shortname, xlt("Delete %s %s") % (node.typename,node.name))
 
     if hasattr(node, "Disconnect"):
       contextMenu.Add(self.OnDisconnect, xlt("Disconnect %s") % node.name, xlt("Disconnect %s \"%s\"") % (node.typename,node.name))
