@@ -1,4 +1,4 @@
-Changes in 2.1.10
+Changes in 2.2.0
 Core:
 - prepare to use wx 3.0.1.1 on Windows
 - fix png iCCS msgbox
@@ -8,6 +8,7 @@ Core:
 - remove module load restriction from config
 - floatToSize() with resolution
 - imaplib added (lib 2.1.9)
+- Version() work
 
 modLdap 0.95.9:
 - ldap group member candidate fix

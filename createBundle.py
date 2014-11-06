@@ -294,7 +294,7 @@ if __name__ == '__main__':
                          name=appName,
                          author=version.author,
                          license=version.copyright,
-                         version=version.version,
+                         version=str(version.version),
                          options={'py2exe': {'packages': packages,
                                              'includes': includes,
                                              'excludes': excludes,
