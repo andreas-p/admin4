@@ -295,6 +295,7 @@ class Mailbox(adm.Node):
     
     def Check(self):
       ok=self.CheckValid(True, self.MailboxName, xlt("Name cannot be empty"))
+      ok=self.CheckValid(ok, self.MailboxName.find('@')<0, xlt("Name may not include the @ character"))
       return ok
     
     
