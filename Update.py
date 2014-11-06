@@ -323,7 +323,7 @@ class UpdateDlg(adm.Dialog):
                 haveUpdate=True
             elif name == "Lib":
               if admVersion.libVersion < version:
-                msg=[msg[0], xlt("There is a newer %(app)s Core version %(new)s available.\nHowever, the current version %(old)s can't update online.\nPlease download and install a full package manually.") % info]
+                msg=[msg[0], xlt("There is a newer %(app)s Core version %(new)s available.\nHowever, the current version %(old)s can't update online to the new version.\nPlease download and install a full package manually.") % info]
                 if not adm.IsPackaged():
                   msg.append(xlt("In addition, the library requirements have changed;\ncheck the new documentation."))
                 self.ModuleInfo = "\n".join(msg)
