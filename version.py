@@ -39,9 +39,50 @@ except:
   revLocalChange=True
   revDirty=True
   revOriginChange=True
-  requiredAdmVersion="2.0"
+  requiredAdmVersion="2.2"
 
-libVersion="2.1.9"
+
+class Version:
+  def __init__(self, version):
+    self.version=version
+    
+  def str(self):
+    return self.version
+
+  def __str__(self):
+    return self.version
+  
+  def fullver(self):
+    ver=[]
+    if self.version:
+      for v in self.version.split('.'):
+        ver.append("%03d" % int(v))
+    return ".".join(ver)
+  
+  def __lt__(self, cmp):
+    return self.fullver() < cmp.fullver()
+
+  def __le__(self, cmp):
+    return self.fullver() <= cmp.fullver()
+
+  def __gt__(self, cmp):
+    return self.fullver() > cmp.fullver()
+  
+  def __ge__(self, cmp):
+    return self.fullver() >= cmp.fullver()
+  
+  def __eq__(self, cmp):
+    return self.fullver() == cmp.fullver()
+  
+  def __ne__(self, cmp):
+    return self.fullver() != cmp.fullver()
+  
+version=Version(version)
+
+
+
+requiredAdmVersion=Version(requiredAdmVersion)
+libVersion=Version("2.2.0")
 
 description="4th generation\nAdministration Tool\n\nHelp and manual: http://www.admin4.org/docs"
 vendor="PSE"

@@ -204,7 +204,7 @@ class UpdateDlg(adm.Dialog):
         version=None
         tagDate=revDate=modDate=None
         revLocalChange=revOriginChange=revDirty=False
-        requiredAdmVersion="2.1.0"
+        requiredAdmVersion=admVersion.Version("2.2.0")
         
         try:
           sys.skipSetupInit=True
@@ -238,13 +238,13 @@ class UpdateDlg(adm.Dialog):
             else:
               msg.append(xlt("Version %s Revision unknown") % moduleinfo['version'])
   
-            rqVer=moduleinfo['requiredAdmVersion']
+            rqVer=admVersion.Version(moduleinfo['requiredAdmVersion'])
             msg.append("")
-            if rqVer > admVersion.version:
-              msg.append(xlt("Module requires Admin4 Core version %s") % rqVer)
+            if rqVer.val() > admVersion.version:
+              msg.append(xlt("Module requires Admin4 Core version %s") % rqVer.str())
               canInstall=False
             else:
-              testedVer=moduleinfo.get('testedAdmVersion')
+              testedVer=admVersion.Version(moduleinfo.get('testedAdmVersion'))
               if testedVer and testedVer < admVersion.version:
                 msg.append(xlt("not verified with this Admin4 Core version"))
           except Exception as _e:
@@ -310,7 +310,7 @@ class UpdateDlg(adm.Dialog):
           
           for module in modules:
             name=module.getAttribute('name')
-            version=module.getAttribute('version')
+            version=admVersion.Version(module.getAttribute('version'))
             if name == "Core":
               info = { 'app': adm.appTitle, 'old': admVersion.version, 'new': version }
               if admVersion.version < version:
@@ -329,7 +329,7 @@ class UpdateDlg(adm.Dialog):
                 return False
             else:
               mod=adm.modules.get(name)
-              rev=mod.moduleinfo.get('revision')
+              rev=admVersion.Version(mod.moduleinfo.get('revision'))
               if rev:
                 info= { 'name': mod.moduleinfo['modulename'], 'old': rev, 'new': version }
                 if rev < version:
