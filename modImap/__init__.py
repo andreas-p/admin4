@@ -18,5 +18,6 @@ moduleinfo={ 'name': "IMAP Server",
              }
 
 
-
-import Server
+import sys
+if not hasattr(sys, 'skipSetupInit'):
+  import Server
