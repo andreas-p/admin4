@@ -15,6 +15,7 @@ from imap_utf7 import decode as decodeUtf7, encode as encodeUtf7
 class Mailbox(adm.Node):
   typename="IMAP Mailbox"
   shortname="Mailbox"
+  deleteDisable=False
   
 
   def splitMbInfo(self, line):
@@ -68,6 +69,8 @@ class Mailbox(adm.Node):
     self.annotations=self.GetConnection().GetAnnotations(self.mailboxPath)
     self.myrights=self.GetConnection().MyRights(self.mailboxPath)
     self.quota = self.GetConnection().GetQuota(self.mailboxPath)
+    self.deleteDisable = ('Noselect' in self.flags)
+
     if force:
       mblist=self.GetConnection().List("", self.mailboxPath)
       if mblist:
@@ -242,7 +245,7 @@ class Mailbox(adm.Node):
       if len(sel) == 1:
         cm.Add(self.OnEditAcl, xlt("Edit"), xlt("Edit user's acl"))
       if len(sel):
-        cm.Add(self.OnDelAcl, xlt("Delete"), xlt("Delete user acl"))
+        cm.Add(self.OnDelAcl, xlt("Remove"), xlt("Remove user acl"))
       cm.Popup(evt)
     
     
@@ -359,6 +362,14 @@ class Mailbox(adm.Node):
     adm.DisplayDialog(self.Dlg, parentWin, self)
 
   def Delete(self):
+    if not 'x' in self.myrights and not 'c' in self.myrights:
+      dlg=wx.MessageDialog(adm.GetCurrentFrame(), xlt("Add missing right and delete?"), xlt("Missing rights on mailbox %s") % self.name, wx.YES_NO|wx.NO_DEFAULT)
+      if dlg.ShowModal() != wx.ID_YES:
+        return False
+      rc=self.GetConnection().SetAcl(self.mailboxPath, self.GetServer().user, self.myrights + 'x')
+      if not rc:
+        return False
+       
     rc=self.GetConnection().DeleteMailbox(self.mailboxPath)
     return rc != None
 
