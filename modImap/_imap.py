@@ -9,7 +9,6 @@ import ssl
 import imaplib
 import adm
 from wh import shlexSplit
-import logger
 
 imaplib.Commands['STARTTLS'] ='NONAUTH'
 #imaplib.Commands['ID'] ='NONAUTH'

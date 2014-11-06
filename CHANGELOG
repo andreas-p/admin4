@@ -1,4 +1,4 @@
-Changes:
+Changes in 2.1.10
 Core:
 - prepare to use wx 3.0.1.1 on Windows
 - fix png iCCS msgbox

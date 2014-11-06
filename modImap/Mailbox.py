@@ -6,8 +6,11 @@
 
 
 import adm
-from wh import shlexSplit, xlt, Menu, floatToSize
+from wh import shlexSplit, xlt, Menu, floatToSize, prettyDate
 import wx
+from imaplib import Internaldate2tuple
+
+from imap_utf7 import decode as decodeUtf7, encode as encodeUtf7
 
 class Mailbox(adm.Node):
   typename="IMAP Mailbox"
@@ -29,6 +32,7 @@ class Mailbox(adm.Node):
     parts=shlexSplit(self.mailboxPath, self.separator)
     if len(parts) > 1:
       name=parts[-1]
+    name=decodeUtf7(name)
     super(Mailbox, self).__init__(parentNode, name)
     if len(parts) == 2 and parts[0] == "user":
       self.GetServer().userList.append(name)
@@ -76,7 +80,7 @@ class Mailbox(adm.Node):
       
       self.properties=[
                        ( xlt("Name"), self.name),
-#                       ( xlt("Separator"), self.separator),
+                       ( xlt("Mailbox path"), self.mailboxPath),
                        ( xlt("Flags"), ", ".join(self.flags))
                        ]
 
@@ -88,7 +92,7 @@ class Mailbox(adm.Node):
       
       lu=self.annotations.Get('/lastupdate')
       if lu:
-        self.AddProperty(xlt("Last update"), lu.strip())
+        self.AddProperty(xlt("Last update"), prettyDate(Internaldate2tuple(lu)))
 # need that?
 #      chk=(self.annotations.Get('/check') ==  "true")
 #      self.AddYesNoProperty(xlt("Check"), chk)
@@ -104,6 +108,8 @@ class Mailbox(adm.Node):
           else:
             items.append(xlt("%s: %s of %s  (root %s)") % (resource, floatToSize(filled, 1024), floatToSize(total, 1024), root) )
         self.AddChildrenProperty(items, xlt("Quota"), -1)
+      else:
+        self.AddProperty(xlt("Quota"), xlt("none"))
 
       if self.acl:
         imageid=self.GetImageId("User")
@@ -294,23 +300,24 @@ class Mailbox(adm.Node):
     
     def Save(self):
       c=self.GetConnection()
+      mailboxName=encodeUtf7(self.MailboxName)
       if self.node:
         if self.MailboxName == self.node.name:
           ok=True
           mailboxPath=self.node.mailboxPath
         else:
           if isinstance(self.node.parentNode, Mailbox):
-            mailboxPath="%s%s%s" % (self.node.parentNode.mailboxPath, self.parentNode.separator, self.MailboxName)
+            mailboxPath="%s%s%s" % (self.node.parentNode.mailboxPath, self.parentNode.separator, mailboxName)
           else:
-            mailboxPath=self.MailboxName
+            mailboxPath=mailboxName
           ok=c.RenameMailbox(self.node.mailboxPath, mailboxPath)  
           if ok:
             self.refreshNode = self.node.parentNode
       else:
         if isinstance(self.parentNode, Mailbox):
-          mailboxPath="%s%s%s" % (self.parentNode.mailboxPath, self.parentNode.separator, self.MailboxName)
+          mailboxPath="%s%s%s" % (self.parentNode.mailboxPath, self.parentNode.separator, mailboxName)
         else:
-          mailboxPath=self.MailboxName
+          mailboxPath=mailboxName
         ok=c.CreateMailbox(mailboxPath)
       
       if ok and self['Comment'].unchangedValue != self.Comment:

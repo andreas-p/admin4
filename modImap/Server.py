@@ -17,6 +17,7 @@ class Server(adm.ServerNode):
   def __init__(self, settings):
     adm.ServerNode.__init__(self, settings)
     self.userList=[]
+    self.mailboxPath=""
 
   def IsConnected(self, _deep=False):
     return self.connection != None
