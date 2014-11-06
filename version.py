@@ -44,7 +44,7 @@ except:
 
 class Version:
   def __init__(self, version):
-    self.version=version
+    self.version=str(version)
     
   def str(self):
     return self.version

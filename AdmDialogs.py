@@ -31,7 +31,7 @@ class AboutDlg(adm.Dialog):
     self['Version'].SetFont(mediumFont)
 
     self.Admin="Admin4"
-    self.Version=xlt("Version %s") % admVersion.version
+    self.Version=xlt("Version %s") % str(admVersion.version)
 
     if not adm.IsPackaged():
         self.Revision = xlt("(%s)\nunknown changes") % admVersion.revDate 
@@ -60,7 +60,7 @@ class AboutDlg(adm.Dialog):
     lv.AddColumn(xlt("Rev."), "2014-01-01++")
     lv.AddColumn(xlt("Description"), 30)
     
-    vals=["Core", admVersion.version, rev, xlt("Admin4 core framework")]
+    vals=["Core", str(admVersion.version), rev, xlt("Admin4 core framework")]
     lv.AppendItem(adm.images.GetId("Admin4Small"), vals)
 
     wxver=wx.version().split(' ')

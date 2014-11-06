@@ -254,6 +254,7 @@ class UpdateDlg(adm.Dialog):
           self.ModuleInfo="\n".join(msg)
           return canInstall
         elif version:
+          version=admVersion.Version(version)
           if revLocalChange:
             if revDirty:
               rev=modDate
