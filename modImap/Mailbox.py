@@ -8,9 +8,9 @@
 import adm
 from wh import shlexSplit, xlt, Menu, floatToSize, prettyDate
 import wx
-from imaplib import Internaldate2tuple
+import re
+from _imap import GetImapDate, decodeUtf7, encodeUtf7
 
-from imap_utf7 import decode as decodeUtf7, encode as encodeUtf7
 
 class Mailbox(adm.Node):
   typename="IMAP Mailbox"
@@ -97,7 +97,7 @@ class Mailbox(adm.Node):
 
       lu=self.annotations.Get('/lastupdate')
       if lu:
-        self.AddProperty(xlt("Last update"), prettyDate(Internaldate2tuple(lu)))
+        self.AddProperty(xlt("Last update"), prettyDate(GetImapDate(lu)))
 # need that?
 #      chk=(self.annotations.Get('/check') ==  "true")
 #      self.AddYesNoProperty(xlt("Check"), chk)
@@ -161,7 +161,8 @@ class Mailbox(adm.Node):
           self['User'].Append(sv.user)
            
         for user in sv.userList:
-          self['User'].Append(user)
+          if self.nameValid(user):
+            self['User'].Append(user)
       
       self.Bind('User Rights')
       self.Bind('RoRights', self.OnRoClick)
@@ -190,6 +191,7 @@ class Mailbox(adm.Node):
     def setAcl(self, acl):
       for i in range(len(self.rightList)):
         self['Rights'].Check(i, self.rightList[i] in acl)
+      self.OnCheck()
       
     def OnRoClick(self, evt):
       self.setAcl('lr')
@@ -206,12 +208,18 @@ class Mailbox(adm.Node):
     
     def Save(self):
       return True
+    
+    validName=re.compile('^[a-z_][a-z_0-9.-]*$')
+    def nameValid(self, name):
+      return  self.validName.match(name) != None
       
     def Check(self):
       user=self.User
       ok=True
       if self['User'].IsEnabled():
         ok=self.CheckValid(ok, user, xlt("No user selected"))
+        ok=self.CheckValid(ok, self.nameValid(user), xlt("User name contains invalid characters"))
+        
         ok=self.CheckValid(ok, user not in self.knownUsers, xlt("User already has an acl"))
         ok = self.CheckValid(ok, self['Rights'].GetChecked(), xlt("Select at least one right"))
       return ok
@@ -241,9 +249,10 @@ class Mailbox(adm.Node):
         self.MailboxName = self.node.name
         self.FullPath=self.node.mailboxPath
         self.comment = self.node.annotations.Get('/comment')
-        for user, acl in self.node.acl.items():
-          self.oldAcl[user]=acl
-          self['ACL'].AppendItem(-1, [user, acl])
+        if self.node.acl:
+          for user, acl in self.node.acl.items():
+            self.oldAcl[user]=acl
+            self['ACL'].AppendItem(-1, [user, acl])
       self.SetUnchanged()
 
 

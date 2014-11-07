@@ -9,10 +9,12 @@ import ssl
 import imaplib
 import adm
 from wh import shlexSplit
+from imap_utf7 import decode as decodeUtf7, encode as encodeUtf7 # @UnusedImport
 
 imaplib.Commands['STARTTLS'] ='NONAUTH'
 #imaplib.Commands['ID'] ='NONAUTH'
 
+GetImapDate=imaplib.Internaldate2tuple
 
 class Annotations(dict):
   def Get(self, key, default=None):
@@ -134,8 +136,10 @@ class ImapServer(imaplib.IMAP4_SSL):
       acls={}
       for line in result:
         parts=shlexSplit(line, ' ')     
-        for i in range(1, len(parts), 2):   
-          acls[parts[i]] = parts[i+1]
+        for i in range(1, len(parts), 2): 
+          who=parts[i]
+          acl=parts[i+1]
+          acls[who] = acl
       return acls
     return None
   
