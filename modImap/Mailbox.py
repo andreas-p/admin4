@@ -364,12 +364,12 @@ class Mailbox(adm.Node):
           # delete remaining acls
           ok=c.DelAcl(mailboxPath, user)
           if not ok:  break
-        if not ok:
-          self.SetStatus("Save error: %s" % self.GetServer().GetLastError())
-          return False
+      if not ok:
+        self.SetStatus("Save error: %s" % self.GetServer().GetLastError())
+        return False
         
-        if self.node:
-          self.parentNode.Refresh()
+      if not self.node:
+        self.parentNode.Refresh()
       return ok
       
   @staticmethod
