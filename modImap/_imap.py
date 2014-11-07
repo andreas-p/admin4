@@ -182,10 +182,14 @@ class ImapServer(imaplib.IMAP4_SSL):
   
   
   def GetQuota(self, mailbox):
-    res=self.getresult(self.getquotaroot(mailbox))
     quotas={}
+    res=self.getresult(self.getquotaroot(mailbox))
     if res and len(res) == 2:
-      for quota in res[1]:
+      res=res[1]
+    else:
+      res=self.getresult(self.getquota(mailbox))
+    if res:
+      for quota in res:
         parts=shlexSplit(quota, ' ')
         if len(parts) > 3:
           root=parts[0]

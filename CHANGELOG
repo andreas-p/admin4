@@ -3,6 +3,7 @@ Changes:
 modImap 0.5.1:
 - acl change fix
 - acl who name checking
+- quota on Noselect mailboxes
 
 
 Changes in 2.2.0

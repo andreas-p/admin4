@@ -111,23 +111,23 @@ class Mailbox(adm.Node):
       if sz != None:
         self.AddSizeProperty(xlt("Size"), sz)
         
-      if self.CanSelect():
-        if self.quota:
-          items=[]
-          for resource, quota in self.quota.items():
-            root, filled, total = quota
-            if root == self.mailboxPath:
-              items.append(xlt("%s: %s of %s") % (resource, floatToSize(filled, 1024), floatToSize(total, 1024)))
-            else:
-              items.append(xlt("%s: %s of %s  (root %s)") % (resource, floatToSize(filled, 1024), floatToSize(total, 1024), root) )
-          self.AddChildrenProperty(items, xlt("Quota"), -1)
-        else:
-          self.AddProperty(xlt("Quota"), xlt("none"))
+      if self.quota:
+        items=[]
+        for resource, quota in self.quota.items():
+          root, filled, total = quota
+          if root == self.mailboxPath:
+            items.append(xlt("%s: %s of %s") % (resource, floatToSize(filled, 1024), floatToSize(total, 1024)))
+          else:
+            items.append(xlt("%s: %s of %s  (root %s)") % (resource, floatToSize(filled, 1024), floatToSize(total, 1024), root) )
+        self.AddChildrenProperty(items, xlt("Quota"), -1)
+      else:
+        self.AddProperty(xlt("Quota"), xlt("none"))
 
-        if self.acl:
-          imageid=self.GetImageId("User")
-          for user, acl in self.acl.items():
-            self.properties.append((user, acl, imageid))
+      if self.acl:
+        imageid=self.GetImageId("User")
+        for user, acl in self.acl.items():
+          self.properties.append((user, acl, imageid))
+
     return self.properties
 
 
