@@ -40,9 +40,8 @@ class Mailbox(adm.Node):
 
 
   def GetIcon(self):
-    
-    if 'Noselect' in self.flags:  icon="MailboxNoselect"
-    else:                         icon="Mailbox"
+    if self.CanSelect():  icon="Mailbox"
+    else:                 icon="MailboxNoselect"
     return self.GetImageId(icon)
     
   def MayHaveChildren(self):
@@ -165,6 +164,8 @@ class Mailbox(adm.Node):
         sv=self.node.GetServer()
         if sv.user not in sv.userList:
           self['User'].Append(sv.user)
+        self['User'].Append("anyone")
+          
            
         for user in sv.userList:
           if self.nameValid(user):
@@ -223,8 +224,13 @@ class Mailbox(adm.Node):
       user=self.User
       ok=True
       if self['User'].IsEnabled():
-        ok=self.CheckValid(ok, user, xlt("No user selected"))
-        ok=self.CheckValid(ok, self.nameValid(user), xlt("User name contains invalid characters"))
+        if not user.startswith('group:'):
+          ok=self.CheckValid(ok, user, xlt("No user selected"))
+          ok=self.CheckValid(ok, self.nameValid(user), xlt("User name contains invalid characters"))
+        else:
+          grp=user[6:]
+          ok=self.CheckValid(ok, grp, xlt("No group selected"))
+          ok=self.CheckValid(ok, self.nameValid(grp), xlt("Group name contains invalid characters"))
         
         ok=self.CheckValid(ok, user not in self.knownUsers, xlt("User already has an acl"))
         ok = self.CheckValid(ok, self['Rights'].GetChecked(), xlt("Select at least one right"))
