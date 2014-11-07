@@ -46,13 +46,16 @@ class Mailbox(adm.Node):
     return self.GetImageId(icon)
     
   def MayHaveChildren(self):
-    return 'HasChildren' in self.flags
+    return not self.flags or 'HasChildren' in self.flags
   
   def CanDelete(self):
-    return ('x' in self.myrights or 'c' in self.myrights())
+    return self.myrights and ('x' in self.myrights or 'c' in self.myrights())
   
   def CanAdmin(self):
-    return ('a' in self.myrights)
+    return self.myrights and ('a' in self.myrights)
+  
+  def CanSelect(self):
+    return not self.flags or not "Noselect" in self.flags
 
   @staticmethod 
   def GetInstances(parentNode):
@@ -79,7 +82,7 @@ class Mailbox(adm.Node):
       mblist=self.GetConnection().List("", self.mailboxPath)
       if mblist:
         _, self.separator, self.flags = self.splitMbInfo(mblist[0])
-    self.deleteDisable = ('Noselect' in self.flags) or not (self.CanAdmin() or self.CanDelete())
+    self.deleteDisable = not self.CanSelect or not (self.CanAdmin() or self.CanDelete())
 
 
   def GetProperties(self):
@@ -236,9 +239,12 @@ class Mailbox(adm.Node):
     def __init__(self, parentWin, node, parentNode=None):
       adm.PropertyDialog.__init__(self, parentWin, node, parentNode)
       self.Bind("MailboxName Comment")
-      self['ACL'].Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.OnClickAcl)
-      self['ACL'].Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK, self.OnRightClickAcl)
-      self.Bind('AddAcl', self.OnAddAcl)
+      if not node or node.CanSelect():
+        self['ACL'].Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.OnClickAcl)
+        self['ACL'].Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK, self.OnRightClickAcl)
+        self.Bind('AddAcl', self.OnAddAcl)
+      else:
+        self.EnableControls("AddAcl ACL", False)
       
     def Go(self):
       self['ACL'].CreateColumns(xlt("User"), xlt("ACL"), 15)

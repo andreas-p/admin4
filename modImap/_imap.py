@@ -108,9 +108,15 @@ class ImapServer(imaplib.IMAP4_SSL):
       annotations[parts[1]] = parts[-1][:-1]
     return annotations
 
+  def quote(self, txt):
+    if not txt:
+      return "NIL"
+    return self._quote(txt)
+  
+  
   def SetAnnotation(self, mailbox, name, value):
     if value == "":   value=None
-    set='(%s ("value.shared" %s))' % (self._quote(name), self._quote(value))
+    set='(%s ("value.shared" %s))' % (self.quote(name), self.quote(value))
     return self.getresult(self.setannotation(mailbox, set ))
     return self.ok()
   
