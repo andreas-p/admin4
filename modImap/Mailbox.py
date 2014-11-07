@@ -47,6 +47,12 @@ class Mailbox(adm.Node):
     
   def MayHaveChildren(self):
     return 'HasChildren' in self.flags
+  
+  def CanDelete(self):
+    return ('x' in self.myrights or 'c' in self.myrights())
+  
+  def CanAdmin(self):
+    return ('a' in self.myrights)
 
   @staticmethod 
   def GetInstances(parentNode):
@@ -69,12 +75,11 @@ class Mailbox(adm.Node):
     self.annotations=self.GetConnection().GetAnnotations(self.mailboxPath)
     self.myrights=self.GetConnection().MyRights(self.mailboxPath)
     self.quota = self.GetConnection().GetQuota(self.mailboxPath)
-    self.deleteDisable = ('Noselect' in self.flags)
-
     if force:
       mblist=self.GetConnection().List("", self.mailboxPath)
       if mblist:
         _, self.separator, self.flags = self.splitMbInfo(mblist[0])
+    self.deleteDisable = ('Noselect' in self.flags) or not (self.CanAdmin() or self.CanDelete())
 
 
   def GetProperties(self):
@@ -137,6 +142,7 @@ class Mailbox(adm.Node):
                 'a': (xlt("administer"), xlt("administer mailbox acl")),
                 'c': (xlt("    create (obsolete)"), xlt("obsolete/implementation dependent for k or kx")),
                 'd': (xlt("    delete (obsolete)"), xlt("obsolete/implementation dependent for xte or te")),
+#                'n': (xlt("annotation"), xlt("manage annotations")),
                }
 
     rightList="lrswipkxteacd"
@@ -145,29 +151,31 @@ class Mailbox(adm.Node):
       self.User=user
       self.knownUsers=knownUsers
       self.statusbar.Show()
-      if user:  self['User'].Disable()
+      
+      if user:
+        self['User'].Disable()
+        self['Rights'].GetValue = self['Rights'].GetChecked
       else:
-        self.Bind('User Rights')
-#        self['Rights'].Bind(wx.EVT_CHECKLISTBOX, self.OnCheck)
         sv=self.node.GetServer()
         if sv.user not in sv.userList:
           self['User'].Append(sv.user)
            
         for user in sv.userList:
           self['User'].Append(user)
-        self.SetUnchanged()
       
+      self.Bind('User Rights')
       self.Bind('RoRights', self.OnRoClick)
       self.Bind('RwRights', self.OnRwClick)
       self.Bind('AllRights', self.OnAllClick)
       self.Bind('NoRights', self.OnNoClick)
       self.Bind(wx.EVT_MOTION, self.OnMouseMoveRights)
-
       
       for right in self.rightList:
         i=self['Rights'].Append("%s   %s" % (right, xlt(self.rightDict[right][0])))
         if acl and right in acl:
           self['Rights'].Check(i)
+
+      self.SetUnchanged()
       self.OnCheck()
 
     def OnMouseMoveRights(self, evt):
@@ -201,9 +209,10 @@ class Mailbox(adm.Node):
       
     def Check(self):
       user=self.User
-      ok=self.CheckValid(True, user, xlt("No user selected"))
-      ok=self.CheckValid(ok, user not in self.knownUsers, xlt("User already has an acl"))
+      ok=True
       if self['User'].IsEnabled():
+        ok=self.CheckValid(ok, user, xlt("No user selected"))
+        ok=self.CheckValid(ok, user not in self.knownUsers, xlt("User already has an acl"))
         ok = self.CheckValid(ok, self['Rights'].GetChecked(), xlt("Select at least one right"))
       return ok
     
