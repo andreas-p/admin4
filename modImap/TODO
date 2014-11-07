@@ -1,6 +1,5 @@
-- set acl to x before deleting (checkbox)
-
 - setquota
-
+- check mailbox move target name
+ 
 no plans:
 - get/set other mailbox and server annotations

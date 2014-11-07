@@ -404,9 +404,25 @@ class MailboxReconstruct:
     recursive=True # TODO ask
     return node.GetConnection().Reconstruct(node.mailboxPath, recursive) != None
 
+class MailboxMove:
+  name=xlt("Move")
+  help=xlt("Move mailbox to a different path")
+  
+  @staticmethod
+  def OnExecute(parentWin, node):
+    dlg=wx.TextEntryDialog(parentWin, xlt("New mailbox path"), xlt("Move mailbox %s") % node.mailboxPath)
+    dlg.SetValue(node.mailboxPath)
+    if dlg.ShowModal() == wx.ID_OK:
+      newPath=dlg.GetValue()
+      rc=node.GetConnection().RenameMailbox(node.mailboxPath, newPath)
+      if rc:
+        node.parentNode.Refresh()
+    return False
+  
   
 menuinfo=[
 # TODO not working?        {'class': MailboxReconstruct, 'nodeclasses': Mailbox, 'sort': 20 },
+           {'class': MailboxMove, 'nodeclasses': Mailbox, 'sort': 10 },
         ]
   
 nodeinfo= [ 
