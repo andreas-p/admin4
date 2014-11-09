@@ -321,16 +321,14 @@ def modPath(name, mod):
   
   prepend module's path to filename
   """
-  if not mod:
-    return os.path.join(loaddir, name)
-  
-  if not isinstance(mod, StringType):
-    mod=mod.__module__
-  ri=mod.rfind('.')
-  if ri > 0:
-    path=os.path.join(loaddir, mod[0:ri].replace('.', '/'), name)
-    return path
-  return name
+  if mod:
+    if not isinstance(mod, StringType):
+      mod=mod.__module__
+    ri=mod.rfind('.')
+    if ri > 0:
+      return os.path.join(loaddir, mod[0:ri].replace('.', '/'), name)
+
+  return os.path.join(loaddir, name)
     
 
 def evalAsPython(val, default=None):
