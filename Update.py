@@ -56,7 +56,8 @@ class OnlineUpdate:
       return
     try:
       # no need to use SSL here; we'll verify the update.xml later
-      response=requests.get("http://www.admin4.org/update.xml", timeout=onlineTimeout, proxies=adm.GetProxies())
+      info = "?ver=%s&rev=%s" % (admVersion.version, admVersion.revDate.replace(' ', '_'))
+      response=requests.get("http://www.admin4.org/update.xml%s" % info, timeout=onlineTimeout, proxies=adm.GetProxies())
       response.raise_for_status()
       xmlText=response.text
       sigres=requests.get("http://www.admin4.org/update.sign", timeout=onlineTimeout, proxies=adm.GetProxies())

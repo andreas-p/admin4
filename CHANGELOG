@@ -1,4 +1,6 @@
 Changes:
+Core:
+- ver/rev in update query url
 
 modImap 0.5.1:
 - acl change fix
