@@ -46,6 +46,8 @@ def CheckAutoUpdate(frame):
 
 
 class OnlineUpdate:
+  startupCwd=os.getcwd()
+  
   def __init__(self):
     self.info=None
     self.message=None
@@ -449,9 +451,16 @@ class UpdateDlg(adm.Dialog):
       self.DoInstall(tmpDir, source)
       updateInfo=xlt("Update installed")     
     
-    dlg=wx.MessageDialog(self, xlt("New program files require restart.\nExit now?"), 
+    dlg=wx.MessageDialog(self, xlt("New program files require restart.\nRestart now?"), 
                          updateInfo,
                          wx.YES_NO|wx.NO_DEFAULT)
     if dlg.ShowModal() == wx.ID_YES:
+      args=[sys.executable]
+      args.extend(sys.argv)
+      if sys.platform == 'win32':
+        args = ['"%s"' % arg for arg in args]
+
+      os.chdir(self.startupCwd)
+      os.execv(sys.executable, args)
       sys.exit()
     return True
