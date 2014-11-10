@@ -2,7 +2,8 @@ Changes:
 Core:
 - ver/rev in update query url
 
-modImap 0.5.1:
+modImap 0.5.2:
+- setacl
 - acl change fix
 - acl who name checking
 - quota on Noselect mailboxes
