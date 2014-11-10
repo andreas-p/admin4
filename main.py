@@ -271,12 +271,16 @@ def main(argv):
     logger.debug("Using old wxPython version %s", wx.version())
   modules=[]
 
-  opts, args = getopt.getopt(argv[1:], "m:n:", ["modules=", "name="])
+  if sys.platform == "darwin":    macOpt="p"
+  else:                           macOpt=""
+  opts, args = getopt.getopt(argv[1:], "m:n:%s" % macOpt, ["modules=", "name="])
   for opt in opts:
     if opt[0] in ['-m', '--modules']:
       modules = map(lambda x: "mod%s" % x.capitalize(), opt[1].split(','))
     elif opt[0] in ['-n', '--name']:
       adm.appname=opt[1]
+    elif opt[0] == '-p':
+      pass
   
   app.SetAppName(adm.appname)
   adm.config=config.Config(adm.appname)
