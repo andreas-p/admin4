@@ -6,7 +6,8 @@
 
 
 import adm
-from wh import shlexSplit, xlt, Menu, floatToSize, prettyDate
+from wh import shlexSplit, xlt, Menu, floatToSize, prettyDate, prettySize,\
+  sizeToFloat
 import wx
 import re
 from _imap import GetImapDate, decodeUtf7, encodeUtf7
@@ -118,7 +119,7 @@ class Mailbox(adm.Node):
           if root == self.mailboxPath:
             items.append(xlt("%s: %s of %s") % (resource, floatToSize(filled, 1024), floatToSize(total, 1024)))
           else:
-            items.append(xlt("%s: %s of %s  (root %s)") % (resource, floatToSize(filled, 1024), floatToSize(total, 1024), root) )
+            items.append(xlt("%s: %s of %s  (root=%s)") % (resource, floatToSize(filled, 1024), floatToSize(total, 1024), root) )
         self.AddChildrenProperty(items, xlt("Quota"), -1)
       else:
         self.AddProperty(xlt("Quota"), xlt("none"))
@@ -247,7 +248,7 @@ class Mailbox(adm.Node):
   class Dlg(adm.PropertyDialog):
     def __init__(self, parentWin, node, parentNode=None):
       adm.PropertyDialog.__init__(self, parentWin, node, parentNode)
-      self.Bind("MailboxName Comment")
+      self.Bind("MailboxName Comment StorageQuota")
       if not node or node.CanSelect():
         self['ACL'].Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.OnClickAcl)
         self['ACL'].Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK, self.OnRightClickAcl)
@@ -268,6 +269,14 @@ class Mailbox(adm.Node):
           for user, acl in self.node.acl.items():
             self.oldAcl[user]=acl
             self['ACL'].AppendItem(-1, [user, acl])
+        if self.node.quota:
+          sq=self.node.quota.get('STORAGE')
+          if sq:
+            if self.node.mailboxPath == sq[0]:
+              self.StorageQuota = prettySize(sq[2])
+            else:
+              self.RootStorageQuota = "%s (root=%s)" % (prettySize(sq[2]), sq[0])
+        
       self.SetUnchanged()
 
 
@@ -357,8 +366,14 @@ class Mailbox(adm.Node):
           mailboxPath=mailboxName
         ok=c.CreateMailbox(mailboxPath)
       
-      if ok and self['Comment'].unchangedValue != self.Comment:
+      if ok and self.HasChanged('Comment'):
         ok = c.SetAnnotation(mailboxPath, "/comment", self.Comment)
+        
+      if ok and self.HasChanged('StorageQuota'):
+        if self.StorageQuota != "":
+          ok=c.SetQuota(mailboxPath, { 'STORAGE': sizeToFloat(self.StorageQuota) } )
+        else:
+          ok=c.SetQuota(mailboxPath, None)
     
       lbAcl=self['ACL']
       if ok and lbAcl.unchangedValue != self.Acl:

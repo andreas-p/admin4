@@ -32,6 +32,30 @@
             </object>
           </object>
           <object class="sizeritem">
+            <object class="wxStaticText" name="">
+              <label>Storage Quota</label>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxBoxSizer">
+              <orient>wxHORIZONTAL</orient>
+              <object class="sizeritem">
+                <object class="wxTextCtrl" name="StorageQuota"/>
+              </object>
+              <object class="spacer">
+                <option>1</option>
+                <flag>wxGROW</flag>
+              </object>
+              <object class="sizeritem">
+                <object class="wxStaticText" name="RootStorageQuota">
+                  <label></label>
+                </object>
+                <flag>wxALIGN_RIGHT</flag>
+              </object>
+            </object>
+            <flag>wxGROW</flag>
+          </object>
+          <object class="sizeritem">
             <object class="wxStaticText">
               <label>Comment</label>
               <pos>5,52d</pos>
@@ -73,7 +97,7 @@
             <flag>wxEXPAND|wxGROW</flag>
           </object>
           <growablecols>1</growablecols>
-          <growablerows>3</growablerows>
+          <growablerows>4</growablerows>
         </object>
         <option>1</option>
         <flag>wxALL|wxEXPAND|wxGROW</flag>

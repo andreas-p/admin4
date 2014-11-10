@@ -180,6 +180,17 @@ class ImapServer(imaplib.IMAP4_SSL):
     print res
     return self.getresult(res)
   
+
+  def SetQuota(self, root, quota):
+    if quota:
+      l=[]
+      for resource, size in quota.items():
+        l.append("%s %d" % (resource, int((size+1023)/1024)))
+      limits="(%s)" % " ".join(l)
+    else:
+      limits="()"
+    res=self.getresult(self.setquota(root, limits))
+    return res
   
   def GetQuota(self, mailbox):
     quotas={}
