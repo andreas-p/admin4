@@ -208,7 +208,7 @@ class Mailbox(adm.Node):
       self.setAcl('lrswit')
     
     def OnAllClick(self, evt):
-      self.setAcl('lrswipkxtea')
+      self.setAcl('lrswipkxteacd')
     
     def OnNoClick(self, evt):
       self.setAcl('')
@@ -414,7 +414,7 @@ class Mailbox(adm.Node):
       dlg=wx.MessageDialog(adm.GetCurrentFrame(), xlt("Add missing right and delete?"), xlt("Missing rights on mailbox %s") % self.name, wx.YES_NO|wx.NO_DEFAULT)
       if dlg.ShowModal() != wx.ID_YES:
         return False
-      rc=self.GetConnection().SetAcl(self.mailboxPath, self.GetServer().user, self.myrights + 'x')
+      rc=self.GetConnection().SetAcl(self.mailboxPath, self.GetServer().user, self.myrights + 'xcd')
       if not rc:
         return False
        

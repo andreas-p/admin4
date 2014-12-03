@@ -102,10 +102,21 @@ class ImapServer(imaplib.IMAP4_SSL):
     annotations=Annotations()
     
     for ann in dat:
-      if not ann:
+      # this tries to deal with some imaplib weirdness if non-ascii is returned.
+      # usually, ann should be a string, but if the value.shared contains non-ascii
+      # a tuple is returned, with the next ann being ")"
+      # This is so for imaplib.__version__ == 2.58
+      if not ann or ann == ")":
         continue
-      parts=shlexSplit(ann, " ")
-      annotations[parts[1]] = parts[-1][:-1]
+      if isinstance(ann, str):
+        parts=shlexSplit(ann.decode('utf-8'), " ")
+        annotations[parts[1]] = parts[-1][:-1]
+      elif isinstance(ann, tuple):
+        parts=shlexSplit(ann[0].decode('utf-8'), " ")
+        annotations[parts[1]] = ann[1].decode('utf-8')
+      else:
+        # whats that?
+        pass
     return annotations
 
   def quote(self, txt):
@@ -116,6 +127,7 @@ class ImapServer(imaplib.IMAP4_SSL):
   
   def SetAnnotation(self, mailbox, name, value):
     if value == "":   value=None
+    else: value=value.encode('utf-8')
     set='(%s ("value.shared" %s))' % (self.quote(name), self.quote(value))
     return self.getresult(self.setannotation(mailbox, set ))
     return self.ok()

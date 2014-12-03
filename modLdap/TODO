@@ -5,3 +5,8 @@ checkCert:
   ldap.set_option(ldap.OPT_X_TLS_NEWCTX,ldap.OPT_X_TLS_DEMAND)
   ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT,ldap.OPT_X_TLS_DEMAND)
   ldap.set_option(ldap.OPT_X_TLS_CACERTFILE,certfile)
+
+objectClasses:
+  mailGroup/member
+  groupOfUniqueNames/uniqueMember
+  
