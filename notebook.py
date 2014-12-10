@@ -68,13 +68,15 @@ class Notebook(wx.Notebook, adm.MenuOwner, _TimerOwner):
 
 
   def Freeze(self):
+    return
     # TODO we don't like this
-    if not wx.version().startswith("3.0.0.0 osx-cocoa"):
+    if not wx.version().endswith(" osx-cocoa") or not wx.version().startswith("3.0"):
       super(Notebook, self).Freeze()
   
   def Thaw(self):
+    return
     # TODO we don't like this
-    if not wx.version().startswith("3.0.0.0 osx-cocoa"):
+    if not wx.version().endswith(" osx-cocoa") or not wx.version().startswith("3.0"):
       super(Notebook, self).Thaw()
 
   def AppendPage(self, page):
