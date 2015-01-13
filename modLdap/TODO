@@ -1,3 +1,6 @@
+New Object:
+- default values preferences
+
 ignoreCert:
   ldap.OPT_X_TLS_ALLOW
 
@@ -10,3 +13,8 @@ objectClasses:
   mailGroup/member
   groupOfUniqueNames/uniqueMember
   
+  
+ToFix:
+- PrimaryGroupSid
+- Group add description/displayname in list
+- User new: cn override from uid?

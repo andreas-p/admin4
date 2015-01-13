@@ -51,7 +51,7 @@ class Entry(adm.Node):
 
   def MayHaveChildren(self):
     try:
-      return self.attribs[self.GetServer().GetHasSubordinatesOid()].GetValue()
+      return self.attribs[self.GetServer().GetHasSubordinatesOid()].GetValue() != None
     except:
       return True
 

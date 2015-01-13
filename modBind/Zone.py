@@ -46,7 +46,7 @@ class Zone(adm.Node):
   def MayHaveChildren(self):
     if self.zones:
       return True
-    return self.GetServer().GetSubzones(self)
+    return self.GetServer().GetSubzones(self) != None
 
   def Updater(self):
     return self.GetConnection().Updater(self.zonename)

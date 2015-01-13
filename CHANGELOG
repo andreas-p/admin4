@@ -13,6 +13,12 @@ modImap 0.5.2:
 - acl who name checking
 - quota on Noselect mailboxes
 
+modBind 0.98.6:
+- Fix bool MayHaveChildren()
+
+modLdap 0.95.10:
+- Fix bool MayHaveChildren()
+
 
 Changes in 2.2.0
 Core:
