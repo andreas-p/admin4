@@ -243,7 +243,7 @@ class UpdateDlg(adm.Dialog):
   
             rqVer=admVersion.Version(moduleinfo['requiredAdmVersion'])
             msg.append("")
-            if rqVer.val() > admVersion.version:
+            if rqVer > admVersion.version:
               msg.append(xlt("Module requires Admin4 Core version %s") % rqVer.str())
               canInstall=False
             else:
