@@ -56,9 +56,14 @@ class OnlineUpdate:
     if not Crypto:
       self.message=xlt("No Crypto lib available.")
       return
+    modsUsed={}
+    for server in adm.config.getServers():
+      mod=server.split('/')[0]
+      modsUsed[mod] = modsUsed.get(mod, 0) +1
+      
     try:
       # no need to use SSL here; we'll verify the update.xml later
-      info = "?ver=%s&rev=%s" % (admVersion.version, admVersion.revDate.replace(' ', '_'))
+      info = "?ver=%s&rev=%s&mods=%s" % (admVersion.version, admVersion.revDate.replace(' ', '_'), ",".join(modsUsed.keys()))
       response=requests.get("http://www.admin4.org/update.xml%s" % info, timeout=onlineTimeout, proxies=adm.GetProxies())
       response.raise_for_status()
       xmlText=response.text

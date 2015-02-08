@@ -1,6 +1,6 @@
 Changes:
 Core:
-- ver/rev in update query url
+- ver/rev/mods in update query url
 - restart application after update
 - fix for manual module update
 
