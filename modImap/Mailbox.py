@@ -248,7 +248,7 @@ class Mailbox(adm.Node):
   class Dlg(adm.PropertyDialog):
     def __init__(self, parentWin, node, parentNode=None):
       adm.PropertyDialog.__init__(self, parentWin, node, parentNode)
-      self.Bind("MailboxName Comment StorageQuota")
+      self.Bind("MailboxName Comment StorageQuota AclRecursive")
       if not node or node.CanSelect():
         self['ACL'].Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.OnClickAcl)
         self['ACL'].Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK, self.OnRightClickAcl)
@@ -376,7 +376,15 @@ class Mailbox(adm.Node):
           ok=c.SetQuota(mailboxPath, None)
     
       lbAcl=self['ACL']
-      if ok and lbAcl.unchangedValue != self.Acl:
+      if ok and lbAcl.unchangedValue != self.Acl or self.AclRecursive:
+        subMbList=[]
+        if self.AclRecursive:
+          mbList=c.List(mailboxPath, "*")
+          for line in mbList:
+            name, _,_ = self.node.splitMbInfo(line)
+            if name != mailboxPath:
+              subMbList.append(name)
+
         for row in range(lbAcl.GetItemCount()):
           user=lbAcl.GetItemText(row, 0)
           acl=lbAcl.GetItemText(row, 1)
@@ -388,12 +396,16 @@ class Mailbox(adm.Node):
           else:
             # add ACL
             ok=c.SetAcl(mailboxPath, user, acl)
+          for mb in subMbList:
+            ok=c.SetAcl(mb, user, acl)
           if not ok:
             break
         for user in self.oldAcl:
           # delete remaining acls
           ok=c.DelAcl(mailboxPath, user)
           if not ok:  break
+          for mb in subMbList:
+            c.DelAcl(mb, user)
       if not ok:
         self.SetStatus("Save error: %s" % self.GetServer().GetLastError())
         return False

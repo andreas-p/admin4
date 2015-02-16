@@ -4,6 +4,9 @@ Core:
 - restart application after update
 - fix for manual module update
 
+modImap 0.5.4:
+- set/del Acl recursive
+
 modImap 0.5.3:
 - fix rights override when deleting for older cyrus
 - utf-8 workaround in annotations
