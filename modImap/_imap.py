@@ -160,12 +160,28 @@ class ImapServer(imaplib.IMAP4_SSL):
           acls[who] = acl
       return acls
     return None
-  
-  def SetAcl(self, mailbox, who, acl):
-    return self.getresult(self.setacl(mailbox, who, acl))
+
+
+  def SetAcl(self, mailbox, who, acl=None):
+    if isinstance(who, list):
+      lst=[mailbox]
+      for item in who:
+        if isinstance(item, tuple):
+          lst.append(item[0])
+          lst.append(item[1])
+        else:
+          lst.append(item)
+      return self.getresult(self._simple_command('SETACL', *lst))
+    else:
+      return self.getresult(self.setacl(mailbox, who, acl))
   
   def DelAcl(self, mailbox, who):
-    return self.getresult(self.deleteacl(mailbox, who))
+    if isinstance(who, list):
+      lst=[mailbox]
+      lst.extend(who)
+      return self.getresult(self._simple_command('DELETEACL', *lst))
+    else:
+      return self.getresult(self.deleteacl(mailbox, who))
   
   def MyRights(self, mailbox):
     result=self.getresult(self.myrights(mailbox))

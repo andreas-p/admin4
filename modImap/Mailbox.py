@@ -377,7 +377,9 @@ class Mailbox(adm.Node):
     
       lbAcl=self['ACL']
       if ok and lbAcl.unchangedValue != self.Acl or self.AclRecursive:
-        subMbList=[]
+        subMbList=[mailboxPath]
+        setAclList=[]
+
         if self.AclRecursive:
           mbList=c.List(mailboxPath, "*")
           for line in mbList:
@@ -391,24 +393,21 @@ class Mailbox(adm.Node):
           if user in self.oldAcl:
             if acl != self.oldAcl[user]:
               # Change ACL
-              ok=c.SetAcl(mailboxPath, user, acl)
+              setAclList.append( (user, acl))
             del self.oldAcl[user]
           else:
             # add ACL
-            ok=c.SetAcl(mailboxPath, user, acl)
-          for mb in subMbList:
-            ok=c.SetAcl(mb, user, acl)
+            setAclList.append( (user, acl))
+        
+        for mb in subMbList:
+          self.SetStatus(xlt("Setting ACL on %s") % mb)
+          ok=c.SetAcl(mb, setAclList)
+          if ok:
+            ok=c.DelAcl(mb, self.oldAcl)
+    
           if not ok:
-            break
-        for user in self.oldAcl:
-          # delete remaining acls
-          ok=c.DelAcl(mailboxPath, user)
-          if not ok:  break
-          for mb in subMbList:
-            c.DelAcl(mb, user)
-      if not ok:
-        self.SetStatus("Save error: %s" % self.GetServer().GetLastError())
-        return False
+            self.SetStatus("Save error: %s" % self.GetServer().GetLastError())
+            return False
         
       if not self.node:
         self.parentNode.Refresh()
