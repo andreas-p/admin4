@@ -1,7 +1,7 @@
 Changes:
 Core:
 - ver/rev/mods in update query url
-- restart application after update
+- restart application after update undone; doesn't work
 - fix for manual module update
 
 modImap 0.5.5:

@@ -456,6 +456,12 @@ class UpdateDlg(adm.Dialog):
       self.DoInstall(tmpDir, source)
       updateInfo=xlt("Update installed")     
     
+    wx.MessageDialog(self, xlt("New program files require restart."), 
+                         updateInfo,
+                         wx.OK)
+    return
+
+    
     dlg=wx.MessageDialog(self, xlt("New program files require restart.\nRestart now?"), 
                          updateInfo,
                          wx.YES_NO|wx.NO_DEFAULT)
