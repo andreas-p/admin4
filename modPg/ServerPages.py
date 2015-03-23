@@ -860,20 +860,21 @@ class InstrumentConfig:
   @staticmethod
   def GetInstrumentQuery(server):
     if server.version >= 8.1 and server.version < 9.4:
-      sql="""
-               SELECT 'admin4.instrumentation', 'ok'
-               FROM pg_settings 
-               WHERE name = 'config_file'
-                 AND pg_read_file(setting, -30, 30) LIKE '%postgresql.auto.conf%'\n
-               UNION
-               SELECT 'postgresql.auto.conf', CASE WHEN 'postgresql.auto.conf' IN 
+      sql="""SELECT 'admin4.instrumentation', 
+                    CASE WHEN setting NOT LIKE (select setting from pg_settings where name='data_directory') || '%'  THEN 'absPath'
+                         WHEN pg_read_file(setting, -30, 30) LIKE '%postgresql.auto.conf%' THEN 'ok'
+                         ELSE '' END
+             FROM pg_settings 
+             WHERE name = 'config_file'
+             UNION
+             SELECT 'postgresql.auto.conf', CASE WHEN 'postgresql.auto.conf' IN 
                      (SELECT pg_ls_dir(setting) FROM pg_settings where name='data_directory') THEN 'ok' ELSE '' END
-               UNION
-               SELECT 'adminpack', 'adminpack' FROM pg_proc
-                WHERE proname='pg_file_write' AND pronamespace=11"""
+             UNION
+             SELECT 'adminpack', 'ok' FROM pg_proc
+              WHERE proname='pg_file_write' AND pronamespace=11"""
       if server.version >= 9.1:
         sql += """UNION
-              SELECT 'adminpack-extension', 'adminpack-extension'
+              SELECT 'adminpack-extension', 'ok'
                 FROM pg_available_extensions
                WHERE name='adminpack'"""
              
@@ -882,10 +883,11 @@ class InstrumentConfig:
   @staticmethod
   def GetMissingInstrumentation(server):
     if server.version < 9.4:
-      if server.version >= 9.1 and not server.GetValue('adminpack-extension'):
+      if server.version >= 9.1 and server.GetValue('adminpack-extension' != 'ok'):
         return 'adminpack-extension'
       for name in ['adminpack', 'postgresql.auto.conf', 'admin4.instrumentation']:
         if not server.GetValue(name):
+#        if server.GetValue(name) != 'ok':
           return name
   
   autoconfLine="custom_variable_classes='admin4'"
@@ -923,15 +925,14 @@ class InstrumentConfig:
         cursor=server.GetCursor()
         cursor.ExecuteSingle("SELECT pg_file_write('postgresql.auto.conf', %s, false)" % quoteValue(InstrumentConfig.autoconfHeader, cursor))
 
-      if not server.GetValue('admin4.instrumentation'):
+      if server.GetValue('admin4.instrumentation') != 'ok':
         dataDir=server.GetValue("data_directory")
         autoconfPath="%s/postgresql.auto.conf" % dataDir
-        cursor=server.GetCursor()
-        
-        
         cfgFile=server.GetValue('config_file')
+
         if cfgFile.startswith(dataDir):
           cfgFile=cfgFile[len(dataDir)+1:]
+          cursor=server.GetCursor()
           cfg=cursor.ExecuteSingle("SELECT pg_read_file('%s', 0, 999999)" % cfgFile)
                                    
           if not cfg.strip().endswith("include '%s'" % autoconfPath):
@@ -942,6 +943,9 @@ class InstrumentConfig:
                 SELECT pg_file_rename('%(cfg)s.tmp', '%(cfg)s', '%(cfg)s.bak');
                 SELECT pg_reload_conf();
                 """ % {'cfg': cfgFile, 'content': quoteValue(cfg, cursor) } )
+        else:
+          wx.MessageBox(xlt("""The main configuration file cannot be modified automatically because it is not located in the data directory.\nPlease edit %s and append the line \"include '%s\' \" at the very end.""") %
+                              (cfgFile, autoconfPath), xlt("Please modify %s manually") % cfgFile.split('/')[-1])
     return True
 
 
