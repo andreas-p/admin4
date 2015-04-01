@@ -401,9 +401,12 @@ class Mailbox(adm.Node):
         
         for mb in subMbList:
           self.SetStatus(xlt("Setting ACL on %s") % mb)
-          ok=c.SetAcl(mb, setAclList)
-          if ok:
-            ok=c.DelAcl(mb, self.oldAcl)
+          if setAclList:
+            ok=c.SetAcl(mb, setAclList)
+          else:
+            ok=True
+          if ok and self.oldAcl:
+            ok=c.DelAcl(mb, self.oldAcl.keys())
     
           if not ok:
             self.SetStatus("Save error: %s" % self.GetServer().GetLastError())

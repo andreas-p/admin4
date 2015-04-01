@@ -4,6 +4,8 @@ Core:
 - restart application after update undone; doesn't work
 - fix for manual module update
 
+modImap 0.5.6:
+- ACL fixes
 modImap 0.5.5:
 - recursion fixes
 modImap 0.5.4:
