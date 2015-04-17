@@ -123,7 +123,16 @@ def _log(level, fmt, args, tb=None):
       pass
 
 
-
+def trace(offset, level, fmt, *args):
+  if True:
+    txt=fmt % args
+    stack=traceback.extract_stack()
+    lst=[]
+    for i in range(len(stack)-offset, len(stack)-offset-level, -1):
+      file=stack[i][0].split('/')[-1]
+      lst.append("%s (%s:%d)" % (stack[i][2], file, stack[i][1]))
+    print txt, "Stack:", "  ".join(lst)
+  
 def debug(fmt, *args):
   _log(LOGLEVEL.DEBUG, fmt, args)
 

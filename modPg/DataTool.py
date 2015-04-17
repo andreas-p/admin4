@@ -596,8 +596,9 @@ class FilterPanel(adm.NotebookPanel):
 
 
 class DataFrame(SqlFrame):
-  def __init__(self, parentWin, connection, name, server):
-    self.tableSpecs=TableSpecs(connection, name)
+  def __init__(self, parentWin, connectionPool, name, server):
+    self.tableSpecs=TableSpecs(connectionPool, name)
+    self.connectionPool=connectionPool
     self.worker=None
     self.output=None
     self.server=server
@@ -627,6 +628,12 @@ class DataFrame(SqlFrame):
     toolbar.Add(self.OnDelete, xlt("Delete"), "delete")
 
     menubar=wx.MenuBar()
+    
+    self.filemenu=menu=Menu(self)
+    menu.Add(self.OnClose, xlt("Quit tool"), xlt("Quit data tool"))
+
+    menubar.Append(menu, xlt("&File"))
+    
     self.datamenu=menu=Menu(self)
     menu.Add(self.OnRefresh, xlt("Refresh"), xlt("Refresh data"))
     menu.Add(self.OnCancelRefresh, xlt("Cancel"), xlt("Cancel refresh"))
@@ -740,6 +747,7 @@ class DataFrame(SqlFrame):
 
   def executeQuery(self, sql):
     self.output.SetEmpty()
+    self.worker=None
     
     self.EnableMenu(self.datamenu, self.OnRefresh, False)
     self.EnableMenu(self.datamenu, self.OnCancelRefresh, True)
@@ -809,6 +817,9 @@ class DataFrame(SqlFrame):
         return 
       elif rc == wx.ID_YES:
         self.output.table.Commit()
+        
+    self.worker = None
+    self.connectionPool.Disconnect()
     adm.config.storeWindowPositions(self)
     self.Destroy()
 

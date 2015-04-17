@@ -318,6 +318,8 @@ class Server(adm.ServerNode):
          ( xlt("Autovacuum"), YesNo(self.info['autovacuum'])),
          ( xlt("Instrumentation"), instr), 
          ]
+    if self.version < 8.4:
+      self.AddProperty(xlt("Ancient server"), xlt("barely supported"))
     return self.properties
 
 

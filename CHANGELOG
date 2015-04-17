@@ -27,6 +27,8 @@ modBind 0.98.6:
 modLdap 0.95.10:
 - Fix bool MayHaveChildren()
 
+modPg 0.5.8:
+- fix connectionPool leak in DataTool
 modPg 0.5.7:
 - fix instrumentation if postgresql.conf not in data_directory (debian...)
 

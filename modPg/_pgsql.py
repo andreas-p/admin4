@@ -13,6 +13,7 @@ import adm
 import re
 import threading
 from wh import xlt, modPath
+from Crypto.PublicKey._slowmath import rsa_construct
 
 
 sqlKeywords=[]
@@ -317,6 +318,7 @@ class pgCursor():
     
   def Close(self):
     if self.conn:
+      logger.trace(2, 4, "RELEASING %s", str(self.conn))
       self.conn.inUse=False
       self.conn=None
       self.cursor=None
@@ -501,6 +503,9 @@ class pgConnectionPool:
     conn=self.CreateConnection()
     with self.lock:
       self.connections.append(conn)
+  
+  def __del__(self):
+    self.Disconnect()
     
   def ServerVersion(self):
     if not self.connections:
@@ -527,10 +532,12 @@ class pgConnectionPool:
       for c in self.connections:
         if not c.inUse:
           conn=c
+#          logger.trace(2, 4, "USING     %s", str(c))
           c.inUse=True
           break
     if not conn:
       conn=self.CreateConnection()
+#      logger.trace(2, 4, "CREATING  %s", str(c))
     return conn.GetCursor()
 
   
@@ -554,6 +561,10 @@ class QueryWorker(threading.Thread):
     self.args=args
     self.running=True
     
+  def __del__(self):
+    self.cancel()
+    self.cursor=None
+    
   def run(self):
     self.cancelled=False
     self.error=None
@@ -575,10 +586,13 @@ class QueryWorker(threading.Thread):
     return self.cursor.GetRowcount()
 
   def GetResult(self):
+    rs=None
     try:
-      return pgRowset(self.cursor)
+      rs=pgRowset(self.cursor)
     except:
-      return None
+      pass
+    self.cursor=None
+    return rs
   
   def IsRunning(self):
     return self.running   
