@@ -131,7 +131,11 @@ class pgRow(pgCursorResult):
   def getDict(self):
     d={}
     for i in range(len(self.colNames)):
-      d[self.colNames[i]] = self.getItem(i)
+      item=self.getItem(i)
+      # aggregate functions deliver [None] with empty left joins; we want []
+      if isinstance(item, list) and len(item) == 1 and item[0] == None:
+        item=[]
+      d[self.colNames[i]] = item
     return d
   
   def __str__(self):
@@ -318,7 +322,7 @@ class pgCursor():
     
   def Close(self):
     if self.conn:
-      logger.trace(2, 4, "RELEASING %s", str(self.conn))
+#      logger.trace(2, 4, "RELEASING %s", str(self.conn))
       self.conn.inUse=False
       self.conn=None
       self.cursor=None
