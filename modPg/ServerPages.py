@@ -158,13 +158,6 @@ class ConnectionPage(LogPanel):
   order=800
   
   colOrder="procpid datname usename clientaddr backend_start query_runtime current_query".split(' ')
-  colDef={'procpid': (xlt("PID"), "65535"), 
-          'datname': (xlt("Database"), "Postgres-DB"), 
-          'usename': (xlt("User"), "postgres"),
-          'clientaddr':  (xlt("Client"), "192.168.255.240:50333", stripMask), 
-          'backend_start': (xlt("Client start"), "2014-01-01 12:00:00", lambda x: str(x)[:19]),
-          'query_runtime': (xlt("Duration"), 8, prettyTime),
-          'current_query': (xlt("Query"), 50) }
 
 
   def __init__(self, notebook):
@@ -185,8 +178,10 @@ class ConnectionPage(LogPanel):
     cursor=None
     if node.version < 9.2:
       pidCol="procpid"
+      queryCol="current_query"
     else:
       pidCol="pid"
+      queryCol="query"
     if node != self.lastNode:
       add=self.control.AddColumnInfo
       add(xlt("PID"), "65535",                      colname=pidCol)
@@ -197,7 +192,7 @@ class ConnectionPage(LogPanel):
         add(xlt("Application Name"), 25,            colname='application_name')
       add(xlt("ClientStart"), "2014-01-01 12:00:00",colname='backend_start', proc=lambda x: str(x)[:19])
       add(xlt("Duration"), 8,                       colname='query_runtime', proc=prettyTime)
-      add(xlt("Query"), 50,                         colname='current_query')
+      add(xlt("Query"), 50,                         colname=queryCol)
       self.RestoreListcols()
 
       cursor=node.GetCursor()
