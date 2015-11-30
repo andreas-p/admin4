@@ -312,10 +312,18 @@ class ServerSetting(adm.CheckedDialog):
     ok=True
     ok=self.CheckValid(ok, self.canWrite, xlt("Can save to instrumented servers only."))
     ok=self.CheckValid(ok, self.vals['context'] != 'internal', xlt("Internal setting; cannot be edited."))
-    minVal=self.vals['min_val']
-    ok=self.CheckValid(ok, minVal==None or self.value.GetValue() >=minVal, xlt("Must be %s or more") % minVal)
-    maxVal=self.vals['max_val']
-    ok=self.CheckValid(ok, maxVal==None or self.value.GetValue() <=maxVal, xlt("Must be %s or less") % maxVal)
+    
+    try:
+      minVal=float(self.vals['min_val'])
+      try:    ok=self.CheckValid(ok, float(self.value.GetValue()) >=minVal, xlt("Must be %s or more") % self.vals['min_val'])
+      except: ok=False
+    except:   pass
+
+    try:
+      maxVal=float(self.vals['max_val'])
+      try:    ok=self.CheckValid(ok, float(self.value.GetValue()) <=maxVal, xlt("Must be %s or less") % self.vals['max_val'])
+      except: ok=False
+    except:   pass
     
     return ok
 
