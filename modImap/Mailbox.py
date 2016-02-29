@@ -12,6 +12,8 @@ import wx
 import re
 from _imap import GetImapDate, decodeUtf7, encodeUtf7
 
+squatAnnotation='/vendor/cmu/cyrus-imapd/squat'
+
 
 class Mailbox(adm.Node):
   typename="IMAP Mailbox"
@@ -112,6 +114,9 @@ class Mailbox(adm.Node):
       if sz != None:
         self.AddSizeProperty(xlt("Size"), sz)
         
+      squat=self.annotations.Get(squatAnnotation)
+      if squat != None:
+        self.AddProperty(xlt("Squat"), squat)
       if self.quota:
         items=[]
         for resource, quota in self.quota.items():
@@ -248,7 +253,7 @@ class Mailbox(adm.Node):
   class Dlg(adm.PropertyDialog):
     def __init__(self, parentWin, node, parentNode=None):
       adm.PropertyDialog.__init__(self, parentWin, node, parentNode)
-      self.Bind("MailboxName Comment StorageQuota AclRecursive")
+      self.Bind("MailboxName Comment Squat StorageQuota AclRecursive")
       if not node or node.CanSelect():
         self['ACL'].Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.OnClickAcl)
         self['ACL'].Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK, self.OnRightClickAcl)
@@ -265,6 +270,8 @@ class Mailbox(adm.Node):
         self.MailboxName = self.node.name
         self.FullPath=self.node.mailboxPath
         self.comment = self.node.annotations.Get('/comment')
+        self.squat = self.node.annotations.Get(squatAnnotation, 'false' ) == 'true'
+        
         if self.node.acl:
           for user, acl in self.node.acl.items():
             self.oldAcl[user]=acl
@@ -368,6 +375,11 @@ class Mailbox(adm.Node):
       
       if ok and self.HasChanged('Comment'):
         ok = c.SetAnnotation(mailboxPath, "/comment", self.Comment)
+      if ok and self.HasChanged('Squat'):
+        if self.Squat: squat='true'
+        else:          squat='false'
+        ok = c.SetAnnotation(mailboxPath, squatAnnotation, squat)
+
         
       if ok and self.HasChanged('StorageQuota'):
         if self.StorageQuota != "":

@@ -70,6 +70,17 @@
           <vgap>10</vgap>
           <hgap>10</hgap>
           <object class="sizeritem">
+            <object class="wxStaticText">
+              <label>Squat</label>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxCheckBox" name="Squat">
+              <style></style>
+              <label></label>
+            </object>
+          </object>
+          <object class="sizeritem">
             <object class="wxBoxSizer">
               <orient>wxVERTICAL</orient>
               <object class="sizeritem">
@@ -104,7 +115,7 @@
             <flag>wxEXPAND|wxGROW</flag>
           </object>
           <growablecols>1</growablecols>
-          <growablerows>4</growablerows>
+          <growablerows>5</growablerows>
         </object>
         <option>1</option>
         <flag>wxALL|wxEXPAND|wxGROW</flag>
