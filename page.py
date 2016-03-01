@@ -168,7 +168,10 @@ class NotebookPanel(wx.Panel, adm.ControlContainer):
 
   def Bind(self, *args, **kargs):
     adm.ControlContainer.Bind(self, *args, **kargs)
-
+    
+  def OnCheck(self, evt):
+    self.dialog.OnCheck(evt)
+    
   def __getattr__(self, name):
     return self._getattr(name)
 
