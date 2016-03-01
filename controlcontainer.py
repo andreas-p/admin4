@@ -466,6 +466,9 @@ class Dialog(wx.Dialog, ControlContainer, MenuOwner):
     var=self.VARNAME reads control
     self["VARNAME"].someMethod() calls control
     VARNAME is case insensitive
+    
+  Handles Save/Check/OnCheck
+    Usually CheckedDialog is used, which includes a status bar as well.
   """
   def __init__(self, parentWin, node=None, resname=None):
     ControlContainer.__init__(self, resname)
@@ -656,20 +659,34 @@ class Dialog(wx.Dialog, ControlContainer, MenuOwner):
 
 
 class CheckedDialog(Dialog):
-  def __init__(self, parentWin, node=None, _parentNode=None):
-    Dialog.__init__(self, parentWin, node)
+  """
+  CheckedDialog
+  
+  Dialog with status bar
+  """
+  
+  def __init__(self, parentWin, node=None, _parentNode=None, resName=None):
+    Dialog.__init__(self, parentWin, node, resName)
     self.addStatusBar()
 
 
 class PropertyDialog(CheckedDialog):
-  def __init__(self, parentWin, node, parentNode=None):
-    CheckedDialog.__init__(self, parentWin, node)
+  """
+  PropertyDialog
+  
+  Editing properties of a node, which is represented by a treeItem 
+  and thus needs a tree refresh if changed
+  """
+  def __init__(self, parentWin, node, parentNode=None, resName=None, title=None):
+    CheckedDialog.__init__(self, parentWin, node, resName=resName)
     if parentNode:
       self.parentNode=parentNode
 
     self.refreshNode=None
 
-    if self.node:
+    if title:
+      self.SetTitle(title)
+    elif self.node:
       self.SetTitle(xlt("Properties of %s \"%s\"") % (self.node.typename, self.node.name))
     elif parentNode:
       self.SetTitle(xlt("New %s") % parentNode.typename)
@@ -689,8 +706,64 @@ class PropertyDialog(CheckedDialog):
     self.Close()
 
 
-class ServerPropertyDialog(PropertyDialog):
+class PagedPropertyDialog(PropertyDialog):
+  """
+  PagedPropertyDialog
+  
+  PropertyDialog with a notebook, distributing property items over several panels
+  """
+  def __init__(self, parentWin, node, parentNode, title):
+    PropertyDialog.__init__(self, parentWin, node, parentNode, resName="./PagedPropertyDlg", title=title)
+    self.panels=[]
+    notebook=self['Notebook']
+    if hasattr(self, 'panelClasses'):
+      for cls in self.panelClasses:
+        if hasattr(cls, 'CreatePanel'):
+          panel=cls.CreatePanel(self, notebook)
+        else:
+          panel=cls(self, notebook)
+        if panel:
+          self.addPanel(panel)
+    notebook.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.OnPanelChange)
 
+  def addPanel(self, panel, name=None):
+    if not name:
+      name=panel.name
+    self.panels.append(panel)
+    self['Notebook'].AddPage(panel, name)
+
+  def OnPanelChange(self, evt):
+    panel=self.panels[evt.Selection]
+    panel.Show()
+    if hasattr(panel, "Display"):
+      panel.Display()
+  
+  def Check(self):
+    for panel in self.panels:
+      if hasattr(panel, "Check"):
+        if not panel.Check():
+          return False
+    return True
+  
+  def GetChanged(self):
+    cl=[]
+    for panel in self.panels:
+      cl.extend(panel.GetChanged())
+    return cl
+  
+  def Go(self):
+    for panel in self.panels:
+      if hasattr(panel, "Go"):
+        panel.Go()
+
+
+class ServerPropertyDialog(PropertyDialog):
+  """
+  ServerPropertyDialog
+  
+  Server Properties with a list of predefined keywords
+  which are stored in the config file
+  """
   keyvals= [ ("HostName", 'name') ,
              ("HostAddress", 'host'),
              "Port",

@@ -15,7 +15,7 @@ import logger
 from controlcontainer import ControlContainer, MenuOwner  # @UnusedImport
 from node import NodeId, Node, Collection, Group, ServerNode  # @UnusedImport
 from page import PropertyPage, NotebookPage, NotebookControlsPage, NotebookPanel, PreferencePanel, getAllPreferencePanelClasses  # @UnusedImport
-from controlcontainer import Dialog, CheckedDialog, PropertyDialog, ServerPropertyDialog  # @UnusedImport
+from controlcontainer import Dialog, CheckedDialog, PropertyDialog, PagedPropertyDialog, ServerPropertyDialog  # @UnusedImport
 from frame import Frame
 from AdmDialogs import PasswordDlg, HintDlg
 
@@ -234,7 +234,6 @@ class ConnectionException(admException):
 def RegisterServer(settings):
   mainframe.servers.RegisterServer(settings)
 
-
 def DisplayDialog(cls, parentWin, *params):
   id="%s%s" % (cls.__name__, params)
   dlg=dialogs.get(id)
@@ -251,6 +250,12 @@ def DisplayDialog(cls, parentWin, *params):
   dlg.Show()
   dlg.SetFocus()
   return dlg
+
+def DisplayNewDialog(cls, parentWin, *params):
+  if len(params) == 3:
+    params = params + ( xlt("New %s") % params[2].name, )
+  print params
+  return DisplayDialog(cls, parentWin, *params)
 
 
 def SetClipboard(data):
