@@ -795,6 +795,7 @@ class SettingsPage(adm.NotebookPanel, ControlledPage):
         self.grid.SetPropertyValue(name, setting)
         self.grid.SetPropertyReadOnly(prop, True)
       self.grid.SetSplitterLeft() 
+      self.grid.CollapseAll()
 
   def SetProperty(self, name, value):
     self.changedConfig[name]=value
