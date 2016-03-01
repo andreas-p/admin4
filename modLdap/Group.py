@@ -198,7 +198,7 @@ SpecificEntry.AddClass(Members)
 #Entry.addNewEntryClass(GroupOfNames)
 
 class Group(SpecificEntry):
-  name=xlt("Posix Group")
+  name=xlt("Group")
   typename=xlt("Group")
   shortname=xlt("Group")
   icon="Group"
@@ -321,7 +321,8 @@ class Group(SpecificEntry):
 
   @staticmethod
   def New(parentWin, parentNode):
-    adm.DisplayDialog(Entry.Dlg, parentWin, None, parentNode, Group)
+    adm.DisplayNewDialog(Entry.Dlg, parentWin, None, parentNode, Group)
+    
 SpecificEntry.AddClass(Group)
 Entry.addNewEntryClass(Group)
 

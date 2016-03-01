@@ -148,7 +148,8 @@ class SpecificEntry(adm.NotebookPanel):
         for flag in ctl.flags:
           if flag.startswith('copy='):
             var=flag[5:]
-            self.dialog.SetValue(var, value, self)
+            if not self[var] or not self.dialog.node:
+              self.dialog.SetValue(var, value, self)
       else:
         self.dialog.DelValue(ctl.ldapOid, self)
       

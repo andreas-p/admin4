@@ -17,5 +17,6 @@ objectClasses:
 ToFix:
 - PrimaryGroupSid
 - Group add description/displayname in list
-- User new: cn override from uid?
 - deleteObjClass: remove attribs
+- nach rename refresh (2nd rename fails)
+- user.scs doppelt

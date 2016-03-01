@@ -11,6 +11,7 @@ import adm
 from wh import xlt
 from . import AttrVal, ldapSyntax
 import os, base64, hashlib
+from controlcontainer import PagedPropertyDialog
 
 
 
@@ -201,9 +202,9 @@ class Entry(adm.Node):
 
 
 
-  class Dlg(adm.PropertyDialog):
-    def __init__(self, parentWin, node, parentNode, primaryClass):
-      adm.PropertyDialog.__init__(self, parentWin, node, parentNode)
+  class Dlg(adm.PagedPropertyDialog):
+    def __init__(self, parentWin, node, parentNode, primaryClass, title=None):
+      adm.PagedPropertyDialog.__init__(self, parentWin, node, parentNode, title=title)
 
       self.rdnOid=None
       self.must=[]
@@ -211,18 +212,14 @@ class Entry(adm.Node):
 
 
     def Go(self):
-      self.panels=[]
       notebook=self['Notebook']
-      def addPanel(panel, name):
-        self.panels.append(panel)
-        notebook.AddPage(panel, name)
 
       for cls, resname in SpecificEntry.GetClasses(self.parentNode.GetServer(), self.primaryClass):
         panel=cls(self, notebook, resname)
-        addPanel(panel, panel.name)
+        self.addPanel(panel)
 
       panel=GenericEntry(self, notebook)
-      addPanel(panel, panel.name)
+      self.addPanel(panel)
 
       self.objectClassOid=self.GetServer().GetObjectClassOid()
       self.attribs={}
@@ -345,10 +342,8 @@ class Entry(adm.Node):
 
 
     def Check(self):
-      for panel in self.panels:
-        if hasattr(panel, "Check"):
-          if not panel.Check():
-            return False
+      if not PagedPropertyDialog.Check(self):
+        return False
 
       ok=True
       ok=self.CheckValid(ok, len(self.objectClasses), xlt("At least one objectClass needed."))
