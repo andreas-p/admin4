@@ -41,8 +41,8 @@ class ComboBox(wx.ComboBox):
     """ 
     wid=None
     if isinstance(stuff, dict):
-      for key, val in stuff.items():
-        wid=self.AppendKey(key, val)
+      for key in sorted(stuff.keys()):
+        wid=self.AppendKey(key, stuff[key])
     elif isinstance(stuff, list):
       for data in stuff:
         if isinstance(data, (tuple, list)):
