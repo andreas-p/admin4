@@ -178,10 +178,15 @@ class ConnectionPage(LogPanel):
     cursor=None
     if node.version < 9.2:
       pidCol="procpid"
-      queryCol="current_query"
+      statQuery="""    SELECT *, client_addr || ':' || client_port::text AS clientaddr, now()-query_start AS query_runtime 
+      FROM pg_stat_activity
+     ORDER BY procpid"""
     else:
+      statQuery="""    SELECT *, CASE WHEN state='active' THEN query ELSE state END as current_query, 
+          client_addr || ':' || client_port::text AS clientaddr, now()-query_start AS query_runtime 
+      FROM pg_stat_activity
+     ORDER BY pid"""
       pidCol="pid"
-      queryCol="query"
     if node != self.lastNode:
       add=self.control.AddColumnInfo
       add(xlt("PID"), "65535",                      colname=pidCol)
@@ -191,8 +196,10 @@ class ConnectionPage(LogPanel):
       if node.GetServer().version >= 9.0:
         add(xlt("Application Name"), 25,            colname='application_name')
       add(xlt("ClientStart"), "2014-01-01 12:00:00",colname='backend_start', proc=lambda x: str(x)[:19])
+      if node.version >= 8.1:
+        add(xlt("Waiting"), 4,                      colname='waiting')
       add(xlt("Duration"), 8,                       colname='query_runtime', proc=prettyTime)
-      add(xlt("Query"), 50,                         colname=queryCol)
+      add(xlt("Query"), 50,                         colname='current_query')
       self.RestoreListcols()
 
       cursor=node.GetCursor()
@@ -204,10 +211,7 @@ class ConnectionPage(LogPanel):
 
     if not cursor:
       cursor=node.GetCursor()
-    rowset=cursor.ExecuteSet("""
-    SELECT *, client_addr || ':' || client_port::text AS clientaddr, now()-query_start AS query_runtime 
-      FROM pg_stat_activity
-     ORDER BY %s"""  % pidCol)
+    rowset=cursor.ExecuteSet(statQuery)
     dbIcon=node.GetImageId('Database')
     ownDbIcon=node.GetImageId('Database-conn')
     rows=[]
