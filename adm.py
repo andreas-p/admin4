@@ -241,6 +241,10 @@ def DisplayDialog(cls, parentWin, *params):
     dlg.Iconize(False)
     dlg.Raise()
   else:
+    while not isinstance(parentWin, (Dialog, Frame)):
+      parentWin=parentWin.GetParent()
+      if not parentWin: break
+      
     dlg=cls(parentWin, *params)
     dlg.dialogId = id
     dialogs[id]=dlg

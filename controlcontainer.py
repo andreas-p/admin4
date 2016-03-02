@@ -712,7 +712,7 @@ class PagedPropertyDialog(PropertyDialog):
   
   PropertyDialog with a notebook, distributing property items over several panels
   """
-  def __init__(self, parentWin, node, parentNode, title):
+  def __init__(self, parentWin, node, parentNode, title=None):
     PropertyDialog.__init__(self, parentWin, node, parentNode, resName="./PagedPropertyDlg", title=title)
     self.panels=[]
     notebook=self['Notebook']
