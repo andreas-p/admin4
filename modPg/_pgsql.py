@@ -623,15 +623,19 @@ class pgQuery:
   def SetCursor(self, cursor):
     self.cursor=cursor
     
-  def AddCol(self, name):
+  def AddCol(self, name, quoted=True):
     if name:
       if isinstance(name, list):
-        map(self.AddCol, name)
+        map(lambda x: self.AddCol(x, quoted), name)
       else:
+        if quoted:
+          name=quoteIdent(name)
         self.columns.append(name)
   
-  def AddColVal(self, name, val):
+  def AddColVal(self, name, val, quoted=True):
     if name:
+      if quoted:
+        name=quoteIdent(name)
       self.columns.append(name)
       self.vals.append(val)
   def AddJoin(self, tab):
