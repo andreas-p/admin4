@@ -9,7 +9,7 @@ import wx.aui
 import adm
 import xmlres
 import wx.grid
-from wh import xlt, Menu, AcceleratorHelper, FileManager, Grid
+from wh import xlt, Menu, AcceleratorHelper, FileManager, Grid, localTimeMillis
 from _pgsql import pgConnection, quoteValue, quoteIdent
 from _explain import ExplainCanvas
 from _snippet import SnippetTree
@@ -392,7 +392,7 @@ class QueryFrame(SqlFrame):
     self.EnableMenu(self.querymenu, self.OnExplainQuery, False)
     
     wx.YieldIfNeeded()
-    self.startTime=wx.GetLocalTimeMillis();
+    self.startTime=localTimeMillis();
     self.worker=worker=self.conn.GetCursor().ExecuteAsync(sql)
     rowcount=0
     rowset=None

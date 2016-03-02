@@ -5,7 +5,7 @@
 # see LICENSE.TXT for conditions of usage
 
 
-from wh import xlt, AcceleratorHelper, Menu, Grid, evalAsPython
+from wh import xlt, AcceleratorHelper, Menu, Grid, evalAsPython, localTimeMillis
 import wx.aui
 import wx.grid
 import adm
@@ -752,7 +752,7 @@ class DataFrame(SqlFrame):
     self.EnableMenu(self.datamenu, self.OnRefresh, False)
     self.EnableMenu(self.datamenu, self.OnCancelRefresh, True)
     
-    self.startTime=wx.GetLocalTimeMillis();
+    self.startTime=localTimeMillis();
     self.worker=worker=self.tableSpecs.GetCursor().ExecuteAsync(sql)
     worker.start()
     

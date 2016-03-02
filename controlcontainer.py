@@ -8,7 +8,7 @@
 import adm
 import inspect
 import wx.xrc as xrc
-from wh import xlt, StringType
+from wh import xlt, StringType, floatToTime, localTimeMillis
 from Validator import Validator
 import wx, os
 import xmlres
@@ -608,7 +608,11 @@ class Dialog(wx.Dialog, ControlContainer, MenuOwner):
 
     if self.IsModal():
       self.EndModal(wx.ID_OK)
-    adm.SetStatus(xlt("Ok."))
+    if hasattr(self, "startTime"):
+      elapsed=localTimeMillis() - self.startTime
+      adm.SetStatus(xlt("Ok: %s execution time.") % floatToTime(elapsed/1000.))
+    else:
+      adm.SetStatus(xlt("Ok."))
     return True
 
   def OnOK(self, _ev):

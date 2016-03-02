@@ -6,7 +6,7 @@
 
 import adm
 import wx.grid, wx.aui
-from wh import xlt, ToolBar, floatToTime
+from wh import xlt, ToolBar, floatToTime, localTimeMillis
 from _pgsql import pgQuery, quoteIdent, quoteValue
 
 HMARGIN=5
@@ -278,7 +278,7 @@ class SqlFrame(adm.Frame):
 
   def pollWorker(self):
     while self.worker.IsRunning():
-      elapsed=wx.GetLocalTimeMillis() - self.startTime
+      elapsed=localTimeMillis() - self.startTime
       self.SetStatusText(floatToTime(elapsed/1000.), self.STATUSPOS_SECS)
       wx.Yield()
       if elapsed < 200:
@@ -289,7 +289,7 @@ class SqlFrame(adm.Frame):
         wx.MilliSleep(500)
       wx.Yield()
     
-    elapsed=wx.GetLocalTimeMillis() - self.startTime
+    elapsed=localTimeMillis() - self.startTime
     if elapsed:
       txt=floatToTime(elapsed/1000.)
     else:

@@ -11,6 +11,8 @@ from shlex import shlex
 
 import logger
 loaddir=None
+localTimeMillis=wx.GetLocalTimeMillis
+
 
 def SetLoaddir(d):
   global loaddir
