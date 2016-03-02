@@ -8,9 +8,9 @@
 from _objects import SchemaObject
 from _pgsql import pgQuery
 import adm
-from wh import xlt
+from wh import xlt, shlexSplit
 import logger
-
+from _pgsql import quoteIdent, quoteValue
 
 persistenceStr={'p': "persistent", 't': "temporary", 'u': "unlogged" }
 
@@ -137,10 +137,11 @@ class Table(SchemaObject):
   def populateColumns(self):
       if not self.columns:
         self.columns = self.GetCursor().ExecuteDictList("""
-          SELECT attname, format_type(atttypid, atttypmod) as typename, attnotnull, def.*, 
-              att.attstattarget, description, cs.relname AS sername, ns.nspname AS serschema,
-              attacl
+          SELECT att.*, format_type(atttypid, atttypmod) as typename, t.typname, t.typcategory, t.typbasetype, 
+              pg_get_expr(adbin, attrelid) as adsrc, 
+              description, cs.relname AS sername, ns.nspname AS serschema
             FROM pg_attribute att
+            JOIN pg_type t ON att.atttypid=t.oid
             LEFT OUTER JOIN pg_attrdef def ON adrelid=attrelid AND adnum=attnum
             LEFT OUTER JOIN pg_description des ON des.objoid=attrelid AND des.objsubid=attnum
             
@@ -189,10 +190,186 @@ class Table(SchemaObject):
       self.constraints=self.GetCursor().ExecuteDictList(self.getConstraintQuery(self.GetOid()))
       
 
+class ColumnPanel(adm.NotebookPanel):
+  name=xlt("Column")
+
+  def __init__(self, dlg, notebook):
+    adm.NotebookPanel.__init__(self, dlg, notebook)
+    self.Bind("Length Precision", self.OnPrecChange)
+    self.Bind("DataType", self.OnTypeChange)
+    self.BindAll()
+    
+  def OnPrecChange(self, evt):
+    self.OnCheck(evt)
+  
+  def OnTypeChange(self, evt):
+    self.OnCheck(evt)
+    
+  def Go(self):
+    cd=self.dialog.colDef
+    self.ColName = cd['attname']
+    self.NotNull = cd['attnotnull']
+    self.DefaultVal=cd['adsrc']
+    self.Description=cd['description']
+    self.Statistics = cd['attstattarget']
+    type=cd['typename']
+    ci=type.find('(')
+    if (ci > 0):
+      prec=type[ci+1:-1].split(',')
+      self.Length=int(prec[0])
+      if len(prec) > 1:
+        self.Precision = int(prec[1])
+    
+    types=self.dialog.node.GetCursor().ExecuteDictList("SELECT oid, typname FROM pg_type WHERE typcategory=%s ORDER BY oid" % quoteValue(cd['typcategory']))
+    for t in types:
+      self["DataType"].AppendKey(t['oid'], t['typname'])
+    
+    self.DataType=cd['atttypid']
+    
+    if cd['atttypid'] in (20, 23) or cd['typbasetype'] in (20,23):
+      if cd['sername']:
+        if cd['serschema'] != 'public':
+          sn="%(serschema)s.%(sername)s" % cd
+        else:
+          sn=cd['sername']
+          
+        self['Sequence'].Append(sn)
+        self.Sequence=sn
+    else:
+      self['Sequence'].Disable()
+      
+      
+    if cd['typcategory'] == 'S' and self.dialog.GetServer().version >= 9.1:
+      colls=self.dialog.node.GetCursor().ExecuteDictList(
+                                            "SELECT oid,collname FROM pg_collation WHERE collencoding IN (-1, %d) ORDER BY oid" 
+                                                      % self.dialog.node.GetDatabase().info['encoding'])
+      for c in colls:
+        self['Collation'].AppendKey(c['oid'], c['collname'])
+      
+      if cd['attcollation']:
+        self.Collation = cd['attcollation']
+      
+    else:
+      self['Collation'].Disable()
+    self.SetUnchanged()
+    
+  def GetSql(self):
+    sql=[]
+    params={ "colname": quoteIdent(self.ColName), "oldcol": quoteIdent(self['ColName'].unchangedValue)}
+
+    if self.HasChanged("ColName"):
+      sql.append("RENAME COLUMN %(oldcol)s TO %(colname)s" % params)
+
+    if self.HasChanged("NotNull"):
+      if self.NotNull:
+        params['val'] = "SET"
+      else:
+        params['val'] = "DROP"
+      sql.append("ALTER COLUMN %(colname)s %(val)s NOT NULL" % params)
+    if self.HasChanged("Statistics"):
+      params['val'] = self.Statistics
+      sql.append("ALTER COLUMN %(colname)s SET STATISTICS %(val)d" % params)
+      
+    # type, len, prec, collate
+#    if self.HasChanged("Collation"):
+#      params['val'] = self["Collation"].GetValue()
+#      sql.append("ALTER COLUMN %(colname)s SET COLLATE \"%(val)d\";" % params)
+      
+    if sql:
+      return "ALTER TABLE %s\n   %s;" % (self.dialog.node.NameSql() , ",\n   ".join(sql))
+    return ""
+  
+  
+class PrivilegePanel(adm.NotebookPanel):
+  name=xlt("Privileges")
+  privString={ 'a': "INSERT",
+               'r': "SELECT",
+               'w': "UPDATE",
+               'd': "DELETE",
+               'D': "TRUNCATE",
+               'x': "REFERENCE",
+               't': "TRIGGER",
+               'U': "USAGE",
+               'C': "CREATE",
+               'T': "TEMP",
+               'c': "CONNECT",
+               'X': "EXECUTE",
+               }
+  @classmethod
+  def CreatePanel(cls, dlg, notebook):
+    if dlg.GetServer().version < 8.4:
+      return None 
+    return cls(dlg, notebook)
+
+  def Go(self):
+    pl=self['PrivList']
+    pl.ClearAll()
+    pl.AddColumnInfo(xlt("Usr/Group"), 20)
+    pl.AddColumnInfo(xlt("Privilege"), -1)
+    acls=self.dialog.colDef['attacl']
+    if acls:
+      for acl in shlexSplit(acls[1:-1], ','):
+        up = shlexSplit(acl, '=')
+        if len(up) == 1:
+          priv=up[0]
+          usr="public"
+        else:
+          usr=up[0]
+          priv=up[1]
+        up=shlexSplit(priv, '/')
+        priv=up[0]
+        if len(up) > 1: grantor=up[1]
+        else:           grantor=None
+        print usr, priv, grantor
+    pl.Show()       
+
+  
+class SecurityPanel(adm.NotebookPanel):
+  name=xlt("Security Labels")
+  @classmethod
+  def CreatePanel(cls, dlg, notebook):
+    if dlg.GetServer().version < 9.1:
+      return None 
+    return cls(dlg, notebook)
+
+
+class SqlPanel(adm.NotebookPanel):
+  name=xlt("SQL")
+
+  def Display(self):
+    sql=self.dialog.GetSql()
+    if sql:
+      self.SqlText=sql
+    else:
+      self.SqlText=xlt("-- No change")
+    self.Show()
+
+
+
+class Column(adm.PagedPropertyDialog):
+  name=xlt("Column")
+  privFlags='arwx'
+#  panelClasses=[ColumnPanel, PrivilegePanel, SecurityPanel, SqlPanel]
+  panelClasses=[ColumnPanel, SqlPanel]
+
+  def __init__(self, parentWin, node, colDef):
+    adm.PagedPropertyDialog.__init__(self, parentWin, node, None)
+    self.colDef=colDef
+
+  def GetSql(self):
+    sql=""
+    for panel in self.panels:
+      if hasattr(panel, "GetSql"):
+        sql += panel.GetSql()
+    return sql
+
+  def Save(self):
+    return True
+  
+  
 class ColumnsPage(adm.NotebookPage):
   name=xlt("Columns")
   order=1
-
     
   def Display(self, node, _detached):
     if node != self.lastNode:
@@ -229,7 +406,8 @@ class ColumnsPage(adm.NotebookPage):
         values.append( (col, icon))
       self.control.Fill(values, 'attname')
 
-
+  def OnItemDoubleClick(self, evt):
+    adm.DisplayDialog(Column, self.control, self.lastNode, self.lastNode.columns[evt.Index])
       
 class ConstraintPage(adm.NotebookPage):
   name=xlt("Constraints")

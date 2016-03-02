@@ -582,9 +582,9 @@ class FilterPanel(adm.NotebookPanel):
   def GetQuery(self):
     query=pgQuery(self.tableSpecs.tabName)
     for colName in self['DisplayCols'].GetCheckedStrings():
-      query.AddCol(colName)
+      query.AddCol(colName, True)
     for colName in self['SortCols'].GetCheckedStrings():
-      query.AddOrder(colName)
+      query.AddOrder(colName, True)
     if self.FilterCheck:
       filter=self.FilterValue.GetText().strip()
       query.AddWhere(filter)
