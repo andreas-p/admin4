@@ -114,11 +114,9 @@ class ServerObject(Node):
   def NameSql(self):
     name=quoteIdent(self.info['name'])
     schema=self.info.get('nspname')
-    if not schema:
+    if not schema or schema == 'public':
       return name
-    elif schema != 'public':
-      schema=quoteIdent(schema)
-    return "%s.%s" % (schema, name)
+    return "%s.%s" % (quoteIdent(schema), name)
   
   @classmethod
   def AddFindRestrictions(cls, sql, schemaName, schemaOid, namecol, patterns):
