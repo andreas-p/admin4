@@ -176,6 +176,7 @@ class ConnectionPage(LogPanel):
     
   def Display(self, node, _detached):
     cursor=None
+    # http://git.postgresql.org/gitweb/?p=postgresql.git;a=blob;f=src/backend/catalog/system_views.sql;hb=refs/heads/REL9_5_STABLE
     if node.version < 9.2:
       pidCol="procpid"
       statQuery="""    SELECT *, client_addr || ':' || client_port::text AS clientaddr, now()-query_start AS query_runtime 
