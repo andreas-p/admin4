@@ -260,6 +260,8 @@ class Mailbox(adm.Node):
         self.Bind('AddAcl', self.OnAddAcl)
       else:
         self.EnableControls("AddAcl ACL", False)
+      if self.node.GetServer().flavor != "cyrus":
+        self.EnableControls("Squat", False)
       
     def Go(self):
       self['ACL'].CreateColumns(xlt("User"), xlt("ACL"), 15)

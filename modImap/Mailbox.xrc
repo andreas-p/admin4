@@ -70,12 +70,12 @@
           <vgap>10</vgap>
           <hgap>10</hgap>
           <object class="sizeritem">
-            <object class="wxStaticText">
+            <object class="wxStaticText" name="stSquat">
               <label>Squat</label>
             </object>
           </object>
           <object class="sizeritem">
-            <object class="wxCheckBox" name="Squat">
+            <object class="wxCheckBox" name="label=stSquat:Squat">
               <style></style>
               <label></label>
             </object>

@@ -33,6 +33,7 @@ class Server(adm.ServerNode):
     if not self.connection:
       self.connection=ImapServer.Create(self)
       self.connection.Login(self.user, self.password)
+      self.flavor=self.connection.id.get('name', '').split()[0].lower()
     return self.connection
 
   
