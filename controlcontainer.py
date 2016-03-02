@@ -608,6 +608,7 @@ class Dialog(wx.Dialog, ControlContainer, MenuOwner):
 
     if self.IsModal():
       self.EndModal(wx.ID_OK)
+    adm.SetStatus(xlt("Ok."))
     return True
 
   def OnOK(self, _ev):
