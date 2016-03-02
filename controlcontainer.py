@@ -108,6 +108,7 @@ class ControlContainer():
     """
     if isinstance(excludeCtlNames, StringType):
       excludeCtlNames=excludeCtlNames.split()
+    excludeCtlNames=map(str.lower, excludeCtlNames)
     
     for name, ctl in self._ctls.items():
       if isinstance(ctl, wx.Button) or isinstance(ctl, wx.StaticText):
@@ -345,6 +346,10 @@ class ControlContainer():
 
 
   def HasChanged(self, name):
+    names=name.split()
+    if len(names) > 1:
+      return reduce(lambda x,y: x or y, map(self.HasChanged, names))
+
     ctl=self[name]
     if not ctl:
       raise AttributeError("No control named '%s'" % name)
