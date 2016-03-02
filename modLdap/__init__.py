@@ -13,7 +13,7 @@ moduleinfo={ 'name': "LDAP Server",
             'requiredAdmVersion': "2.1.4", 
             'testedAdmVersion': "2.1.8", 
             'pages': [],
-            'copyright': "(c) 2013-2014 PSE Consulting Andreas Pflug",
+            'copyright': "(c) 2013-2016 PSE Consulting Andreas Pflug",
             'credits': "python-ldap from http://www.python-ldap.org using OpenLdap 2.4 (http://www.openldap.org)",
              }
 

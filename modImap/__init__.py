@@ -13,7 +13,7 @@ moduleinfo={ 'name': "IMAP Server",
             'requiredAdmVersion': "2.2.0", 
             'testedAdmVersion': "2.2.0", 
             'pages': [],
-            'copyright': "(c) 2014 PSE Consulting Andreas Pflug",
+            'copyright': "(c) 2014-2016 PSE Consulting Andreas Pflug",
             'credits': "utf-7 code from https://pypi.python.org/pypi/IMAPClient",
              }
 

@@ -3,6 +3,8 @@ Core:
 - ver/rev/mods in update query url
 - restart application after update undone; doesn't work
 - fix for manual module update
+- Fix DisplayDialog to use Frame or Dialog as parentWin
+- self.dialog.node.GetCursor().ExecuteDictList
 
 modImap 0.5.6:
 - ACL fixes
@@ -26,9 +28,13 @@ modBind 0.98.6:
 
 modLdap 0.95.10:
 - Fix bool MayHaveChildren()
+- Squat flag support
 
 modPg 0.5.8:
 - fix connectionPool leak in DataTool
+- quoteIdent fixes
+- pg_stat_activity fixes
+- basic Column support
 modPg 0.5.7:
 - fix instrumentation if postgresql.conf not in data_directory (debian...)
 

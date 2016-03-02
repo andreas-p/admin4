@@ -12,7 +12,7 @@ moduleinfo={ 'name': "BIND DNS Server",
             'requiredAdmVersion': "2.1.8", 
             'testedAdmVersion': "2.1.8", 
             'supports': "BIND V9.6 ... V9.9",
-            'copyright': "(c) 2014 PSE Consulting Andreas Pflug",
+            'copyright': "(c) 2014-2016 PSE Consulting Andreas Pflug",
             'credits': "dnspython from http://www.dnspython.org",
      }
 
