@@ -39,9 +39,14 @@ class Element(minidom.Element):
     self.appendChild(e)
     return e
 
+  def setAttribute(self, name, val):
+    minidom.Element.setAttribute(self, name, val)
+    return self
+
   def setAttributes(self, attribs):
     for key, val in attribs.items():
       self.setAttribute(key, unicode(val))
+    return self
 
   def getText(self):
     pt=[]
