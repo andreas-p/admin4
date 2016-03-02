@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource>
+  <object class="wxDialog" name="PagedPropertyDlg">
+    <title>Paged Property</title>
+    <style>wxCAPTION|wxRESIZE_BORDER|wxCLOSE_BOX</style>
+    <object class="wxBoxSizer">
+      <orient>wxVERTICAL</orient>
+      <object class="sizeritem">
+        <object class="wxNotebook" name="Notebook"/>
+        <option>1</option>
+        <flag>wxEXPAND</flag>
+      </object>
+      <object class="sizeritem">
+        <object class="wxBoxSizer">
+          <orient>wxHORIZONTAL</orient>
+          <object class="spacer">
+            <option>1</option>
+          </object>
+          <object class="sizeritem">
+            <object class="wxButton" name="Cancel">
+              <label>Cancel</label>
+              <pos>40,145d</pos>
+              <size>45,15d</size>
+            </object>
+            <flag>wxBOTTOM|wxRIGHT</flag>
+            <border>5d</border>
+          </object>
+          <object class="sizeritem">
+            <object class="wxButton" name="OK">
+              <label>OK</label>
+              <pos>95,145d</pos>
+              <size>45,15d</size>
+            </object>
+            <flag>wxRIGHT</flag>
+            <border>10</border>
+          </object>
+        </object>
+        <flag>wxBOTTOM|wxGROW</flag>
+        <ratio>1</ratio>
+      </object>
+      <object class="sizeritem">
+        <object class="unknown" name="StatusBar"/>
+        <flag>wxEXPAND</flag>
+        <minsize>12d</minsize>
+      </object>
+    </object>
+  </object>
+</resource>

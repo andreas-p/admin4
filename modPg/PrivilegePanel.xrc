@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource>
+  <object class="wxPanel" name="PrivilegePanel">
+    <object class="wxBoxSizer">
+      <orient>wxVERTICAL</orient>
+      <object class="sizeritem">
+        <object class="whListView" name="PrivList"/>
+      </object>
+    </object>
+  </object>
+</resource>

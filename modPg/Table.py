@@ -8,7 +8,7 @@
 from _objects import SchemaObject
 from _pgsql import pgQuery
 import adm
-from wh import xlt, shlexSplit
+from wh import xlt, shlexSplit, localTimeMillis
 import logger
 from _pgsql import quoteIdent, quoteValue
 
@@ -364,6 +364,10 @@ class Column(adm.PagedPropertyDialog):
     return sql
 
   def Save(self):
+    sql=self.GetSql()
+    if sql:
+      self.startTime=localTimeMillis();
+      self.node.GetCursor().Execute(sql)
     return True
   
   

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource>
+  <object class="wxPanel" name="SqlPanel">
+    <object class="wxTextCtrl" name="SqlText">
+      <style>wxTE_MULTILINE|wxTE_READONLY</style>
+    </object>
+  </object>
+</resource>
