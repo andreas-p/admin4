@@ -195,14 +195,14 @@ class ColumnPanel(adm.NotebookPanel):
 
   def __init__(self, dlg, notebook):
     adm.NotebookPanel.__init__(self, dlg, notebook)
-    self.Bind("Length Precision", self.OnPrecChange)
+    self.typeInfo={}
     self.Bind("DataType", self.OnTypeChange)
-    self.BindAll()
+    self.BindAll("DataType")
     
-  def OnPrecChange(self, evt):
-    self.OnCheck(evt)
-  
   def OnTypeChange(self, evt):
+    precFlag=self.typeInfo.get(self.DataType)
+    self.EnableControls("Length", precFlag>0)
+    self.EnableControls("Precision", precFlag==2)
     self.OnCheck(evt)
     
   def Go(self):
@@ -212,6 +212,7 @@ class ColumnPanel(adm.NotebookPanel):
     self.DefaultVal=cd['adsrc']
     self.Description=cd['description']
     self.Statistics = cd['attstattarget']
+
     type=cd['typename']
     ci=type.find('(')
     if (ci > 0):
@@ -219,10 +220,16 @@ class ColumnPanel(adm.NotebookPanel):
       self.Length=int(prec[0])
       if len(prec) > 1:
         self.Precision = int(prec[1])
-    
-    types=self.dialog.node.GetCursor().ExecuteDictList("SELECT oid, typname FROM pg_type WHERE typcategory=%s ORDER BY oid" % quoteValue(cd['typcategory']))
+    self.typeInfo={}
+    types=self.dialog.node.GetCursor().ExecuteDictList("SELECT oid, typname, typmodin FROM pg_type WHERE typcategory=%s ORDER BY oid" % quoteValue(cd['typcategory']))
     for t in types:
+      oid=t['oid']
       self["DataType"].AppendKey(t['oid'], t['typname'])
+      if t['typmodin'] != '-':
+        precFlag=1
+      else:
+        precFlag=0
+      self.typeInfo[oid] = precFlag
     
     self.DataType=cd['atttypid']
     
@@ -238,21 +245,33 @@ class ColumnPanel(adm.NotebookPanel):
     else:
       self['Sequence'].Disable()
       
-      
-    if cd['typcategory'] == 'S' and self.dialog.GetServer().version >= 9.1:
-      colls=self.dialog.node.GetCursor().ExecuteDictList(
+    if self.dialog.GetServer().version >= 9.1:
+      if cd['typcategory'] == 'S':
+        colls=self.dialog.node.GetCursor().ExecuteDictList(
                                             "SELECT oid,collname FROM pg_collation WHERE collencoding IN (-1, %d) ORDER BY oid" 
                                                       % self.dialog.node.GetDatabase().info['encoding'])
-      for c in colls:
-        self['Collation'].AppendKey(c['oid'], c['collname'])
+        for c in colls:
+          self['Collation'].AppendKey(c['oid'], c['collname'])
       
-      if cd['attcollation']:
-        self.Collation = cd['attcollation']
-      
+        if cd['attcollation']:
+          self.Collation = cd['attcollation']
+      else:
+        self['Collation'].Disable()
     else:
-      self['Collation'].Disable()
+      self.ShowControls("Collation", False)
+    self.Comment=cd['description']
+      
+    # Not yet supported
+    self.ShowControls("Sequence Storage Statistics", False)
+    self.OnTypeChange(None)
+
     self.SetUnchanged()
     
+  def Check(self):
+    if self.typeInfo.get(self.DataType) == 2:
+      return self.CheckValid(True, self.Precision <= self.Length, xlt("Precision must be <= Length"))
+    return True
+  
   def GetSql(self):
     sql=[]
     params={ "colname": quoteIdent(self.ColName), "oldcol": quoteIdent(self['ColName'].unchangedValue)}
@@ -266,6 +285,26 @@ class ColumnPanel(adm.NotebookPanel):
       else:
         params['val'] = "DROP"
       sql.append("ALTER COLUMN %(colname)s %(val)s NOT NULL" % params)
+      
+    if self.HasChanged("DefaultVal"):
+      if self.DefaultVal:
+        params['default'] = self.DefaultVal
+        sql.append("ALTER COLUMN %(colname)s SET DEFAULT %(default)s" % params)
+      else:
+        sql.append("ALTER COLUMN (%colname)s DROP DEFAULT" % params)
+    if self.HasChanged("DataType Collation Length Precision"):
+      
+      params['type']=self['DataType'].GetValue()
+      n="ALTER COLUMN %(colname)s TYPE %(type)s" % params
+      precFlag=self.typeInfo.get(self.DataType)
+      if precFlag and self.Length:
+        n += "(%d" % self.Length
+        if precFlag == 2 and self['Precision'].GetValue():
+          n += ", %d" % self.Precision
+        n += ")"
+      if self.HasChanged("Collation"):
+        n += " COLLATE %s" % quoteIdent(self['Collation'].GetValue())
+      sql.append(n)
     if self.HasChanged("Statistics"):
       params['val'] = self.Statistics
       sql.append("ALTER COLUMN %(colname)s SET STATISTICS %(val)d" % params)
@@ -276,7 +315,14 @@ class ColumnPanel(adm.NotebookPanel):
 #      sql.append("ALTER COLUMN %(colname)s SET COLLATE \"%(val)d\";" % params)
       
     if sql:
-      return "ALTER TABLE %s\n   %s;" % (self.dialog.node.NameSql() , ",\n   ".join(sql))
+      sql=["ALTER TABLE %s\n   %s;" % (self.dialog.node.NameSql() , ",\n   ".join(sql))]
+    
+    if self.HasChanged('Comment'):
+      params['tabname'] = self.dialog.node.NameSql()
+      params['comment'] = quoteValue(self.Comment)
+      sql.append("COMMENT ON COLUMN %(tabname)s.%(colname)s IS %(comment)s" % params)
+    if sql:
+      return "\n".join(sql)
     return ""
   
   
@@ -400,7 +446,8 @@ class ColumnsPage(adm.NotebookPage):
       
       add=self.control.AddColumnInfo
       add(xlt("Name"), 20,         colname='attname')
-      add(xlt("Type"), -1,         proc=_typename)
+      add(xlt("Type"), 30,         proc=_typename)
+      add(xlt("Comment"), -1,         colname='description')
       self.RestoreListcols()
 
       node.populateColumns()
