@@ -468,15 +468,11 @@ class UpdateDlg(adm.Dialog):
 
     if dlg.ShowModal() == wx.ID_YES:
       if sys.platform == "darwin" and hasattr(sys, 'frozen'):
-	args= [ os.path.join(os.path.dirname(sys.executable) , admVersion.appName) ]
-      else:
-        args=[sys.executable]
+	       sys.executable = os.path.join(os.path.dirname(sys.executable), admVersion.appName)
 
-      args.extend(sys.argv)
-      if sys.platform == 'win32':
-        args = ['"%s"' % arg for arg in args]
-
-      rc=subprocess.Popen(args, cwd=OnlineUpdate.startupCwd)
+      subprocess.Popen([sys.executable] + sys.argv, cwd=OnlineUpdate.startupCwd)
+      adm.Frame.CloseAll()
       sys.exit()
+ 
     return True
 

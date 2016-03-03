@@ -33,6 +33,11 @@ class Frame(wx.Frame, adm.MenuOwner):
     if size and self.HasFlag(wx.RESIZE_BORDER):
       self.SetSize(size)
 
+  @classmethod
+  def CloseAll(cls):
+    for frame in cls.allFrames:
+      frame.Destroy()
+
 
   def GetToolBar(self):
     if hasattr(self, 'toolbar'):
