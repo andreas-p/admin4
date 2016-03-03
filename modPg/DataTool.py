@@ -820,7 +820,7 @@ class DataFrame(SqlFrame):
         
     self.worker = None
     self.connectionPool.Disconnect()
-    adm.config.storeWindowPositions(self)
+    super(DataFrame, self).OnClose(evt)
     self.Destroy()
 
 class DataTool:

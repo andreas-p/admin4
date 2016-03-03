@@ -15,10 +15,14 @@ from LoggingDialog import LoggingDialog
 from AdmDialogs import PreferencesDlg, AboutDlg
 from Update import UpdateDlg, CheckAutoUpdate
 
+
 class Frame(wx.Frame, adm.MenuOwner):
+  allFrames=[]
+  
   def __init__(self, parentWin, title, style, _size, _pos):
     size,pos = restoreSize("main", (600,400), None)
     wx.Frame.__init__(self, parentWin, title=title, style=style, size=size, pos=pos)
+    Frame.allFrames.append(self)
     self.tree=None
     self.currentNode=None
     self.Bind(wx.EVT_CLOSE, self.OnClose)
@@ -116,6 +120,8 @@ class Frame(wx.Frame, adm.MenuOwner):
 
   def OnClose(self, evt):
     adm.config.storeWindowPositions(self)
+    try: Frame.allFrames.remove(self)
+    except: pass
     evt.Skip()
 
   def SetStatus(self, text=None):
