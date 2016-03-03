@@ -3,27 +3,3 @@ hide password preference
 frames/app close
 
 SSL certificate management
-
-
-def restart_with_reloader():
-    """Spawn a new Python interpreter with the same arguments as this one,
-    but running the reloader thread.
-    """
-    while 1:
-        _log('info', ' * Restarting with reloader')
-        args = [sys.executable] + sys.argv
-        new_environ = os.environ.copy()
-        new_environ['WERKZEUG_RUN_MAIN'] = 'true'
-
-        # a weird bug on windows. sometimes unicode strings end up in the
-        # environment and subprocess.call does not like this, encode them
-        # to latin1 and continue.
-        if os.name == 'nt' and PY2:
-            for key, value in iteritems(new_environ):
-                if isinstance(value, text_type):
-                    new_environ[key] = value.encode('iso-8859-1')
-
-        exit_code = subprocess.call(args, env=new_environ)
-        if exit_code != 3:
-            return exit_code
-

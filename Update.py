@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2013-2014 Andreas Pflug
+# (c) 2013-2016 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -10,7 +10,7 @@ import adm, logger
 import version as admVersion
 from wh import xlt, copytree
 from xmlhelp import Document as XmlDocument
-import time, threading
+import time, threading, subprocess
 
 try:
   import Crypto.PublicKey.RSA, Crypto.Hash.SHA, Crypto.Signature.PKCS1_v1_5
@@ -433,45 +433,50 @@ class UpdateDlg(adm.Dialog):
     
   def Execute(self):
     tmpDir=self.prepareTmp()
-    if self['Notebook'].GetSelection():
-      self.ModuleInfo = xlt("Installing...")
-      self.DoInstall(tmpDir, self.Source)
-      updateInfo=xlt("Installed new module %s") % self.modname      
-    else:
-      self.modname = "Core"
-      if self.hasCoreUpdate and self.minorUpdateUrl and self.updateUrl != self.minorUpdateUrl:
-        source=self.DoDownload(tmpDir, self.updateUrl, self.updateZipHash)
+    if True: # False: skip update for reboot testing
+      if self['Notebook'].GetSelection():
+        self.ModuleInfo = xlt("Installing...")
+        self.DoInstall(tmpDir, self.Source)
+        updateInfo=xlt("Installed new module %s") % self.modname      
+      else:
+        self.modname = "Core"
+        if self.hasCoreUpdate and self.minorUpdateUrl and self.updateUrl != self.minorUpdateUrl:
+          source=self.DoDownload(tmpDir, self.updateUrl, self.updateZipHash)
+          if not source:
+            return False
+          self.ModuleInfo = xlt("Updating...")
+          if not self.DoInstall(tmpDir, source):
+            return False
+
+          tmpDir=self.prepareTmp()
+
+        source=self.DoDownload(tmpDir, self.minorUpdateUrl, self.minorUpdateZipHash)
         if not source:
           return False
         self.ModuleInfo = xlt("Updating...")
-        if not self.DoInstall(tmpDir, source):
-          return False
-
-        tmpDir=self.prepareTmp()
+        self.DoInstall(tmpDir, source)
         
-      source=self.DoDownload(tmpDir, self.minorUpdateUrl, self.minorUpdateZipHash)
-      if not source:
-        return False
-      self.ModuleInfo = xlt("Updating...")
-      self.DoInstall(tmpDir, source)
-      updateInfo=xlt("Update installed")     
-    
-    wx.MessageDialog(self, xlt("New program files require restart."), 
-                         updateInfo,
-                         wx.OK)
-    return
-
-    
+      updateInfo=xlt("Update installed")
+    else:
+      updateInfo="Fake update"
+      
+          
+    self.ModuleInfo = updateInfo
     dlg=wx.MessageDialog(self, xlt("New program files require restart.\nRestart now?"), 
                          updateInfo,
                          wx.YES_NO|wx.NO_DEFAULT)
+
     if dlg.ShowModal() == wx.ID_YES:
-      args=[sys.executable]
+      if sys.platform == "darwin" and hasattr(sys, 'frozen'):
+	args= [ os.path.join(os.path.dirname(sys.executable) , admVersion.appName) ]
+      else:
+        args=[sys.executable]
+
       args.extend(sys.argv)
       if sys.platform == 'win32':
         args = ['"%s"' % arg for arg in args]
 
-      os.chdir(self.startupCwd)
-      os.execv(sys.executable, args)
+      rc=subprocess.Popen(args, cwd=OnlineUpdate.startupCwd)
       sys.exit()
     return True
+
