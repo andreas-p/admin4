@@ -30,7 +30,7 @@ class AboutDlg(adm.Dialog):
     self['Admin'].SetFont(bigFont)
     self['Version'].SetFont(mediumFont)
 
-    self.Admin="Admin4"
+    self.Admin=admVersion.appName
     self.Version=xlt("Version %s") % str(admVersion.version)
 
     if not adm.IsPackaged():

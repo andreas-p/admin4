@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2013-2014 Andreas Pflug
+# (c) 2013-2016 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -18,12 +18,10 @@ addModules=[]
 excludes=['lib2to3', 'hotshot', 'distutils', 'ctypes', 'unittest']
 buildDir=".build"
 releaseDir="release/"
-appName="Admin4"
 versionTag=None
 requiredAdmVersion="2.2.0" # this is written to __version.py
 checkGit=True
 checkGitCommits=False
-standardInstallDir="/usr/share/%s" % appName
 recentlyChanged=[]
 
 if __name__ == '__main__':
@@ -32,6 +30,9 @@ if __name__ == '__main__':
   import Crypto.Hash.SHA
   import version
   
+  appName=version.appName
+  standardInstallDir="/usr/share/%s" % appName
+
   platform=platform.system()
   
   if len(sys.argv) > 1 and sys.argv[1] in ['srcUpdate', 'py2exe', 'py2app']:

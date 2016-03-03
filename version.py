@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2013-2014 Andreas Pflug
+# (c) 2013-2016 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -84,6 +84,7 @@ version=Version(version)
 requiredAdmVersion=Version(requiredAdmVersion)
 libVersion=Version("2.2.0")
 
+appName="Admin4"
 description="4th generation\nAdministration Tool\n\nHelp and manual: http://www.admin4.org/docs"
 vendor="PSE"
 vendorDisplay="PSE Consulting"
