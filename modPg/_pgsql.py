@@ -652,8 +652,10 @@ class pgQuery:
         where="%s=%s" % (quoteIdent(where), quoteValue(val))
       self.where.append(where)
       
-  def AddOrder(self, order):
+  def AddOrder(self, order, quoted=False):
     if order:
+      if quoted:
+        order=quoteIdent(order)
       self.order.append(order)
     
     def AddGroup(self, group):

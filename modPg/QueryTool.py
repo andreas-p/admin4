@@ -310,7 +310,7 @@ class QueryFrame(SqlFrame):
       conn=self.databases.GetClientData(i)
       if conn:
         conn.disconnect()
-    adm.config.storeWindowPositions(self)
+    super(QueryFrame, self).OnClose(evt)
     self.Destroy()
       
     
