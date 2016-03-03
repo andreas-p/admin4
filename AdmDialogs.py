@@ -93,6 +93,7 @@ class AboutDlg(adm.Dialog):
     
     licenses.append("Additional licenses from libraries used may apply.")
     self.License="\n\n".join(licenses)
+    self.Bind("OK", self.OnCancel)
   
 
 class PreferencesDlg(adm.CheckedDialog):
