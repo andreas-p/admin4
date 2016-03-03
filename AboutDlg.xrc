@@ -3,17 +3,18 @@
   <object class="wxDialog" name="AboutDlg">
     <title>About</title>
     <centered>1</centered>
-    <style>wxCAPTION|wxCLOSE_BOX</style>
+    <style>wxCAPTION|wxRESIZE_BORDER|wxCLOSE_BOX</style>
     <object class="wxFlexGridSizer">
       <object class="sizeritem">
         <object class="wxBitmapButton" name="OK">
           <bitmap>Admin4.png</bitmap>
           <style></style>
         </object>
-        <flag>wxGROW|wxALIGN_CENTRE|wxALIGN_CENTRE_VERTICAL</flag>
+        <flag>wxTOP|wxBOTTOM|wxLEFT|wxRIGHT|wxGROW|wxALIGN_CENTRE|wxALIGN_CENTRE_VERTICAL</flag>
+        <border>10</border>
       </object>
       <object class="sizeritem">
-        <object class="wxNotebook">
+        <object class="wxNotebook" name="">
           <object class="notebookpage">
             <label>Version</label>
             <object class="wxPanel">
@@ -32,22 +33,25 @@
                   </object>
                   <flag>wxALIGN_CENTRE|wxTOP</flag>
                   <border>10</border>
+                  <ratio>1</ratio>
                 </object>
                 <object class="sizeritem">
                   <object class="wxStaticText" name="Revision">
-                    <label></label>
+                    <label>Revision</label>
                     <style>wxALIGN_CENTRE</style>
                   </object>
                   <flag>wxALIGN_CENTRE|wxTOP</flag>
                   <border>2</border>
+                  <ratio>1</ratio>
                 </object>
                 <object class="sizeritem">
                   <object class="wxStaticText" name="Description">
-                    <label></label>
+                    <label>Description</label>
                     <style>wxALIGN_CENTRE</style>
                   </object>
                   <flag>wxALIGN_CENTRE|wxTOP</flag>
                   <border>20</border>
+                  <ratio>1</ratio>
                 </object>
               </object>
             </object>
@@ -71,7 +75,7 @@
           </object>
         </object>
         <option>1</option>
-        <flag>wxBOTTOM|wxRIGHT|wxGROW</flag>
+        <flag>wxTOP|wxBOTTOM|wxRIGHT|wxGROW</flag>
         <border>10</border>
       </object>
       <cols>2</cols>
