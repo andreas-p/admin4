@@ -109,7 +109,7 @@ class UpdateDlg(adm.Dialog):
     self.SetTitle(xlt("Update %s modules") % adm.appTitle)
 
     self.onlineUpdateInfo=None
-
+    self.canUpdate = True
     self.Bind("Source")
     self.Bind("Search", self.OnSearch)
     self.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.OnCheck)
@@ -119,10 +119,15 @@ class UpdateDlg(adm.Dialog):
       self['CheckUpdate'].Disable()
     
   def Go(self):
-    if not os.access(adm.loaddir, os.W_OK):
-      self.EnableControls("Target Search Ok", False)
+    if not admVersion.revDate:
+      self.EnableControls("CheckUpdate Search Ok", False)
+      self.ModuleInfo=xlt("Update not possible:\nInstallation not from official release package.")
+      logger.debug("__version.py is missing in program directory: no online update possible since not from official release package.")
+      self.canUpdate = False
+    elif not os.access(adm.loaddir, os.W_OK):
+      self.EnableControls("CheckUpdate Search Ok", False)
       self.ModuleInfo=xlt("Update not possible:\nProgram directory cannot be written.")
-      self['Ok'].Disable()
+      self.canUpdate = False
     else:
       self.DoCheckUpdate()
       self.Check()
@@ -154,6 +159,8 @@ class UpdateDlg(adm.Dialog):
 
     
   def Check(self):
+    if not self.canUpdate:
+      return False
     if self['Notebook'].GetSelection():
       modSrc=None
       canInstall=True
