@@ -10,10 +10,10 @@ ignoredirs=['xrced', 'build', 'dist', '_update', 'release']
 ignoredfiles=['createBundle.py']
 moreFiles=["LICENSE.TXT", 'CHANGELOG', 'admin4.pubkey']
 
-requiredMods=['wx.lib.ogl', 'xml', 'ast', 'Crypto.Signature']
+requiredMods=['wx.lib.ogl', 'xml', 'Crypto.Signature']
 appEntry='admin4.py'
 packages=['wx']
-includes=[]
+includes=['ast']
 addModules=[]
 excludes=['lib2to3', 'hotshot', 'distutils', 'ctypes', 'unittest']
 buildDir=".build"
@@ -288,8 +288,9 @@ if __name__ == '__main__':
     
   else:
     print "Creating package in %s" %distDir
+    # os.environ['DISTUTILS_DEBUG'] = 'true'
     import distutils.core
-    __import__(installer)
+    
     info=dict( data_files=data_files,
                          name=appName,
                          author=version.author,
@@ -313,8 +314,13 @@ if __name__ == '__main__':
                          )
   
     if platform == "Windows":
+      __import__(installer)
       distutils.core.setup(windows=[{'script': appEntry, 'icon_resources': [(1, '%s.ico' % appName)] }], **info)
     elif platform == "Darwin":
+      import py2app
+      if py2app.__version__ < '0.8':
+        raise Exception("py2app too old: must be 0.8 or newer")
+      # if you're getting "Cannot include subpackages using the 'packages' option" py2app is too old
       distutils.core.setup(app=[appEntry], **info)
       libdir='%s/%s.app/Contents/Resources/lib/python2.7/wx' % (distDir, appName)
       if not '-A' in sys.argv:
