@@ -9,5 +9,7 @@ For complete packages suitable for your platform, see the Vn.n.n directories.
 The Updates directory contains minor releases with bug fixes and additions based on major Vn.n.n files. 
 It's recommended to use the online update feature which will automatically do the right thing, but you also can download a file and install it manually.
 
+Please note that most programming is performed on OSX, so if you encounter some strange behaviour on other platforms please don't hesitate to give feedback.
+
 
 
