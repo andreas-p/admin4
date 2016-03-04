@@ -44,6 +44,12 @@ def CheckAutoUpdate(frame):
       thread=UpdateThread(frame)
       thread.start()
 
+def HttpGet(url, timeout=onlineTimeout):
+  # We're verifying all contents ourself using the admin4 public key
+  response=requests.get(url, timeout=timeout, proxies=adm.GetProxies(), verify=False)
+  response.raise_for_status()
+  return response
+
 
 class OnlineUpdate:
   startupCwd=os.getcwd()
@@ -64,11 +70,9 @@ class OnlineUpdate:
     try:
       # no need to use SSL here; we'll verify the update.xml later
       info = "?ver=%s&rev=%s&mods=%s" % (admVersion.version, admVersion.revDate.replace(' ', '_'), ",".join(modsUsed.keys()))
-      response=requests.get("http://www.admin4.org/update.xml%s" % info, timeout=onlineTimeout, proxies=adm.GetProxies())
-      response.raise_for_status()
+      response=HttpGet("http://www.admin4.org/update.xml%s" % info)
       xmlText=response.text
-      sigres=requests.get("http://www.admin4.org/update.sign", timeout=onlineTimeout, proxies=adm.GetProxies())
-      sigres.raise_for_status()
+      sigres=HttpGet("http://www.admin4.org/update.sign")
       signature=sigres.content
       
     except Exception as ex:
@@ -417,8 +421,7 @@ class UpdateDlg(adm.Dialog):
   def DoDownload(self, tmpDir, url, hash):
       self.ModuleInfo = xlt("Downloading...\n\n%s") % url
       try:
-        response=requests.get(url, timeout=onlineTimeout*5, proxies=adm.GetProxies())
-        response.raise_for_status()
+        response=HttpGet(url, onlineTimeout*5)
       except Exception as ex:
         self.ModuleInfo = xlt("The download failed:\n%s\n\n%s") % (str(ex), url)
         return None
