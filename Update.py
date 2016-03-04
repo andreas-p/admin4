@@ -70,9 +70,9 @@ class OnlineUpdate:
     try:
       # no need to use SSL here; we'll verify the update.xml later
       info = "?ver=%s&rev=%s&mods=%s" % (admVersion.version, admVersion.revDate.replace(' ', '_'), ",".join(modsUsed.keys()))
-      response=HttpGet("http://www.admin4.org/update.xml%s" % info)
+      response=HttpGet("https://www.admin4.org/update.xml%s" % info)
       xmlText=response.text
-      sigres=HttpGet("http://www.admin4.org/update.sign")
+      sigres=HttpGet("https://www.admin4.org/update.sign")
       signature=sigres.content
       
     except Exception as ex:
