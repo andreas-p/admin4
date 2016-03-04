@@ -1,4 +1,8 @@
-Changes:
+Changes in 2.2.2:
+Core:
+- skip verify SSL certificates when downloading updates
+
+Changes in 2.2.1:
 Core:
 - ver/rev/mods in update query url
 - restart application after update undone; doesn't work
