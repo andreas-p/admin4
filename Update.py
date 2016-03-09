@@ -112,7 +112,6 @@ class UpdateDlg(adm.Dialog):
   def __init__(self, parentWin):
     adm.Dialog.__init__(self, parentWin)
     self.SetTitle(xlt("Update %s modules") % adm.appTitle)
-    print "ARGS", sys.argv, sys.executable
     self.onlineUpdateInfo=None
     self.canUpdate = True
     self.Bind("Source")
