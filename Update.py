@@ -39,6 +39,8 @@ class UpdateThread(threading.Thread):
   
 def CheckAutoUpdate(frame):
   if adm.updateCheckPeriod:
+    if not admVersion.revDate:
+      return
     lastUpdate=adm.config.Read('LastUpdateCheck', 0)
     if not lastUpdate or lastUpdate+adm.updateCheckPeriod*24*60*60 < time.time():
       thread=UpdateThread(frame)
