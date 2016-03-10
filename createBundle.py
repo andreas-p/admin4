@@ -318,7 +318,7 @@ if __name__ == '__main__':
       __import__(installer)
       distutils.core.setup(windows=[{'script': appEntry, 'icon_resources': [(1, '%s.ico' % appName)] }], **info)
     elif platform == "Darwin":
-      import py2app
+      py2app=__import__(installer)
       if py2app.__version__ < '0.8':
         raise Exception("py2app too old: must be 0.8 or newer")
       # if you're getting "Cannot include subpackages using the 'packages' option" py2app is too old
