@@ -5,7 +5,7 @@
 # see LICENSE.TXT for conditions of usage
 
 import wx
-import requests, sys, os, zipfile, shutil
+import requests, sys, os, stat, zipfile, shutil
 import adm, logger
 import version as admVersion
 from wh import xlt, copytree
@@ -39,6 +39,8 @@ class UpdateThread(threading.Thread):
   
 def CheckAutoUpdate(frame):
   if adm.updateCheckPeriod:
+    if not admVersion.revDate:
+      return
     lastUpdate=adm.config.Read('LastUpdateCheck', 0)
     if not lastUpdate or lastUpdate+adm.updateCheckPeriod*24*60*60 < time.time():
       thread=UpdateThread(frame)
@@ -68,7 +70,6 @@ class OnlineUpdate:
       modsUsed[mod] = modsUsed.get(mod, 0) +1
       
     try:
-      # no need to use SSL here; we'll verify the update.xml later
       info = "?ver=%s&rev=%s&mods=%s" % (admVersion.version, admVersion.revDate.replace(' ', '_'), ",".join(modsUsed.keys()))
       response=HttpGet("https://www.admin4.org/update.xml%s" % info)
       xmlText=response.text
@@ -111,7 +112,6 @@ class UpdateDlg(adm.Dialog):
   def __init__(self, parentWin):
     adm.Dialog.__init__(self, parentWin)
     self.SetTitle(xlt("Update %s modules") % adm.appTitle)
-
     self.onlineUpdateInfo=None
     self.canUpdate = True
     self.Bind("Source")
@@ -407,6 +407,14 @@ class UpdateDlg(adm.Dialog):
     copytree(source, destination)
     try: shutil.rmtree(tmpDir)
     except: pass
+    
+    if self.modname == "Core":
+      try:
+        # Make start file executable for unpackaged files
+        startFile=sys.argv[0] # usually admin4.py
+        st=os.stat(startFile)
+        os.chmod(startFile, st.st_mode | stat.S_IXUSR|stat.S_IXGRP|stat.S_IXOTH)
+      except: pass
     return True
   
   def prepareTmp(self):
