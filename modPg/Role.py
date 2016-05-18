@@ -71,6 +71,11 @@ class RolesPage(adm.NotebookPage):
   name=xlt("Roles")
   order=50
   availableOn="Server"
+  roleFlags={'rolcreaterole': 'createRole',
+             'rolcreatedb': 'crDb',
+             'rolcatupdate': 'catUpd',
+             'rolreplication': 'repl'
+            }
   
   def Display(self, node, _detached):
     if node != self.lastNode:
@@ -81,13 +86,9 @@ class RolesPage(adm.NotebookPage):
         if d:  return ",".join(d)
       def flags(row):
         fl=[]
-        if row['rolcreaterole']:
-          fl.append('createRole')
-        if row['rolcreatedb']:
-          fl.append('crDb')
-        if row['rolcatupdate']:
-          fl.append('catUpd')
-        
+        for key, desc in self.roleFlags.items():
+          if row.get(key):
+            fl.append(desc)
         return" ".join(fl)
         
       add=self.control.AddColumnInfo
