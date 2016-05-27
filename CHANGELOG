@@ -1,3 +1,6 @@
+modImap 0.5.7:
+fix squat
+
 Changes in 2.2.2:
 Core:
 - skip verify SSL certificates when downloading updates

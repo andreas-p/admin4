@@ -254,13 +254,13 @@ class Mailbox(adm.Node):
     def __init__(self, parentWin, node, parentNode=None):
       adm.PropertyDialog.__init__(self, parentWin, node, parentNode)
       self.Bind("MailboxName Comment Squat StorageQuota AclRecursive")
-      if not node or node.CanSelect():
+      if node and node.CanSelect():
         self['ACL'].Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.OnClickAcl)
         self['ACL'].Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK, self.OnRightClickAcl)
         self.Bind('AddAcl', self.OnAddAcl)
       else:
         self.EnableControls("AddAcl ACL", False)
-      if self.node.GetServer().flavor != "cyrus":
+      if node and node.GetServer().flavor != "cyrus":
         self.EnableControls("Squat", False)
       
     def Go(self):
