@@ -375,7 +375,7 @@ class UpdateDlg(adm.Dialog):
         if haveUpdate and canUpdate:
           msg.insert(1, xlt("An update is available."))
         else:
-          msg.append(xlt("No update available."))
+          msg.append(xlt("No update available, you're up-to-date."))
         
         self.ModuleInfo = "\n".join(msg)
         return haveUpdate and canUpdate
