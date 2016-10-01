@@ -1,3 +1,7 @@
+
+modPg 0.5.9:
+ roles 9.5+
+ 
 modImap 0.5.7:
 fix squat
 
