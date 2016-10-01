@@ -14,4 +14,33 @@
 	<natures>
 		<nature>org.python.pydev.pythonNature</nature>
 	</natures>
+	<filteredResources>
+		<filter>
+			<id>1475335001256</id>
+			<name></name>
+			<type>22</type>
+			<matcher>
+				<id>org.eclipse.ui.ide.multiFilter</id>
+				<arguments>1.0-name-matches-false-false-*.png</arguments>
+			</matcher>
+		</filter>
+		<filter>
+			<id>1475335001258</id>
+			<name></name>
+			<type>22</type>
+			<matcher>
+				<id>org.eclipse.ui.ide.multiFilter</id>
+				<arguments>1.0-name-matches-false-false-*.ico</arguments>
+			</matcher>
+		</filter>
+		<filter>
+			<id>1475335001260</id>
+			<name></name>
+			<type>22</type>
+			<matcher>
+				<id>org.eclipse.ui.ide.multiFilter</id>
+				<arguments>1.0-name-matches-false-false-*.xrc</arguments>
+			</matcher>
+		</filter>
+	</filteredResources>
 </projectDescription>
