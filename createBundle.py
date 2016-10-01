@@ -34,6 +34,8 @@ if __name__ == '__main__':
   standardInstallDir="/usr/share/%s" % appName
 
   platform=platform.system()
+  try:  os.mkdir(releaseDir)
+  except: pass
   
   if len(sys.argv) > 1 and sys.argv[1] in ['srcUpdate', 'py2exe', 'py2app']:
     installer=sys.argv[1]
