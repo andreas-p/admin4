@@ -688,6 +688,9 @@ class DataFrame(SqlFrame):
                           .Name("Edit Data").Caption(xlt("Edit Data")).CaptionVisible(False))
 
     self.restorePerspective()
+    self.manager.GetPane("Edit data").Show()
+    self.manager.Update()
+
     self.manager.Bind(wx.aui.EVT_AUI_PANE_CLOSE, self.OnAuiCloseEvent)
     self.viewmenu.Check(self.OnToggleFilter, self.manager.GetPane("filter").IsShown())
     self.OnToggleToolBar()

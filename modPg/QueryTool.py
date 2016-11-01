@@ -271,7 +271,9 @@ class QueryFrame(SqlFrame):
 
     self.SetStatus(xlt("ready"))
     self.restorePerspective()
-
+    self.manager.GetPane("Result").Show()
+    self.manager.Update()
+    
     self.viewmenu.Check(self.OnToggleSnippets, self.manager.GetPane("snippets").IsShown())
     self.OnToggleToolBar()
     self.OnToggleStatusBar()
