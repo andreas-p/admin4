@@ -584,7 +584,10 @@ class FilterPanel(adm.NotebookPanel):
     for colName in self['DisplayCols'].GetCheckedStrings():
       query.AddCol(colName, True)
     for colName in self['SortCols'].GetCheckedStrings():
-      query.AddOrder(colName, True)
+      if colName.endswith(' DESC'):
+        query.AddOrder(query.quoteIdent(colName[:-5]) + " DESC", False)
+      else:
+        query.AddOrder(colName, True)
     if self.FilterCheck:
       filter=self.FilterValue.GetText().strip()
       query.AddWhere(filter)

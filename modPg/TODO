@@ -9,10 +9,13 @@ DataGrid
 - Drag/drop not from MouseDown for wx>3.0
 - OnFilterValidate and executeQuery catch error w/o logging
 - FK drilldown
+- float edit
 
 ShowBusy abort enable
 
 roundcube.identities.send-to quoteIdent in DataGrid
+
+ResetPerspective
 
 
 

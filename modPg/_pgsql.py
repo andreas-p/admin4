@@ -620,6 +620,9 @@ class pgQuery:
     if tab:
       self.tables.append(tab)
 
+  def quoteIdent(self, identifier):
+    return quoteIdent(identifier)
+  
   def SetCursor(self, cursor):
     self.cursor=cursor
     
