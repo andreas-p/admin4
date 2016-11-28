@@ -10,17 +10,17 @@ from _pgsql import quoteIdent, quoteValue
 from wh import shlexSplit
 
 rightString={'r': "SELECT",
-               'w': "UPDATE",
-               'a': "INSERT",
-               'd': "DELETE",
-               'D': "TRUNCATE",
-               'x': "REFERENCES",
-               't': "TRIGGER",
-               'X': "EXECUTE",
-               'U': "USAGE",
-               'C': "CREATE",
-               'c': "CONNECT",
-               'T': "TEMPORARY" }
+             'w': "UPDATE",
+             'a': "INSERT",
+             'd': "DELETE",
+             'D': "TRUNCATE",
+             'x': "REFERENCES",
+             't': "TRIGGER",
+             'X': "EXECUTE",
+             'U': "USAGE",
+             'C': "CREATE",
+             'c': "CONNECT",
+             'T': "TEMPORARY" }
 
 class ServerObject(Node):
   def __init__(self, parentNode, name):
@@ -33,6 +33,47 @@ class ServerObject(Node):
     
   def GetOid(self):
     return self.info['oid']
+  
+  def getAclDef(self, aclName, allRights='ZZ'):
+    acls=[]
+    for acl in shlexSplit(self.info[aclName][1:-1], ','):
+      if acl.startswith('='):
+        user='public'
+        b=shlexSplit(acl[1:], '/')
+      else:
+        a=shlexSplit(acl, '=')
+        user=quoteIdent(a[0])
+        b=shlexSplit(a[1], '/')
+      # grantor=b[1]
+
+      privileges=""
+      grants=""
+      lastP=""
+      for p in b[0]:
+        if p == '*':
+          grants += lastP
+        else:
+          lastP=p
+          privileges += p
+
+      def mkGrant(lst, withGrant=""):
+        if lst == allRights:
+          pl=['ALL']
+        else:
+          pl=[]
+          for p in b[0]:
+            pl.append(rightString[p])
+        return "GRANT " + ",".join(pl) + " ON " + self.ObjectSql() +" TO " + user + withGrant +";"
+      if privileges:
+        acls.append(mkGrant(privileges))
+      if grants:
+        acls.append(mkGrant(grants, " WITH GRANT OPTION"))
+    return acls  
+  
+  def getCommentDef(self):
+    if self.info['description']:
+      return ["COMMENT ON " + self.ObjectSql() + " IS " + quoteValue(self.info['description']) + ";"]
+    return []  
 
   def GetCursor(self):
     if self.connection:

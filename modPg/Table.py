@@ -134,6 +134,57 @@ class Table(SchemaObject):
               'cols': self.GetServer().ExpandColDefs(cols)} 
  
  
+  def GetSql(self):
+    self.populateColumns()
+    cols=[]
+    for col in self.columns:
+      cols.append(quoteIdent(col['attname']) + ' ' + self.colTypeName(col));
+
+    constraints=[]
+
+    self.populateConstraints()
+
+    for constraint in self.constraints:
+      c=[]
+      for col in constraint['colnames']:
+        c.append(quoteIdent(col))
+      if constraint['indisprimary']:
+        cols.append("PRIMARY KEY("+ ", ".join(c)+")")
+      else:
+        if constraint['type'] == 'index':
+          info=['CREATE']
+          if constraint['indisunique']:
+            info.append('UNIQUE')
+          info.append("INDEX")
+          info.append(constraint['fullname'])
+          info.append('ON ' + self.NameSql())
+          info.append("(%s)" % ",".join(c))
+          constraints.append(" ".join(info) + ";")
+        elif constraint['type'] == 'foreignkey':
+          info=["ALTER TABLE " + self.NameSql() + "\n  ADD CONSTRAINT "]
+          info.append(constraint['fullname'])
+          info.append("REFERENCES " + quoteIdent(constraint['reftable']))
+          info.append("(%s)" % ",".join(map(quoteIdent, constraint['refcolnames'])))
+          constraints.append(" ".join(info) +";")
+        elif constraint['type'] == 'check':
+          pass
+
+
+    sql=[]
+    sql.append("CREATE TABLE " + self.NameSql())
+    sql.append("(");
+    sql.append("  " + ",\n  ".join(cols))
+    if (self.info['relhasoids']):
+      sql.append(") WITH OIDs;")
+    else:                    
+      sql.append(");")          
+    sql.append("ALTER TABLE " + self.NameSql() + " OWNER TO " + quoteIdent(self.info['owner']) + ";")
+    sql.extend(constraints)
+    sql.extend(self.getAclDef('relacl', "arwdDxt"))
+    sql.extend(self.getCommentDef())
+    return "\n".join(sql); 
+  
+  
   def populateColumns(self):
       if not self.columns:
         self.columns = self.GetCursor().ExecuteDictList("""
@@ -188,7 +239,24 @@ class Table(SchemaObject):
   def populateConstraints(self):
     if self.constraints == None:
       self.constraints=self.GetCursor().ExecuteDictList(self.getConstraintQuery(self.GetOid()))
-      
+   
+  def colTypeName(self, col):   
+    n= [col['typename'], ['NULL', 'NOT NULL'][col['attnotnull']] ]
+    default=col['adsrc']
+    if default != None:
+      if default == "nextval('%s_%s_seq'::regclass)" % (self.info['relname'], col['attname']):
+        if n[0] == "integer":
+          n[0] = "serial"
+        elif n[0] == "bigint":
+          n[0] = "bigserial"
+        else:
+          logger.debug("Unknown serial type %s for %s", n[0], default)
+          n.append("DEFAULT")
+          n.append(default)
+      else:
+        n.append("DEFAULT")
+        n.append(default)
+    return "  ".join(n)
 
 class ColumnPanel(adm.NotebookPanel):
   name=xlt("Column")
@@ -424,30 +492,14 @@ class ColumnsPage(adm.NotebookPage):
   def Display(self, node, _detached):
     if node != self.lastNode:
       def _typename(row):
-        n= [row['typename'], ['NULL', 'NOT NULL'][row['attnotnull']] ]
-        default=row['adsrc']
-        if default != None:
-          if default == "nextval('%s_%s_seq'::regclass)" % (node.info['relname'], row['attname']):
-            if n[0] == "integer":
-              n[0] = "serial"
-            elif n[0] == "bigint":
-              n[0] = "bigserial"
-            else:
-              logger.debug("Unknown serial type %s for %s", n[0], default)
-              n.append("DEFAULT")
-              n.append(default)
-          else:
-            n.append("DEFAULT")
-            n.append(default)
-        return "  ".join(n)
+        return node.colTypeName(row)
 
       self.lastNode=node
       self.control.ClearAll()
       
-      add=self.control.AddColumnInfo
-      add(xlt("Name"), 20,         colname='attname')
-      add(xlt("Type"), 30,         proc=_typename)
-      add(xlt("Comment"), -1,         colname='description')
+      self.control.AddColumnInfo(xlt("Name"), 20,         colname='attname')
+      self.control.AddColumnInfo(xlt("Type"), 30,         proc=_typename)
+      self.control.AddColumnInfo(xlt("Comment"), -1,      colname='description')
       self.RestoreListcols()
 
       node.populateColumns()
@@ -482,11 +534,10 @@ class ConstraintPage(adm.NotebookPage):
           pass
         return "".join(info)
       
-      add=self.control.AddColumnInfo
-      add(xlt("Name"), 10,         colname='fullname')
-      add(xlt("Columns"), 15,      colname='colnames', proc=lambda x: ", ".join(x))
-      add(xlt("Details"), 15,      proc=_getDetails)
-      add(xlt("Description"), -1,  colname='description')
+      self.control.AddColumnInfo(xlt("Name"), 10,         colname='fullname')
+      self.control.AddColumnInfo(xlt("Columns"), 15,      colname='colnames', proc=lambda x: ", ".join(x))
+      self.control.AddColumnInfo(xlt("Details"), 15,      proc=_getDetails)
+      self.control.AddColumnInfo(xlt("Description"), -1,  colname='description')
       self.RestoreListcols()
 
       node.populateConstraints()
