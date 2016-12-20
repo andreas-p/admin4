@@ -1,4 +1,6 @@
-
+Core:
+  - Fix splitValUnit() as reported by Catalin Mocanu
+  
 modPg 0.5.10:
  Datatool sort DESC
  Table SQL

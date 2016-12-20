@@ -624,7 +624,7 @@ def splitValUnit(value):
   num=""
   unit=""
   canDot=True
-  for c in value:
+  for c in str(value):
     if  unit:
       unit += c
     else:
