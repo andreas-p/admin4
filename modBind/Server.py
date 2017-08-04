@@ -92,28 +92,60 @@ class Server(adm.ServerNode):
         self.views={}
         self.viewzones={}
         self.knownZones=[]
-        for view in self.stats.iter('view'):
-          viewname=view.findtext('name')
-          viewstat=[]
-          self.views[viewname]=viewstat
-          viewzone=[]
-          self.viewzones[viewname]=viewzone
-          for rdt in view.iter('rdtype'):
-            viewstat.append( (rdt.findtext('name'), rdt.findtext('counter')) )
-          for res in view.iter('resstat'):
-            viewstat.append( (res.findtext('name'), res.findtext('counter')) )
-          for zone in view.iter('zone'):
-            if zone.find('rdataclass').text == 'IN':
-              zonename=zone.findtext('name').split('/')[0]
-              self.knownZones.append(zonename)
-              viewzone.append(zonename)
-        
-        sv=self.stats.find('bind').find('statistics').find('server')
-        self.serverBoot=sv.findtext('boot-time')
+        if self.stats.tag == 'statistics':
+          statVersion=float(self.stats.attrib['version'])
+        else:
+          statVersion=float(self.stats.find('statistics').findtext('version'))
+          
+        if statVersion >=3: # bind >= 9.10
+          for view in self.stats.iter('view'):
+            viewname=view.attrib['name']
+            viewstat=[]
+            self.views[viewname]=viewstat
+            viewzone=[]
+            self.viewzones[viewname]=viewzone
+            for rdt in view.iter('rdtype'):
+              viewstat.append( (rdt.attrib['name'], rdt.text) )
+            for res in view.iter('resstat'):
+              viewstat.append( (res.attrib['name'], res.text) )
+            for zone in view.iter('zone'):
+              if zone.attrib['rdataclass'] == 'IN':
+                zonename=zone.attrib['name']
+                self.knownZones.append(zonename)
+                viewzone.append(zonename)
+          
+          self.serverBoot=self.stats.find('server').findtext('boot-time')
+  
+          self.serverStats=[]
+          for counters in self.stats.iter('counters'):
+            if counters.attrib['type'] =='nsstat':
+              for counter in counters.iter('counter'):
+                self.serverStats.append( (counter.attrib['name'], counter.text) )
 
-        self.serverStats=[]
-        for sres in sv.iter('nsstat'):
-          self.serverStats.append( (sres.findtext('name'), sres.findtext('counter')) ) 
+        else:  # bind <= 9.9
+          for view in self.stats.iter('view'):
+            viewname=view.findtext('name')
+            viewstat=[]
+            self.views[viewname]=viewstat
+            viewzone=[]
+            self.viewzones[viewname]=viewzone
+            for rdt in view.iter('rdtype'):
+              viewstat.append( (rdt.findtext('name'), rdt.findtext('counter')) )
+            for res in view.iter('resstat'):
+              viewstat.append( (res.findtext('name'), res.findtext('counter')) )
+            for zone in view.iter('zone'):
+              if zone.find('rdataclass').text == 'IN':
+                zonename=zone.findtext('name').split('/')[0]
+                self.knownZones.append(zonename)
+                viewzone.append(zonename)
+          
+          sv=self.stats.find('bind').find('statistics').find('server')
+          self.serverBoot=sv.findtext('boot-time')
+  
+          self.serverStats=[]
+          for sres in sv.iter('nsstat'):
+            self.serverStats.append( (sres.findtext('name'), sres.findtext('counter')) )
+           
         self.knownZones=sorted(set(self.knownZones))
     return self.stats
   

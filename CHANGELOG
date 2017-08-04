@@ -1,6 +1,10 @@
 Core:
   - Fix splitValUnit() as reported by Catalin Mocanu
   
+modBind 0.98.7:
+  CAA support (with modpython 1.15)
+  BIND9.10 support
+  
 modPg 0.5.10:
  Datatool sort DESC
  Table SQL
