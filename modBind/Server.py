@@ -92,10 +92,18 @@ class Server(adm.ServerNode):
         self.views={}
         self.viewzones={}
         self.knownZones=[]
-        if self.stats.tag == 'statistics':
+        if self.stats.tag == 'statistics': # 9.10
           statVersion=float(self.stats.attrib['version'])
-        else:
-          statVersion=float(self.stats.find('statistics').findtext('version'))
+        else: # <9.9
+          st=self.stats.find('statistics')
+          if st:
+            statVersion=float(st.findtext('version'))
+          else: # 9.9
+            try:
+              st=self.stats.find('bind').find('statistics')
+              statVersion=float(st.attrib['version'])
+            except:
+              statVersion=0 # hope the best
           
         if statVersion >=3: # bind >= 9.10
           for view in self.stats.iter('view'):

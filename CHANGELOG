@@ -1,4 +1,5 @@
-
+modBind 0.98.8:
+- Fix for Bind9.9
 Core:
   - Fix splitValUnit() as reported by Catalin Mocanu
   
