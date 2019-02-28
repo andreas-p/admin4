@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2013-2016 Andreas Pflug
+# (c) 2013-2019 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -7,7 +7,7 @@
 
 filePatterns=['.png', '.ico', '.xrc', '.py', '.html']
 ignoredirs=['xrced', 'build', 'dist', '_update', 'release']
-ignoredfiles=['createBundle.py']
+ignoredfiles=['createBundle.py', 'Dockerfile', 'admin4-docker.sh']
 moreFiles=["LICENSE.TXT", 'CHANGELOG', 'admin4.pubkey']
 
 requiredMods=['wx.lib.ogl', 'xml', 'Crypto.Signature']
