@@ -174,7 +174,7 @@ class Table(SchemaObject):
     sql.append("CREATE TABLE " + self.NameSql())
     sql.append("(");
     sql.append("  " + ",\n  ".join(cols))
-    if (self.info['relhasoids']):
+    if (self.info.get('relhasoids')):
       sql.append(") WITH OIDs;")
     else:                    
       sql.append(");")          

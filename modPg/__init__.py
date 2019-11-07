@@ -8,12 +8,12 @@
 moduleinfo={ 'name': "PostgreSQL Server",
             'modulename': "PostgreSQL",
             'description': "PostgreSQL database server",
-            'version': "9.6",
-            'revision': "0.5.10",
+            'version': "12.0",
+            'revision': "0.5.12",
             'requiredAdmVersion': "2.1.8", 
             'testedAdmVersion': "2.1.8", 
-            'supports': "PostgreSQL 8.1 ... 9.6 (pre-9.1 with restrictions)",
-            'copyright': "(c) 2013-2016 PSE Consulting Andreas Pflug",
+            'supports': "PostgreSQL 8.1 ... 12 (pre-9.1 with restrictions)",
+            'copyright': "(c) 2013-2019 PSE Consulting Andreas Pflug",
             'credits': "psycopg2 from http://initd.org/psycopg using libpq (http://www.postgresql.org)",
      }
 

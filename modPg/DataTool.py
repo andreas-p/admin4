@@ -300,11 +300,13 @@ class TableSpecs:
         self.dbName=part[7:]
     
     cursor=connectionPool.GetCursor()
+
+    oidcheck="false as" if self.serverVersion >= 12.0 else ""
     row=cursor.ExecuteRow("""
-      SELECT c.oid, relhasoids
+      SELECT c.oid, %s relhasoids
         FROM pg_class c
        WHERE oid=oid(regclass('%s'))
-    """ % self.tabName)
+    """ % (oidcheck, self.tabName))
     if not row:
       raise Exception(xlt("No such table: %s") % self.tabName)
     self.oid=row['oid']
