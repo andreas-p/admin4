@@ -13,7 +13,8 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends \
             wget unzip \
             python-requests python-crypto python-wxgtk3.0 \ 
-            python-dnspython python-ldap python-psycopg2 
+            python-dnspython python-ldap python-psycopg2 && \
+    apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 
 ARG VERSION
