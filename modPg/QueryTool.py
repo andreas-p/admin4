@@ -93,11 +93,25 @@ class SqlResultGrid(Grid):
     self.Copy()
   
   def Copy(self):
-    vals=self.GetAllSelectedCellValues()
     cellSep=", "
     rowSep="\n"
+    vals=self.GetAllSelectedCellValues()
     if vals:
-      txt=rowSep.join(map(lambda row:cellSep.join(row), vals))
+      tl=self.GetSelectionBlockTopLeft()
+      if len(tl):
+        br=self.GetSelectionBlockBottomRight()
+        rowvals=[]
+        start=0
+        for bc in range(len(tl)):
+          rows=br[bc][0]-tl[bc][0]+1
+          cols=br[bc][1]-tl[bc][1]+1
+          for rc in range(start, rows*cols, cols):
+            rowvals.append(cellSep.join(vals[0][rc: rc+cols]))
+          start += rows*cols
+        txt=rowSep.join(rowvals)
+        adm.SetClipboard(txt)
+      else:
+        txt=rowSep.join(map(lambda row:cellSep.join(row), vals))
       adm.SetClipboard(txt)
 
       
