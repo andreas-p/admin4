@@ -48,7 +48,7 @@ if __name__ == '__main__':
         installer='py2app'
         distDir=releaseDir + "Admin4-%s-Mac"
       else:
-        print "Platform %s not supported" % platform
+        print ("Platform %s not supported" % platform)
         sys.exit(1)
     sys.argv.insert(1, installer)
 
@@ -115,7 +115,7 @@ if __name__ == '__main__':
       f=open('__version.py')
       verSrc=f.read()
       f.close()
-      exec verSrc
+      exec (verSrc)
     except:
       pass
     return version
@@ -130,10 +130,10 @@ if __name__ == '__main__':
       try: 
         import git
         if git.__version__ < "0.3":
-          print "\nWARNING: GIT too old, must be >0.3\n\n"
+          print ("\nWARNING: GIT too old, must be >0.3\n\n")
           return False
       except:
-        print "\nWARNING: No GIT installed\n\n"
+        print ("\nWARNING: No GIT installed\n\n")
         return False
   
       repo=git.Repo(os.path.dirname(os.path.abspath(sys.argv[0])))
@@ -188,21 +188,21 @@ if __name__ == '__main__':
         
         return repo.is_dirty()
       else:
-        print "No tags found"
+        print ("No tags found")
         return True    
 
     versionTag=readVersion()
     if versionTag != None:
-      print "\nWARNING: using existing __version.py file."
+      print ("\nWARNING: using existing __version.py file.")
       return False
     else:
-      print "\nWARNING: No __version file!"
+      print ("\nWARNING: No __version file!")
       sys.exit()
     
 
   # Start of code
   if writeVersion():
-    print "\nWARNING: Repository has uncommitted data\n\n"
+    print ("\nWARNING: Repository has uncommitted data\n\n")
       
   sys.skipSetupInit=True
   
@@ -261,13 +261,13 @@ if __name__ == '__main__':
   elif versionTag:
     distDir += "-%s" % versionTag
     
-  print "Required:", ", ".join(packages)
+  print ("Required:", ", ".join(packages))
   
   if installer == 'srcUpdate':
     if recentlyChanged:
       distDir = distDir[:-4] + "+%s-Upd" % time.strftime("%y%m%d", time.localtime(time.time()))
 
-    print "Collecting update into %s" % distDir
+    print ("Collecting update into %s" % distDir)
     try:
       shutil.rmtree(distDir)
       os.mkdir(distDir)
@@ -290,7 +290,7 @@ if __name__ == '__main__':
       shutil.copy2('__version.py', distDir)
     
   else:
-    print "Creating package in %s" %distDir
+    print ("Creating package in %s" %distDir)
     # os.environ['DISTUTILS_DEBUG'] = 'true'
     import distutils.core
     
@@ -331,7 +331,7 @@ if __name__ == '__main__':
         shutil.rmtree('%s/%s.app/Contents/Resources/mpl-data' % (distDir, appName))
   
   if installer == 'py2app':
-    print "\nWriting dmg."
+    print ("\nWriting dmg.")
     zipOut=distDir+".dmg"
     os.system("hdiutil create -format UDBZ -volname %s -noanyowners -nospotlight -srcfolder %s %s" % (appName, distDir, zipOut))
   else:
@@ -343,7 +343,7 @@ if __name__ == '__main__':
             continue
           zipwrite(os.path.join(path, f), stripLen)
   
-    print "\nWriting zip."
+    print ("\nWriting zip.")
     zipOut=distDir+".zip"
     zip=zipfile.ZipFile(zipOut, 'w', zipfile.ZIP_DEFLATED)
     zipwrite(distDir, len(os.path.dirname(distDir))+1)
@@ -361,5 +361,5 @@ if __name__ == '__main__':
   f=open(distDir+".sha1", 'w')
   f.write(digest)
   f.close()
-  print "SHA1 Hash for %s: %s" % (zipOut, digest)
-  print "\ndone."
+  print ("SHA1 Hash for %s: %s" % (zipOut, digest))
+  print ("\ndone.")

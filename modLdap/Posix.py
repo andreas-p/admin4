@@ -1,13 +1,13 @@
 # The Admin4 Project
-# (c) 2013-2014 Andreas Pflug
+# (c) 2013-2022 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
 
 
 nodeinfo=[]
-from SpecificEntry import SpecificEntry
-from Entry import Entry
+from .SpecificEntry import SpecificEntry
+from .Entry import Entry
 from wh import xlt
 import wx, adm
 

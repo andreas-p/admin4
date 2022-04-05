@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2013-2014 Andreas Pflug
+# (c) 2013-2022 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -9,11 +9,12 @@ import wx.html
 import wx.propgrid as wxpg
 from page import ControlledPage
 from wh import xlt, floatToTime, floatToSize, sizeToFloat, timeToFloat, breakLines, GetBitmap, Menu
-from _pgsql import quoteValue
+from ._pgsql import quoteValue
 from Validator import Validator
 from LoggingDialog import LogPanel
 import logger
-import csv, cStringIO
+import csv
+from io import StringIO
 
   
 def prettyTime(val):
@@ -164,7 +165,6 @@ class ConnectionPage(LogPanel):
     LogPanel.__init__(self, notebook, notebook, "Connections")
 
     self.SetOwner(notebook)
-#      adm.NotebookPage.__init__(self, notebook)
 
     self.control.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK, notebook.OnItemRightClick)
     if wx.Platform == "__WXMSW__":
@@ -487,9 +487,9 @@ class LoggingPage(adm.NotebookPanel, ControlledPage):
     # periodic read starts here 
     cursor=self.lastNode.GetCursor()
     logfile=self['LogFile']
-    dir=cursor.ExecuteList("SELECT pg_ls_dir('%s')" % self.lastNode.GetValue('log_directory'))
-    dir.sort()
-    for fn in dir:
+    directory=cursor.ExecuteList("SELECT pg_ls_dir('%s')" % self.lastNode.GetValue('log_directory'))
+    directory.sort()
+    for fn in directory:
       if fn.endswith('.csv'):
         if logfile.FindString(fn) < 0:
           logfile.Insert(fn, 1)
@@ -522,7 +522,7 @@ class LoggingPage(adm.NotebookPanel, ControlledPage):
       self.lastLogfile = logfile.GetString(current-1)
 
 
-    c=csv.reader(cStringIO.StringIO(log), delimiter=',', quotechar='"')
+    c=csv.reader(StringIO(log), delimiter=',', quotechar='"')
     
     startdatetimepos=self.getIndex('session_start_datetime')
     severitypos=self.getIndex('error_severity')
@@ -539,7 +539,7 @@ class LoggingPage(adm.NotebookPanel, ControlledPage):
       vals=[]
       for colname in self.displayCols:
         colnum=self.getIndex(colname)
-        vals.append(linecols[colnum].decode('utf-8'))
+        vals.append(linecols[colnum])
       severity=linecols[severitypos]
 
       if severity.startswith('DEBUG'):
@@ -557,7 +557,7 @@ class LoggingPage(adm.NotebookPanel, ControlledPage):
       icon=node.GetImageId(severity)
       self.control.AppendItem(icon, vals)
         
-  def OnSelectLogfile(self, evt):
+  def OnSelectLogfile(self, _evt):
     logfile=self['LogFile']
     if logfile.GetSelection() == 0:
       self.lastLogfile=logfile.GetString(1)
@@ -571,7 +571,7 @@ class LoggingPage(adm.NotebookPanel, ControlledPage):
  
   @staticmethod   
   def ShowQueryTool(parent, server, line):
-    from QueryTool import QueryFrame
+    from .QueryTool import QueryFrame
     params={'dbname': line[LoggingPage.getIndex('database_name')], 
             'query': line[LoggingPage.getIndex('query')], 
             'errline': line[LoggingPage.getIndex('query_pos')], 
@@ -595,7 +595,7 @@ class LoggingPage(adm.NotebookPanel, ControlledPage):
       res.AttachUnknownControl("HtmlWindow", self.browser)
         
     def getVal(self, name):
-      return self.logline[LoggingPage.getIndex(name)].decode('utf-8')
+      return self.logline[LoggingPage.getIndex(name)]
     
     def Go(self):
       lines=[]
@@ -617,7 +617,7 @@ class LoggingPage(adm.NotebookPanel, ControlledPage):
       self.query=self.getVal('query')
       self.EnableControls("QueryTool", self.query)
       
-    def OnQueryTool(self, evt):
+    def OnQueryTool(self, _evt):
       LoggingPage.ShowQueryTool(self, self.server, self.logline)
       self.Close()
       
@@ -638,22 +638,22 @@ class LoggingPage(adm.NotebookPanel, ControlledPage):
     cm.Add(self.OnLoglinesDclick, xlt("Details"), xlt("Show details"))
     cm.Popup(evt)
 
-  def OnQuery(self, evt):
+  def OnQuery(self, _evt):
     index=self.control.GetSelection()[0]
     logline=self.log[index]
     LoggingPage.ShowQueryTool(self, self.lastNode, logline)
   
-  def OnCopy(self, evt):
+  def OnCopy(self, _evt):
     lines=self.control.GetSelection()
     if lines:
-      sio=cStringIO.StringIO()
+      sio=StringIO()
       cwr=csv.writer(sio, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
       
       cwr.writerow(self.logColNames)
       for i in lines:
         cwr.writerow(self.log[i])
       
-      data=sio.getvalue().decode('utf-8')
+      data=sio.getvalue()
       adm.SetClipboard(data)
       
   def OnLoglinesDclick(self, evt):
@@ -664,7 +664,7 @@ class LoggingPage(adm.NotebookPanel, ControlledPage):
     dlg.Go()
     dlg.Show()
     
-  def OnRotate(self, evt):
+  def OnRotate(self, _evt):
     self.lastNode.GetCursor().ExecuteSingle("SELECT pg_rotate_logfile()")
     pass
 
@@ -688,7 +688,7 @@ class SettingsPage(adm.NotebookPanel, ControlledPage):
     res.AttachUnknownControl("ValueGrid", self.grid)
     
 
-  def OnSelChanging(self, evt):
+  def OnSelChanging(self, _evt):
     if self.lastFindProperty:
       self.grid.SetPropertyColoursToDefault(self.lastFindProperty)
       self.grid.RefreshProperty(self.grid.GetProperty(self.lastFindProperty))
@@ -698,13 +698,13 @@ class SettingsPage(adm.NotebookPanel, ControlledPage):
     txt=""
     pos=self.grid.HitTest(evt.GetPosition())
     if pos:
-      property=pos.GetProperty()
-      if property:
-        name=property.GetName()
+      prop=pos.GetProperty()
+      if prop:
+        name=prop.GetName()
         cfg=self.currentConfig.get(name)
         if cfg:
           txt=cfg['short_desc']
-    self.grid.SetToolTipString(txt)
+    self.grid.SetToolTip(txt)
     evt.Skip()
       
     
@@ -832,29 +832,29 @@ class SettingsPage(adm.NotebookPanel, ControlledPage):
       self.lastNode=None
       self.Display(node, False)
 
-  def OnFind(self, evt):
+  def OnFind(self, _evt):
     self.OnSelChanging(None)
-    self.grid.SetSelection([])
+
     name=self.Find
     if not name: return
     
     for prop in self.currentConfig.keys():
       if prop.find(name) >= 0:
         self.lastFindProperty=prop
-        self.grid.SetPropertyBackgroundColour(prop, wx.SystemSettings_GetColour(wx.SYS_COLOUR_HIGHLIGHT))
-        self.grid.SetPropertyTextColour(prop, wx.SystemSettings_GetColour(wx.SYS_COLOUR_HIGHLIGHTTEXT))
+        self.grid.SetPropertyBackgroundColour(prop, wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT))
+        self.grid.SetPropertyTextColour(prop, wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHTTEXT))
         self.grid.EnsureVisible(prop)
         self['Find'].SetForegroundColour(wx.BLACK)
         return
     self['Find'].SetForegroundColour(wx.RED)
 
     
-  def OnApply(self, evt):
+  def OnApply(self,_evt):
     self.DoReload()
     
   def OnItemDoubleClick(self, evt):
-    property=evt.GetProperty()
-    name=self.grid.GetPropertyLabel(property)
+    prop=evt.GetProperty()
+    name=self.grid.GetPropertyLabel(prop)
     cfg=self.currentConfig.get(name)
     if cfg:
       dlg=ServerSetting(self.lastNode, self, cfg)
@@ -960,4 +960,4 @@ class InstrumentConfig:
 
 
 pageinfo = [StatisticsPage, ConnectionPage, LoggingPage, SettingsPage]
-menuinfo=[{"class": InstrumentConfig } ]
+menuinfo=[{"class": InstrumentConfig, "sort": 1 } ]

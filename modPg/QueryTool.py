@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2013-2014 Andreas Pflug
+# (c) 2013-2022 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -10,20 +10,20 @@ import adm
 import xmlres
 import wx.grid
 from wh import xlt, Menu, AcceleratorHelper, FileManager, Grid, localTimeMillis
-from _pgsql import pgConnection, quoteValue, quoteIdent
-from _explain import ExplainCanvas
-from _snippet import SnippetTree
-from _sqlgrid import SqlFrame, HMARGIN, VMARGIN
-from _sqledit import SqlEditor
+from ._pgsql import pgConnection, quoteIdent
+from ._explain import ExplainCanvas
+from ._snippet import SnippetTree
+from ._sqlgrid import SqlFrame, StringTable, HMARGIN, VMARGIN
+from ._sqledit import SqlEditor
 
 
 NULLSTRING="(NULL)"
 
-
+    
 class SqlResultGrid(Grid):
   def __init__(self, parent):
     Grid.__init__(self, parent)
-    self.CreateGrid(0,0)
+    self.SetTable(StringTable(0,0))
     self.SetColLabelSize(0)
     self.SetRowLabelSize(0)
     pt=parent.GetFont().GetPointSize()
@@ -39,10 +39,12 @@ class SqlResultGrid(Grid):
 
     
   def SetEmpty(self):
-    self.SetTable(wx.grid.GridStringTable(0,0))
+    self.table=self.SetTable(StringTable(0,0))
     self.SetColLabelSize(0)
     self.SetRowLabelSize(0)
     self.SendSizeEventToParent()
+
+
 
   
   def SetData(self, rowset):
@@ -51,41 +53,41 @@ class SqlResultGrid(Grid):
     
     if rowcount<0:
       rowcount=0
-    self.SetTable(wx.grid.GridStringTable(rowcount, colcount))
+    self.SetTable(StringTable(rowcount, colcount))
+
     w,h=self.GetTextExtent('Colname')
     self.SetColLabelSize(h+HMARGIN)
     self.SetRowLabelSize(w+VMARGIN)
     self.SetDefaultRowSize(h+HMARGIN)
-    
+
     self.previousCols=rowset.colNames
     self.Freeze()
     self.BeginBatch()
+
     for x in range(colcount):
       colname=rowset.colNames[x]
       if colname == '?column?':
         colname="Col #%d" % (x+1)
-      self.SetColLabelValue(x, colname)
+      self.table.SetColLabelValue(x, colname)
     y=0  
     for row in rowset:
-      self.SetRowLabelValue(y, "%d" % (y+1))
       for x in range(colcount):
         val=row[x]
         if val == None:
           val=NULLSTRING
         else:
-          val=unicode(val)
+          val=str(val)
         self.SetCellValue(y, x, val)
         self.SetReadOnly(y,x) 
       y = y+1
     self.EndBatch()
     self.AutoSizeColumns(False)
-    
     adm.config.restoreGridPositions(self)
     adm.config.storeGridPositions(self)
     self.Thaw()
     self.SendSizeEventToParent()
-    
-    
+
+
   def Paste(self):
     pass    
   
@@ -195,7 +197,7 @@ class QueryFrame(SqlFrame):
     self.filemenu=menu=Menu(self)
 
     menu.Add(self.OnFileOpen, xlt("&Open"), xlt("Open query file"))
-    menu.AppendMenu(-1, xlt("Open recent..."), self.fileManager.GetRecentFilesMenu())
+    menu.Append(-1, xlt("Open recent..."), self.fileManager.GetRecentFilesMenu())
     menu.Add(self.OnFileInsert, xlt("&Insert"), xlt("Insert query file"))
     menu.Add(self.OnFileSave, xlt("&Save"), xlt("Save current file"))
     menu.Add(self.OnFileSaveAs, xlt("Save &as.."), xlt("Save file under new name"))
@@ -316,7 +318,7 @@ class QueryFrame(SqlFrame):
     adm.Frame.SetTitle(self, title)
 
 
-  def OnHelp(self, evt):
+  def OnHelp(self, _evt):
     wx.LaunchDefaultBrowser("http://www.admin4.org/docs/pgsql/querytool")
     
     
@@ -330,7 +332,7 @@ class QueryFrame(SqlFrame):
     self.Destroy()
       
     
-  def OnChangeDatabase(self, evt=None):
+  def OnChangeDatabase(self, _evt=None):
     i=self.databases.GetSelection()
     if i == self.databases.GetCount()-1:
       class ConnectDlg(adm.CheckedDialog):
@@ -369,7 +371,7 @@ class QueryFrame(SqlFrame):
           self.conn = pgConnection(self.server.GetDsn(dbName, self.application))
           self.databases.SetClientData(i, self.conn)
         except Exception as e:
-          print str(e)
+          print (str(e))
       self.SetTitle(dbName)
     self.lastDatabaseSelection=i
         
@@ -518,7 +520,7 @@ class QueryFrame(SqlFrame):
     paneInfo.Show(how)
     self.manager.Update()    
   
-  def OnAddSnippet(self, evt):
+  def OnAddSnippet(self, _evt):
     sql=self.getSql()
     if sql:
       dlg=wx.TextEntryDialog(self, xlt("Snippet name"), xlt("Add snippet"))
@@ -527,24 +529,24 @@ class QueryFrame(SqlFrame):
         self.snippets.AppendSnippet(name, sql)
         self.SetStatus(xlt("Snipped stored."))
     
-  def OnReplaceSnippet(self, evt):
+  def OnReplaceSnippet(self, _evt):
     sql=self.getSql()
     if sql:
       self.snippets.ReplaceSnippet(sql)
 
 
-  def OnCancelQuery(self, evt):
+  def OnCancelQuery(self, _evt):
     self.EnableMenu(self.querymenu, self.OnCancelQuery, False)
     if self.worker:
       self.worker.Cancel()
 
-  def OnExecuteQuery(self, evt):
+  def OnExecuteQuery(self, _evt):
     sql=self.getSql()
     if not sql.strip():
       return
     self.executeSql(self.result, sql)
 
-  def OnExplainQuery(self, evt):
+  def OnExplainQuery(self,_evt):
     sql=self.getSql()
     if not sql:
       return
@@ -575,11 +577,11 @@ class QueryFrame(SqlFrame):
   def OnRecentFileOpened(self, filename):
     self.fileOpen(None, filename)
     
-  def OnFileOpen(self, evt):
+  def OnFileOpen(self, _evt):
     self.fileOpen(xlt("Open SQL file"))
       
   
-  def OnFileInsert(self, evt):
+  def OnFileInsert(self, _evt):
     sql=self.readFile(xlt("Insert SQL from file"))
     if sql:
       self.editor.ReplaceSelection(sql)
@@ -599,31 +601,31 @@ class QueryFrame(SqlFrame):
     except:
       self.SetStatus(xlt("Failed to save to %s") % self.fileManager.filename)
       
-  def OnFileSave(self, evt):
+  def OnFileSave(self, _evt):
     self.saveFile(self.fileManager.SaveFile)
     
-  def OnFileSaveAs(self, evt):
+  def OnFileSaveAs(self, _evt):
     self.saveFile(self.fileManager.SaveFileAs)
   
   
-  def OnUndo(self, evt):
+  def OnUndo(self, _evt):
     self.editor.Undo()
   
-  def OnClear(self, evt):
+  def OnClear(self, _evt):
     self.editor.ClearAll()
     self.updateMenu()
     
-  def OnFind(self, evt):
+  def OnFind(self, _evt):
     pass
   
-  def OnRedo(self, evt):
+  def OnRedo(self, _evt):
     self.editor.Redo()
   
-  def OnChangeStc(self, evt):
+  def OnChangeStc(self, _evt):
     self.sqlChanged=True
     self.updateMenu()
     
-  def OnStatusPos(self, evt):
+  def OnStatusPos(self, _evt):
     row=self.editor.LineFromPosition(self.editor.GetCurrentPos())+1
     col=self.editor.GetColumn(self.editor.GetCurrentPos())+1
     self.SetStatusText(xlt("Ln %d Col %d") % (row, col), self.STATUSPOS_POS)
@@ -641,9 +643,9 @@ class QueryTool:
   @staticmethod
   def GetInstrumentQuery(server):
     sql="""SELECT 'snippet_table', relname FROM pg_class JOIN pg_namespace nsp ON nsp.oid=relnamespace 
-         WHERE nspname=%(adminspace)s AND relname=%(snippet_table)s""" % {
-         'adminspace': quoteValue(server.GetPreference("AdminNamespace")),
-         'snippet_table': quoteValue("Admin_Snippet_%s" % server.user)
+         WHERE nspname='%(adminspace)s' AND relname='%(snippet_table)s'""" % {
+         'adminspace': server.GetPreference("AdminNamespace"),
+         'snippet_table': "Admin_Snippet_%s" % server.user
           }
     return sql  
 

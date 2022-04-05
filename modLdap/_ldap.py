@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2013-2014 Andreas Pflug
+# (c) 2013-2022 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -66,13 +66,14 @@ class LdapServer:
 
     try:
       result=self.ldap.search_s("", ldap.SCOPE_BASE, "(objectClass=*)", ['*','+'] )
+      self.decodeResult(result)
       self.base=result[0][1]
 
       try:
         subschemaDN=self.base['subschemaSubentry'][0]
-
 #        result=self.ldap.search_s(subschemaDN, ldap.SCOPE_BASE, "(objectClass=*)", ['*','+'] )
         result=self.ldap.search_s(subschemaDN, ldap.SCOPE_BASE, "(objectClass=*)",  ['ldapSyntaxes', 'attributeTypes', 'objectclasses', 'matchingRules', 'matchingRuleUse'] )
+        self.decodeResult(result)
         self.subschema=ldap.schema.SubSchema(result[0][1])
       except Exception as e:
         logger.debug("Didn't get subschema: %s", str(e))
@@ -82,14 +83,18 @@ class LdapServer:
       pass
   #  adm.StopWaiting(frame)
 
-
+  def decodeResult(self, result):
+    for _dn, row in result:
+      for key, val in row.items():
+        row[key] = list(map(lambda x: x.decode(), val))
+        
   def execute(self, proc, *args, **kargs):
     rc=None
     frame=adm.StartWaiting()
     try:
       rc=proc(*args, **kargs)
     except Exception as e:
-      d=e[0]
+      d=str(e)
       adm.StopWaiting(frame, d)
       raise e
 
@@ -120,22 +125,29 @@ class LdapServer:
       lst=[lst]
     return lst
   
+  def _addMod(self, mods, attr, code=-1):
+    value=list(map(lambda x:x.encode(), attr.value))
+    if code >= 0:
+      mods.append( (code, attr.name, value) )
+    else:
+      mods.append( (attr.name, attr.value) )
+      
   def Modify(self, dn, chgList, addList=None, delList=None):
     chgList=self._chkLst(chgList)
     addList=self._chkLst(addList)
     delList=self._chkLst(delList)
-    logger.querylog("Modify %s: Chg %s, Add %s, Del %s" % (dn, map(str, chgList), map(str, addList), map(str, delList)))
+    logger.querylog("Modify %s: Chg %s, Add %s, Del %s" % (dn, list(map(str, chgList)), list(map(str, addList)), list(map(str, delList))))
 
     mods=[]
     for attr in delList:
-      mods.append( (ldap.MOD_DELETE, attr.name, attr.value) )
+      self._addMod(mods, attr, ldap.MOD_DELETE)
     for attr in addList:
-      mods.append( (ldap.MOD_ADD, attr.name, attr.value) )
+      self._addMod(mods, attr, ldap.MOD_ADD)
     for attr in chgList:
-      mods.append( (ldap.MOD_REPLACE, attr.name, attr.value) )
+      self._addMod(mods, attr, ldap.MOD_REPLACE)
 
     try:
-      self.execute(self.ldap.modify_s, dn.encode('utf8'), mods)
+      self.execute(self.ldap.modify_s, dn, mods)
       return True
     except Exception as e:
       self.raiseException(e, "Modify")
@@ -144,7 +156,7 @@ class LdapServer:
   def Delete(self, dn):
     logger.querylog("Delete %s" % dn)
     try:
-      self.execute(self.ldap.delete_s, dn.encode('utf8'))
+      self.execute(self.ldap.delete_s, dn)
       return True
     except Exception as e:
       self.raiseException(e, "Delete")
@@ -153,12 +165,12 @@ class LdapServer:
   def Add(self, dn, addList):
     mods=[]
     addList=self._chkLst(addList)
-    logger.querylog("Add %s: %s" % (dn, map(str, addList)))
+    logger.querylog("Add %s: %s" % (dn, list(map(str, addList))))
     for attr in addList:
-      mods.append( (attr.name, attr.value) )
+      self._addMod(mods, attr.name, attr.value)
 
     try:
-      self.execute(self.ldap.add_s, dn.encode('utf8'), mods)
+      self.execute(self.ldap.add_s, dn, mods)
       return True
     except Exception as e:
       self.raiseException(e, "Add")
@@ -166,16 +178,16 @@ class LdapServer:
   def Rename(self, dn, newRdn, newParentDn=None):
     logger.querylog("Rename %s to %s %s" % (dn, newRdn, newParentDn))
     if newParentDn:
-      newParentDn=newParentDn.encode('utf8')
+      newParentDn=newParentDn
     try:
-      self.execute(self.ldap.rename_s, dn.encode('utf8'), newRdn.encode('utf8'), newParentDn)
+      self.execute(self.ldap.rename_s, dn, newRdn, newParentDn)
       return True
     except Exception as e:
       self.raiseException(e, "Rename")
 
   def SetPassword(self, dn, passwd):
     try:
-      self.execute(self.ldap.passwd_s, dn.encode('utf8'), None, passwd.encode('utf8'))
+      self.execute(self.ldap.passwd_s, dn, None, passwd)
       return True
     except Exception as e:
       self.raiseException(e, "SetPassword")
@@ -198,7 +210,7 @@ class LdapServer:
       return a.oid
     return None
 
-  def _search(self, base, filter, scope, attrs):
+  def _search(self, base, sfilter, scope, attrs):
     """
     _search(base, filter, scope)
 
@@ -206,32 +218,33 @@ class LdapServer:
     (dn, valueDict) utf-encoded str
     """
 
-    def _searchAsync(base, scope, filter, attrs):
-      msgid=self.ldap.search(base.encode('utf8'), scope, filter.encode('utf8'), map(str, attrs))
-      response=self.ldap.result(msgid, 1, self.ldap.timeout)
-      return response[1]
+    def _searchAsync(base, scope, sfilter, attrs):
+      msgid=self.ldap.search(base, scope, sfilter, list(map(str, attrs)))
+      _number, result=self.ldap.result(msgid, 1, self.ldap.timeout)
+      self.decodeResult(result)
+      return result
     
     err=None
     try:
-      result=self.execute(_searchAsync, base, scope, filter, attrs)
+      result=self.execute(_searchAsync, base, scope, sfilter, attrs)
     except (ldap.NO_SUCH_OBJECT,ldap.NO_SUCH_ATTRIBUTE, ldap.INSUFFICIENT_ACCESS) as e:
       result=None
       err=type(e).__name__
       
-    logger.querylog("%s %s base=%s, scope=%s" % (filter, str(attrs), base, ['BASE','ONE','SUB'][scope]), None, err)
+    logger.querylog("%s %s base=%s, scope=%s" % (sfilter, str(attrs), base, ['BASE','ONE','SUB'][scope]), None, err)
     return result
   
-  def Search(self, base, filter, attrs=["*"], scope=ldap.SCOPE_SUBTREE):
+  def Search(self, base, sfilter, attrs=["*"], scope=ldap.SCOPE_SUBTREE):
     if not isinstance(attrs, list):
       attrs=attrs.split()
-    return self._search(base, filter, scope, attrs)
+    return self._search(base, sfilter, scope, attrs)
 
-  def SearchSub(self, base, filter="(objectClass=*)", attrs=["*"]):
-    return self.Search(base, filter, attrs, ldap.SCOPE_SUBTREE)
+  def SearchSub(self, base, sfilter="(objectClass=*)", attrs=["*"]):
+    return self.Search(base, sfilter, attrs, ldap.SCOPE_SUBTREE)
 
-  def SearchOne(self, base, filter="(objectClass=*)", attrs=["*"]):
-    return self.Search(base, filter, attrs, ldap.SCOPE_ONELEVEL)
+  def SearchOne(self, base, sfilter="(objectClass=*)", attrs=["*"]):
+    return self.Search(base, sfilter, attrs, ldap.SCOPE_ONELEVEL)
   
-  def SearchBase(self, base, filter="(objectClass=*)", attrs=["*"]):
-    return self.Search(base, filter, attrs, ldap.SCOPE_BASE)
+  def SearchBase(self, base, sfilter="(objectClass=*)", attrs=["*"]):
+    return self.Search(base, sfilter, attrs, ldap.SCOPE_BASE)
   

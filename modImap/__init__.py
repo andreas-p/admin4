@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2014 Andreas Pflug
+# (c) 2022 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -20,4 +20,4 @@ moduleinfo={ 'name': "IMAP Server",
 
 import sys
 if not hasattr(sys, 'skipSetupInit'):
-  import Server
+  from . import Server

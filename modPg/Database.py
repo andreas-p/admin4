@@ -5,7 +5,7 @@
 # see LICENSE.TXT for conditions of usage
 
 
-from _objects import ServerObject, DatabaseObject
+from ._objects import ServerObject, DatabaseObject
 from wh import xlt, YesNo
 
 class Database(ServerObject):
@@ -16,7 +16,7 @@ class Database(ServerObject):
   def GetInstances(parentNode):
     instances=[]
     params={'sysrestr': " WHERE d.oid > %s" % parentNode.GetServer().GetLastSysOid() }
-    set=parentNode.GetCursor().ExecuteSet("""
+    rowset=parentNode.GetCursor().ExecuteSet("""
       SELECT d.*, pg_encoding_to_char(encoding) AS pgencoding, pg_get_userbyid(datdba) AS dbowner, spcname, d.oid, description
         FROM pg_database d
         JOIN pg_tablespace t ON t.oid=dattablespace
@@ -24,8 +24,8 @@ class Database(ServerObject):
         %(sysrestr)s
        ORDER BY datname
       """ % params)
-    if set:
-      for row in set:
+    if rowset:
+      for row in rowset:
         if not row:
           break
         instances.append(Database(parentNode, row['datname'], row.getDict()))
@@ -79,10 +79,10 @@ class Database(ServerObject):
     # P=Proc
     queries=[]
     if len(patterns) > 1:
-      type=patterns[0]
+#      dtype=patterns[0]
       patterns=patterns[1:]
-    else:
-      type=None
+#    else:
+#      dtype=None
       
     dp=patterns[0].find('.')
     if dp>0:
@@ -128,19 +128,19 @@ class Database(ServerObject):
      
   def GetProperties(self):
     if not len(self.properties):
-      dict=self.GetCursor().ExecuteDict("""
+      ddict=self.GetCursor().ExecuteDict("""
           SELECT 'languages', array_agg(lanname) as lannames 
             FROM (SELECT lanname FROM pg_language ORDER BY lanispl desc, lanname) AS langlist""")
-      self.info.update(dict)
+      self.info.update(ddict)
       if self.GetServer().version >= 9.1:
-        dict=self.GetCursor().ExecuteDict("""
+        ddict=self.GetCursor().ExecuteDict("""
           SELECT 'extensions', array_agg(name) as extnames
             FROM (SELECT extname || ' V' || extversion AS name FROM pg_extension ORDER BY extname) AS extlist
           UNION
           SELECT 'available_extensions', array_agg(name) as extnames
             FROM (SELECT name || ' V' || default_version AS name FROM pg_available_extensions WHERE installed_version is null ORDER BY name) AS avextlist
           """)
-        self.info.update(dict)
+        self.info.update(ddict)
           
           
         

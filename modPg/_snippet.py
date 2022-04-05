@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2013-2014 Andreas Pflug
+# (c) 2013-2022 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -9,11 +9,11 @@ import wx
 from tree import DragTreeCtrl, TreeItemData
 from wh import xlt, Menu
 from adm import images
-from _pgsql import pgQuery
+from ._pgsql import pgQuery
  
 class Snippet:
-  def __init__(self, id, parent, name, text, sort):
-    self.id=id
+  def __init__(self, snid, parent, name, text, sort):
+    self.id=snid
     self.sort=sort
     self.name=name
     self.parent=parent
@@ -39,8 +39,8 @@ class SnippetTree(DragTreeCtrl):
     
     rootSnippets=[]
     if self.frame.snippet_table:
-      set=self.server.GetCursor().ExecuteSet("SELECT * FROM %s ORDER BY parent, sort" % self.frame.snippet_table)
-      for row in set:
+      rowset=self.server.GetCursor().ExecuteSet("SELECT * FROM %s ORDER BY parent, sort" % self.frame.snippet_table)
+      for row in rowset:
         snippet=Snippet(row['id'], row['parent'], row['name'], row['snippet'], row['sort'])
         self.snippets[snippet.id]=snippet
         if not snippet.parent:
@@ -76,11 +76,11 @@ class SnippetTree(DragTreeCtrl):
     query.AddColVal('sort', snippet.sort)
     query.AddColVal('name', snippet.name)
     query.AddColVal('snippet', snippet.text)
-    id=query.Insert("id")
-    snippet.id=id
-    return id
+    snid=query.Insert("id")
+    snippet.id=snid
+    return snid
   
-  def OnDelSnippet(self, evt):
+  def OnDelSnippet(self, _evt):
     snippet=self.GetNode()
     if snippet:
       query=pgQuery(self.frame.snippet_table, self.server.GetCursor())
@@ -133,7 +133,7 @@ class SnippetTree(DragTreeCtrl):
       image= images.GetModuleId(self, 'snippets')
     else:
       image= images.GetModuleId(self, 'snippet')
-    item=self.AppendItem(parentItem, self.getSnippetName(snippet), image=image, selectedImage=image, data=TreeItemData(snippet))
+    item=self.AppendItem(parentItem, self.getSnippetName(snippet), image=image, selImage=image, data=TreeItemData(snippet))
     self.snippets[snippet.id] = snippet
     snippet.treeitem=item
     return True
@@ -158,12 +158,12 @@ class SnippetTree(DragTreeCtrl):
       self.frame.SetStatus(xlt("Snippet updated."))
     return False
 
-  def OnReplaceSnippet(self, evt):
+  def OnReplaceSnippet(self, _evt):
     sql=self.frame.getSql()
     if sql:
       self.ReplaceSnippet(sql)
       
-  def OnRenameSnippet(self, evt):
+  def OnRenameSnippet(self, _evt):
     snippet=self.GetNode()
     if snippet:
       dlg=wx.TextEntryDialog(self, xlt("Name"), xlt("Rename snippet"), snippet.name)
@@ -173,7 +173,7 @@ class SnippetTree(DragTreeCtrl):
         self.SetItemText(snippet.treeitem, self.getSnippetName(snippet))
         self.frame.SetStatus(xlt("Snippet renamed."))
 
-  def OnRevertSnippet(self, evt):
+  def OnRevertSnippet(self, _evt):
     snippet=self.GetNode()
     if snippet and snippet.prevText:
       snippet.text=snippet.prevText
@@ -183,14 +183,14 @@ class SnippetTree(DragTreeCtrl):
     return False
 
      
-  def OnAddGroup(self, evt):
+  def OnAddGroup(self, _evt):
     dlg=wx.TextEntryDialog(self, xlt("Group name"), xlt("Add group"))
     if dlg.ShowModal() == wx.ID_OK:
       name=dlg.GetValue()
       if name:
         self.AppendSnippet(name, parentItem=self.GetRootItem())
       
-  def OnTreeSelChanged(self, evt):
+  def OnTreeSelChanged(self, _evt):
     self.frame.updateMenu()
 
   def OnTreeRightClick(self, evt):
@@ -262,7 +262,7 @@ class SnippetTree(DragTreeCtrl):
         self.checkChildren(child)     
 
 
-  def OnTreeActivate(self, evt):
+  def OnTreeActivate(self, _evt):
     snippet= self.GetNode()
     if snippet:
       self.editor.ReplaceSelection(snippet.text)

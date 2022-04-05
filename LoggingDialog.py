@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2013-2014 Andreas Pflug
+# (c) 2013-2022 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -70,7 +70,7 @@ class LoggingPanel(LogPanel):
     self.insertPosition=-1 # 0: start, -1: end
 
 
-  def OnCopy(self, evt):
+  def OnCopy(self, _evt):
     lines=[]
     for i in self.control.GetSelection():
       txt=self.control.GetItemText(i, 1)
@@ -81,7 +81,7 @@ class LoggingPanel(LogPanel):
         lines.append(txt)
     adm.SetClipboard("\n".join(lines))
 
-  def OnClear(self, evt):
+  def OnClear(self, _evt):
     self.logIndex=0
     logger.loglines=[]
     self.control.DeleteAllItems()
@@ -102,12 +102,12 @@ class LoggingPanel(LogPanel):
       self.EnsureVisible()
 
 
-  def GetToolTipText(self, id):
-    if id < 0:
+  def GetToolTipText(self, tid):
+    if tid < 0:
       return
     if not self.insertPosition:
-      id = self.control.GetItemCount()-id-1
-    line=logger.loglines[id]
+      tid = self.control.GetItemCount()-tid-1
+    line=logger.loglines[tid]
     lines=[]
     lines.append("%s - %s" % (line.Timestamp(), line.LevelText()))
     lines.append(line.text)
@@ -137,7 +137,7 @@ class QueryLoggingPanel(LogPanel):
     self.insertPosition=-1 # 0: start, -1: end
 
 
-  def OnCopy(self, evt):
+  def OnCopy(self, _evt):
     lines=[]
     for i in self.control.GetSelection():
       txt=self.control.GetItemText(i, 1)
@@ -145,7 +145,7 @@ class QueryLoggingPanel(LogPanel):
     adm.SetClipboard("\n".join(lines))
 
 
-  def OnClear(self, evt):
+  def OnClear(self, _evt):
     self.logIndex=0
     logger.querylines=[]
     self.control.DeleteAllItems()
@@ -162,12 +162,12 @@ class QueryLoggingPanel(LogPanel):
        
 
 
-  def GetToolTipText(self, id):
-    if id < 0:
+  def GetToolTipText(self, tid):
+    if tid < 0:
       return
     if not self.insertPosition:
-      id = self.control.GetItemCount()-id-1
-    line=logger.querylines[id]
+      tid = self.control.GetItemCount()-tid-1
+    line=logger.querylines[tid]
     lines=[]
     lines.append("%s - %s" % (line.Timestamp(), line.LevelText()))
     lines.append(line.cmd)
@@ -211,11 +211,11 @@ class LoggingDialog(adm.Dialog, _TimerOwner):
     ah.Add(wx.ACCEL_CTRL, 'C', self.BindMenuId(self.OnCopy))
     ah.Realize()
         
-  def OnLevel(self, evt=None):
+  def OnLevel(self, _evt=None):
     self.LogLevelFileStatic=xlt(logger.LOGLEVEL.Text(self.loglevels[self.LogLevelFile]))
     self.LogLevelQueryStatic=xlt(logger.LOGLEVEL.Text(self.querylevels[self.LogLevelQuery]))
   
-  def OnApply(self, evt):
+  def OnApply(self, _evt):
     adm.config.Write("LogLevel", self.loglevels[self.LogLevelFile])
     adm.config.Write("QueryLevel", self.querylevels[self.LogLevelQuery])
     adm.config.Write("LogFile", self.LogFileLog)
@@ -247,7 +247,7 @@ class LoggingDialog(adm.Dialog, _TimerOwner):
     self.OnPageChange()
 
 
-  def OnClose(self, evt):
+  def OnClose(self, _evt):
     if self.timer:
       self.timer.Stop()
     self.Close()

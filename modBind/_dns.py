@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2013-2014 Andreas Pflug
+# (c) 2013-2022 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -90,16 +90,16 @@ def DnsAbsName(*args):
 def RdataClass(rdClass, rdType):
   return dns.rdata.get_rdata_class(rdClass, rdType)
 
-def Rdata(set, *args):
-  cls=RdataClass(set.rdclass, set.rdtype)
-  return cls(set.rdclass, set.rdtype, *args)
+def Rdata(dset, *args):
+  cls=RdataClass(dset.rdclass, dset.rdtype)
+  return cls(dset.rdclass, dset.rdtype, *args)
 
-def RdataEmpty(set):
-  cls=RdataClass(set.rdclass, set.rdtype)
+def RdataEmpty(dset):
+  cls=RdataClass(dset.rdclass, dset.rdtype)
   zero=[]
   for _slot in cls.__slots__:
     zero.append("0")
-  return cls.from_text(set.rdclass, set.rdtype, dns.tokenizer.Tokenizer(" ".join(zero)))
+  return cls.from_text(dset.rdclass, dset.rdtype, dns.tokenizer.Tokenizer(" ".join(zero)))
   
 def Rdataset(ttl, rdclass, rdtype, *args):
   rds=dns.rdataset.Rdataset(rdclass, rdtype)

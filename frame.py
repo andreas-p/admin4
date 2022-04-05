@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2013-2014 Andreas Pflug
+# (c) 2013-2022 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -26,6 +26,7 @@ class Frame(wx.Frame, adm.MenuOwner):
     self.tree=None
     self.currentNode=None
     self.Bind(wx.EVT_CLOSE, self.OnClose)
+    self.messageLayer=0
 
     size, pos=adm.config.getWindowPositions(self)
     if pos:
@@ -74,7 +75,7 @@ class Frame(wx.Frame, adm.MenuOwner):
     elif isinstance(icon, StringType):
       icon=GetIcon(icon, mod)
     if isinstance(icon, wx.Bitmap):
-      icon=wx.IconFromBitmap(icon)
+      icon=wx.Icon.FromBitmap(icon)
     if icon:      
       wx.Frame.SetIcon(self, icon)
       return True
@@ -93,8 +94,8 @@ class Frame(wx.Frame, adm.MenuOwner):
       Edit(self, parentWindow)
       HandleEvent(self, evt)
     """
-    id=evt.GetId()
-    proc=self.GetMenuProc(id)
+    pid=evt.GetId()
+    proc=self.GetMenuProc(pid)
     if proc:
       args = self.GetCallArgs(proc)
       if len(args) and args[0] == "self":
@@ -106,7 +107,7 @@ class Frame(wx.Frame, adm.MenuOwner):
       if hasattr(proc, "_classname_"):
         ci.append(proc._classname_)
       ci.append(proc.__name__)
-      adm.logger.debug("Calling ID %d: %s", id, ".".join(ci))
+      adm.logger.debug("Calling ID %d: %s", pid, ".".join(ci))
       node=self.currentNode
       if not node and self.tree:
         node=self.tree.GetNode()
@@ -140,12 +141,16 @@ class Frame(wx.Frame, adm.MenuOwner):
   def PushStatus(self, text, field=0):
     sb=self.GetStatusBar()
     if sb:
+      self.messageLayer += 1
       sb.PushStatusText(text, field)
 
   def PopStatus(self):
     sb=self.GetStatusBar()
     if sb:
-      sb.PopStatusText()
+      if self.messageLayer:
+        self.messageLayer -= 1
+      try: sb.PopStatusText()
+      except: pass
 
 
 
@@ -162,7 +167,7 @@ class FindPanel(adm.NotebookPanel):
     if hasattr(self.dialog, 'manager'):
       self.dialog.manager.Update()
 
-  def OnFindClose(self, evt):
+  def OnFindClose(self, _evt):
     self.DoShow(False)
 
   def OnFindChar(self, evt):
@@ -171,7 +176,7 @@ class FindPanel(adm.NotebookPanel):
     else:
       evt.Skip()  
       
-  def OnFindEnter(self, evt):
+  def OnFindEnter(self, _evt):
     if not self['FindNext'].IsEnabled():
       return
     s,e=self['Find'].GetSelection()
@@ -192,9 +197,11 @@ class NodeTreePanel(FindPanel):
     res.AttachUnknownControl("ValueGrid", self.tree)
     self['FindClose'].SetBitmapCurrent(GetBitmap('close'))
     # we'd like wx.BitmapButton.NewCloseButton here...
-    self.OnFind(None)
+
+    # TODO
+    # self.OnFind(None)
     
-  def OnFindClose(self, evt):
+  def OnFindClose(self, _evt):
     self.DoShow(False)
     self.tree.SetFocus()
     
@@ -327,9 +334,9 @@ class DetailFrame(Frame):
                           .Name("servers").Caption(xlt("Registered Servers")) \
                           .MinSize((70,70)).BestSize((100,80)))
 
-    str=adm.config.GetPerspective(self)
-    if str:
-      self.manager.LoadPerspective(str)
+    pers=adm.config.GetPerspective(self)
+    if pers:
+      self.manager.LoadPerspective(pers)
 
     ah=AcceleratorHelper(self)
     ah.Add(wx.ACCEL_CTRL, 'F', self.OnFindObject)
@@ -345,7 +352,7 @@ class DetailFrame(Frame):
     self.Bind(wx.EVT_ACTIVATE, self.OnActivate)
     self.activated=False
     
-  def OnFindObject(self, evt):
+  def OnFindObject(self, _evt):
     self.nodePanel.DoShow(True)
     self.nodePanel['Find'].SetFocus()
     
@@ -360,7 +367,7 @@ class DetailFrame(Frame):
       
     evt.Skip()
     
-  def AutoConnect(self, evt):
+  def AutoConnect(self, _evt):
     haveOne=False
     if self.appArgs:
       for server in self.servers.nodes:
@@ -384,7 +391,7 @@ class DetailFrame(Frame):
     if evt.GetPane().name == "objectBrowser":
       self.viewmenu.Check(self.OnToggleTree, False)
   
-  def OnQuit(self, evt):
+  def OnQuit(self, _evt):
     self.details=None # this is for Win C++ dtor
     self.Close()
 
@@ -395,12 +402,12 @@ class DetailFrame(Frame):
       self.manager.Update()
       adm.config.Write("TreeShown", show, self)
   
-  def OnLogging(self, evt):
+  def OnLogging(self, _evt):
     dlg=LoggingDialog(self)
     dlg.Go()
     dlg.Show()
 
-  def OnUpdate(self, evt=None):
+  def OnUpdate(self, _evt=None):
     dlg=UpdateDlg(self)
     dlg.GoModal()
     
@@ -410,26 +417,26 @@ class DetailFrame(Frame):
     else:
       return self.tree.GetNode()
 
-  def OnHelp(self, evt):
+  def OnHelp(self, _evt):
     wx.LaunchDefaultBrowser("http://www.admin4.org/docs")
     
-  def OnPreferences(self, evt):
+  def OnPreferences(self, _evt):
     dlg=PreferencesDlg(self)
     dlg.Go()
     dlg.Show()
 
 
-  def OnAbout(self, evt):
+  def OnAbout(self, _evt):
     about=AboutDlg(self)
     about.ShowModal()
     
     
-  def OnShowServers(self, evt):
+  def OnShowServers(self, _evt):
     self.manager.GetPane("servers").Show(True)
     self.manager.Update()
 
 
-  def OnDetach(self, evt):
+  def OnDetach(self, _evt):
     node=self.GetNode()
     if node:
       if not node.detachedWindow:
@@ -437,7 +444,7 @@ class DetailFrame(Frame):
       node.detachedWindow.Show()
       node.detachedWindow.Raise()
         
-  def OnRefresh(self, evt):
+  def OnRefresh(self, _evt):
     node=self.GetNode()
     if node:
       node.Refresh()
@@ -445,19 +452,19 @@ class DetailFrame(Frame):
       info=node.GetInfo()
       self.SetStatus(info)
 
-  def OnNew(self, evt):
+  def OnNew(self, _evt):
     node=self.GetNode()
     if node:
       newcls=self.getNewClass(node)
       if newcls:
         newcls.New(self, node.parentNode)
 
-  def OnEdit(self, evt):
+  def OnEdit(self, _evt):
     node=self.GetNode()
     if node and hasattr(node, "Edit"):
       node.Edit(self)
 
-  def OnDelete(self, evt):
+  def OnDelete(self, _evt):
     node=self.tree.GetNode()
     if node and hasattr(node, "Delete"):
       if not adm.ConfirmDelete(xlt("Delete \"%s\"?") % node.name, xlt("Deleting %s") % node.typename):
@@ -469,7 +476,7 @@ class DetailFrame(Frame):
       else:
         self.SetStatus(xlt("%s \"%s\" NOT deleted: %s.") % (node.typename, node.name, node.GetServer().GetLastError()))
         
-  def OnDisconnect(self, evt):
+  def OnDisconnect(self, _evt):
     node=self.tree.GetNode()
     if node and hasattr(node, "Disconnect"):
       node.Disconnect()
@@ -661,7 +668,7 @@ class DetachFrame(Frame):
     self.details.detached=True
     self.details.Set(node)
 
-  def OnRefresh(self, evt):
+  def OnRefresh(self, _evt):
     self.node.Refresh()
     self.node.PopulateChildren()
       

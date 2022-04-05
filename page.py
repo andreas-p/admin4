@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2013-2014 Andreas Pflug
+# (c) 2013-2022 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -47,7 +47,7 @@ class ControlledPage:
     rrc.Bind(wx.EVT_COMMAND_SCROLL, self.OnRefreshRate)
     
 
-  def OnRefresh(self, evt=None):
+  def OnRefresh(self, _evt=None):
     self.TriggerTimer()
     
   def OnRefreshRate(self, evt=None):
@@ -91,7 +91,7 @@ class ControlledPage:
     else:
       return self.control
 
-  def OnListColResize(self, evt):
+  def OnListColResize(self, _evt):
     adm.config.storeListviewPositions(self.control, self, self.panelName)
 
   def RestoreListcols(self):
@@ -156,12 +156,16 @@ class NotebookPanel(wx.Panel, adm.ControlContainer):
   which loads its controls from an xml resource
   """
   def __init__(self, dlg, notebook, resname=None):
-    adm.ControlContainer.__init__(self, resname)
+    super(NotebookPanel, self).__init__()
+
+    self.setResname(resname)
     self.dialog=dlg
     res=self.getResource()
-    pre=wx.PrePanel()
-    res.LoadOnPanel(pre, notebook, self.resname)
-    self.PostCreate(pre)
+#    pre=wx.PrePanel() wx 3.0
+#    res.LoadOnPanel(pre, notebook, self.resname)
+#    self.PostCreate(pre)
+
+    res.LoadPanel(self, notebook, self.resname)   
     self.addControls(res)
     self.AddExtraControls(res)
     adm.logger.debug("Controls found in Panel %s/%s: %s", self.module, self.resname, ", ".join(self._ctls.keys()))
@@ -174,7 +178,6 @@ class NotebookPanel(wx.Panel, adm.ControlContainer):
     
   def __getattr__(self, name):
     return self._getattr(name)
-
   def __setattr__(self, name, value):
     return self._setattr(name, value)
 

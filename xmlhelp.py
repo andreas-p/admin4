@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2013-2014 Andreas Pflug
+# (c) 2013-2022 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -22,7 +22,7 @@ class Element(minidom.Element):
   def addElementText(self, name, val):
     t=minidom.Text()
     if val:
-      t.data=unicode(val)
+      t.data=str(val)
     else:
       t.data=""
     t.ownerDocument=self.ownerDocument
@@ -32,7 +32,7 @@ class Element(minidom.Element):
     return e
 
   def addElementTree(self, el):
-    if isinstance(el, (str, unicode)):
+    if isinstance(el, str):
       doc=minidom.parseString(el)
       el=doc.documentElement
     e=self.ownerDocument.importNode(el, True)
@@ -45,7 +45,7 @@ class Element(minidom.Element):
 
   def setAttributes(self, attribs):
     for key, val in attribs.items():
-      self.setAttribute(key, unicode(val))
+      self.setAttribute(key, str(val))
     return self
 
   def getText(self):
@@ -93,14 +93,14 @@ class Document(minidom.Document):
     return doc.documentElement
 
   @staticmethod
-  def parseRaw(str):
-    doc=minidom.parseString(str)
+  def parseRaw(txt):
+    doc=minidom.parseString(txt)
     return doc.documentElement
 
   @staticmethod
-  def parse(str):
+  def parse(txt):
     doc=Document.implementation.createDocument(None, "none", None)
-    rootRaw=Document.parseRaw(str)
+    rootRaw=Document.parseRaw(txt)
     root=doc.importNode(rootRaw, True)
     doc.rootElement=root
     return root

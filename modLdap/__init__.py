@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2013-2014 Andreas Pflug
+# (c) 2013-2022 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -71,7 +71,7 @@ if not hasattr(sys, 'skipSetupInit'):
           return self.value[0]
         else:
           try:
-            val=self.value[0].decode('utf8')
+            val=self.value[0]
           except Exception as _e:
             if self.schema:
               syntax=self.schema.syntax
@@ -86,8 +86,8 @@ if not hasattr(sys, 'skipSetupInit'):
         if self.IsBinary():
           return self.value;
         elif self.IsTime():
-            return map(lambda x: strToIsoDate(x), self.value)
-        return map(lambda x: x.decode('utf8'), self.value)
+            return list(map(lambda x: strToIsoDate(x), self.value))
+        return list(map(str, self.value))
   
     def SetValue(self, value):
       self.empty=(value == None)
@@ -97,7 +97,7 @@ if not hasattr(sys, 'skipSetupInit'):
         elif self.IsSingleValue():
           self.value=[str(value)]
         else:
-          self.value=map(str, value)
+          self.value=list(map(str, value))
       else:
         if value == None or value == []:
           self.value=['']
@@ -110,18 +110,18 @@ if not hasattr(sys, 'skipSetupInit'):
             else:
               self.value=["FALSE"]
           else:
-            self.value=[value.encode('utf8')]
+            self.value=[value]
         else:
-          self.value=map(lambda x: x.encode('utf8'), value)
+          self.value=list(map(str, value))
       if not self.value or not len(self.value[0]):
         self.empty=True
   
     def AppendValue(self, value):
-      self.value.append(value.encode('utf8'))
+      self.value.append(value)
   
     def RemoveValue(self, value):
       try:
-        self.value.remove(value.encode('utf8'))
+        self.value.remove(value)
       except:
         return False
       return True
@@ -164,12 +164,12 @@ if not hasattr(sys, 'skipSetupInit'):
   
     
     @staticmethod
-    def CreateList(dict):
-      list=[]
-      for name, value in dict.items():
-        av=AttrVal(name, str(value).encode('utf8'))
-        list.append(av)
-      return list
+    def CreateList(ddict):
+      avlist=[]
+      for name, value in ddict.items():
+        av=AttrVal(name, str(value))
+        avlist.append(av)
+      return avlist
     
   
   def ConvertResult(res):
@@ -182,7 +182,7 @@ if not hasattr(sys, 'skipSetupInit'):
       for dn, info in res:
         do={}
         for key in info:
-          do[key.decode('utf8').lower()] = map(lambda x: x.decode('utf8'), info[key])
+          do[key.lower()] = list(map(str, info[key]))
         out.append( (dn, do) )
     return out
     
@@ -195,4 +195,4 @@ if not hasattr(sys, 'skipSetupInit'):
     def Init():
       pass
   
-  import Server
+  from . import Server

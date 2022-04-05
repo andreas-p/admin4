@@ -10,7 +10,7 @@
           <bitmap>Admin4.png</bitmap>
           <style></style>
         </object>
-        <flag>wxTOP|wxBOTTOM|wxLEFT|wxRIGHT|wxGROW|wxALIGN_CENTRE|wxALIGN_CENTRE_VERTICAL</flag>
+        <flag>wxTOP|wxBOTTOM|wxLEFT|wxRIGHT|wxGROW|wxALIGN_CENTRE_VERTICAL</flag>
         <border>10</border>
       </object>
       <object class="sizeritem">

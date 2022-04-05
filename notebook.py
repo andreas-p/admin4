@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2013-2014 Andreas Pflug
+# (c) 2013-2022 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -173,8 +173,8 @@ class Notebook(wx.Notebook, adm.MenuOwner, _TimerOwner):
       DoSomething(self, parentNotebook, currentPage)
       DoSomething(self, parentNotebook)
     """
-    id=evt.GetId()
-    proc=self.GetMenuProc(id)
+    cid=evt.GetId()
+    proc=self.GetMenuProc(cid)
     if proc:
       args=self.GetCallArgs(proc)
       if len(args) and args[0] == "self":
@@ -183,7 +183,7 @@ class Notebook(wx.Notebook, adm.MenuOwner, _TimerOwner):
       if hasattr(proc, "_classname_"):
         ci.append(proc._classname_)
       ci.append(proc.__name__)
-      logger.debug("Calling ID %d: %s", id, ".".join(ci))
+      logger.debug("Calling ID %d: %s", cid, ".".join(ci))
       if len(args) == 2:
         page=self.pages[self.GetSelection()]
         proc(self, page)

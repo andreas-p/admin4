@@ -1,13 +1,13 @@
 # The Admin4 Project
-# (c) 2013-2014 Andreas Pflug
+# (c) 2013-2022 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
 
 
 nodeinfo=[]
-from SpecificEntry import SpecificEntry
-from Entry import Entry
+from .SpecificEntry import SpecificEntry
+from .Entry import Entry
 from . import AttrVal
 from wh import xlt
 import wx, adm
@@ -25,16 +25,15 @@ class Groups(SpecificEntry):
 
   class GroupInfo:
     def __init__(self, dn, info):
-      self.dn=dn.decode('utf8')
-      self.info=info
+      self.dn=dn
       displayname=info.get('displayName')
       if displayname:
-        self.name=displayname[0].decode('utf8')
+        self.name=displayname[0]
       else:
-        self.name=info['cn'][0].decode('utf8')
+        self.name=info['cn'][0]
 
-      self.desc=("\n".join(info.get('description', []))).decode('utf8')
-      self.objectClass=info['structuralObjectClass'][0].decode('utf8').lower()
+      self.desc=("\n".join(info.get('description', [])))
+      self.objectClass=info['structuralObjectClass'][0].lower()
 
 
     def GetIcon(self):
@@ -104,9 +103,9 @@ class Groups(SpecificEntry):
       if uidVal:
         userFilter="|(%s)(memberuid=%s)" % (userFilter, uidVal.GetValue()[0])
   
-      filter="(&(%s)(%s))" % (clsFilter, userFilter)
-      for res in self.GetConnection().SearchSub(baseDn, filter, "dn"):
-        dn=res[0].decode('utf8')
+      dfilter="(&(%s)(%s))" % (clsFilter, userFilter)
+      for res in self.GetConnection().SearchSub(baseDn, dfilter, "dn"):
+        dn=res[0]
         self.memberOf.append(dn)
         self.addMember(dn)
 
@@ -291,7 +290,7 @@ class Group(SpecificEntry):
           candidates.append(uid)
         else:
           candidates.append("%s %s" % (uid, name))
-    candidates.sort(key=unicode.lower)
+    candidates.sort(key=str.lower)
     
     dlg=wx.MultiChoiceDialog(self, xlt("Add member"), xlt("Add member to group"), candidates)
     if dlg.ShowModal() == wx.ID_OK:

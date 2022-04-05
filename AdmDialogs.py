@@ -83,13 +83,13 @@ class AboutDlg(adm.Dialog):
       serverclass=mi['serverclass'].__name__.split('.')[-1]
       icon=adm.images.GetId(os.path.join(modid, serverclass))
       lv.AppendItem(icon, vals)
-      credits=mi.get('credits')
-      if credits:
-        copyrights.append(credits)
-      license=mi.get("license")
-      if license:
-        licenses.append("%s: %s" % (modulename, license))
-    self.Copyright = "\n\n".join(copyrights).replace("(c)", unichr(169))
+      creditst=mi.get('credits')
+      if creditst:
+        copyrights.append(creditst)
+      licenset=mi.get("license")
+      if licenset:
+        licenses.append("%s: %s" % (modulename, licenset))
+    self.Copyright = "\n\n".join(copyrights).replace("(c)", chr(169))
     
     licenses.append("Additional licenses from libraries used may apply.")
     self.License="\n\n".join(licenses)

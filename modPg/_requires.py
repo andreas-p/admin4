@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2013-2014 Andreas Pflug
+# (c) 2013-2022 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -14,10 +14,10 @@ def GetPrerequisites(info=False):
       return "psycopg2 csv"
     else:
       if info:
-        print "psycopg2 too old"
+        print ("psycopg2 too old")
   except:
     if info:
-      print "psycopg2 missing"
+      print ("psycopg2 missing")
     pass
   return None
 

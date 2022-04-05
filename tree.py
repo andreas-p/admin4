@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2013-2014 Andreas Pflug
+# (c) 2013-2022 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -12,10 +12,8 @@ import logger
 from wh import xlt, Menu, StringType
 
 
-class TreeItemData(wx.TreeItemData):
-  def __init__(self, node):
-    wx.TreeItemData.__init__(self)
-    self.SetData(node)
+def TreeItemData(data):
+  return data
 
 class TreeCtrl(wx.TreeCtrl):
   def __init__(self, parentWin, name, size=wx.DefaultSize, style=wx.TR_HAS_BUTTONS | wx.TR_HIDE_ROOT | wx.TR_LINES_AT_ROOT):
@@ -55,10 +53,8 @@ class TreeCtrl(wx.TreeCtrl):
     if not item:
       item=self.GetSelection()
     if item:
-      d=self.GetItemData(item)
-      if d:
-        return d.GetData()
-    return None
+      return self.GetItemData(item)
+    return None 
 
   def GetFrame(self):
     w=self.GetParent()
@@ -74,6 +70,8 @@ class TreeCtrl(wx.TreeCtrl):
       i,cookie=self.GetNextChild(item, cookie)
     return itemlist
   
+####################################################################################
+
 class DragTreeCtrl(TreeCtrl):
   def __init__(self, parentWin, name, size=wx.DefaultSize, style=wx.TR_HAS_BUTTONS | wx.TR_HIDE_ROOT | wx.TR_LINES_AT_ROOT):
     TreeCtrl.__init__(self, parentWin, name, size, style)
@@ -101,7 +99,8 @@ class NodeTreeCtrl(TreeCtrl):
     self.Bind(wx.EVT_RIGHT_DOWN, self.OnTreeRightClick)
     self.Bind(wx.EVT_TREE_ITEM_EXPANDING, self.OnTreeExpand)
     self.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnTreeActivate)
-    
+    parentWin.SetBackgroundColour(wx.WHITE)
+
 
   def OnTreeActivate(self, evt):
     node=self.GetNode(evt.GetItem())
@@ -162,7 +161,7 @@ class NodeTreeCtrl(TreeCtrl):
     image=node.GetIcon()
     simage=-1
 
-    item=self.AppendItem(parentItem, txt, image=image, selectedImage=simage, data=TreeItemData(node))
+    item=self.AppendItem(parentItem, txt, image=image, selImage=simage, data=TreeItemData(node))
     if node.treeitems.get(self.name) == None:
       node.treeitems[self.name] = []
     node.treeitems[self.name].append(item)
@@ -352,24 +351,24 @@ class ServerTreeCtrl(DragTreeCtrl):
     self.ConnectServer(node, adm.mainframe.name)
 
     
-  def OnAddGroup(self, evt):
+  def OnAddGroup(self, _evt):
     dlg=wx.TextEntryDialog(self, xlt("Enter group name"), xlt("New server group"))
     rc=dlg.ShowModal()
     if rc == wx.ID_OK:
       groupName=dlg.GetValue()
       self.addGroup(groupName)
 
-  def OnDelGroup(self, evt):
+  def OnDelGroup(self, _evt):
     if self.currentItem:
       self.Delete(self.currentItem)
       self.StoreServers()
   
-  def OnEdit(self, _ev):
+  def OnEdit(self, _evt):
     server=self.currentNode
     if hasattr(server, "Edit"):
       server.Edit(self.GetFrame())
   
-  def OnUnregister(self, evt):
+  def OnUnregister(self, _evt):
     if self.currentNode:
       self.Delete(self.currentItem)
       self.StoreServers()
@@ -428,7 +427,7 @@ class ServerTreeCtrl(DragTreeCtrl):
     if not parentItem:
       parentItem=self.GetRootItem()
       
-    item=self.InsertItem(parentItem, prev, name, image=image, selectedImage=image, data=TreeItemData(data))
+    item=self.InsertItem(parentItem, prev, name, image=image, selImage=image, data=TreeItemData(data))
     return item
 
   def Append(self, parentItem, name, data):
@@ -438,7 +437,7 @@ class ServerTreeCtrl(DragTreeCtrl):
     if data:
       self.nodes.append(data)
     image=self.getImage(name, data)
-    item=self.AppendItem(parentItem, name, image=image, selectedImage=image, data=TreeItemData(data))
+    item=self.AppendItem(parentItem, name, image=image, selImage=image, data=TreeItemData(data))
     return item
 
 
@@ -495,15 +494,15 @@ class ServerTreeCtrl(DragTreeCtrl):
       nodePath=server.settings.get('nodePath')
       if nodePath:
         for nodeId in nodePath.split('/'):
-          type,name=nodeId.split(':')
-          id=adm.NodeId(type, name)
-          if id == server.id:
+          typ,name=nodeId.split(':')
+          nid=adm.NodeId(typ, name)
+          if nid == server.id:
             continue
           tree.Expand(item)
           found=False
           for item in tree.GetChildItems(item):
             node=tree.GetNode(item)
-            if node.id == id:
+            if node.id == nid:
               found=True
               break
           if not found:

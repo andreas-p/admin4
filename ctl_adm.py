@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2013-2014 Andreas Pflug
+# (c) 2013-2022 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -11,12 +11,12 @@ try:
   import adm
   import logger
 except:
-  print "ctl_adm: XRCED mode"
+  print ("ctl_adm: XRCED mode")
   adm=None
   
 class ComboBox(wx.ComboBox):
-  def __init__(self, parentWin, id=-1, pos=wx.DefaultPosition, size=wx.DefaultSize, style=0):
-    wx.ComboBox.__init__(self, parentWin, id, "", pos, size, style=style | wx.CB_DROPDOWN|wx.CB_READONLY)
+  def __init__(self, parentWin, cid=-1, pos=wx.DefaultPosition, size=wx.DefaultSize, style=0):
+    wx.ComboBox.__init__(self, parentWin, cid, "", pos, size, style=style | wx.CB_DROPDOWN|wx.CB_READONLY)
     self.keys={}
 
   def InsertKey(self, pos, key, val):
@@ -47,14 +47,14 @@ class ComboBox(wx.ComboBox):
       for data in stuff:
         if isinstance(data, (tuple, list)):
           wid=self.AppendKey(data[0], data[1])
-        elif isinstance(data, (str,unicode)):
+        elif isinstance(data, str):
           wid=wx.ComboBox.Append(self, data)
           self.SetClientData(wid, None)
         else:
           logger.debug("unknown type to append to combobox: %s %s", type(data), data)
     elif isinstance(stuff, tuple):
       wid=self.AppendKey(stuff[0], stuff[1])
-    elif isinstance(stuff, (str,unicode)):
+    elif isinstance(stuff, str):
       wid=wx.ComboBox.Append(self, stuff)
       self.SetClientData(wid, None)
     else:
@@ -62,15 +62,15 @@ class ComboBox(wx.ComboBox):
     return wid
 
   def SetKeySelection(self, key):
-    id=self.keys.get(key)
-    if id != None:
-      return self.SetSelection(id)
+    kid=self.keys.get(key)
+    if kid != None:
+      return self.SetSelection(kid)
     return -1
 
   def GetKeySelection(self):
-    id=self.GetSelection()
-    if id >= 0:
-      return self.GetClientData(id)
+    kid=self.GetSelection()
+    if kid >= 0:
+      return self.GetClientData(kid)
     return None
   
   
@@ -79,10 +79,10 @@ class ListView(wx.ListView):
   ICONWITDH=20
   dlgConstant=None
 
-  def __init__(self, parentWin, defaultImageName="", id=-1, pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.LC_REPORT):
+  def __init__(self, parentWin, defaultImageName="", cid=-1, pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.LC_REPORT):
     unused=style
     style=wx.LC_REPORT
-    wx.ListView.__init__(self, parentWin, id, pos, size, style)
+    wx.ListView.__init__(self, parentWin, cid, pos, size, style)
     if adm:
       self.SetImageList(adm.images, wx.IMAGE_LIST_SMALL)
       self.defaultImageId=adm.images.GetId(defaultImageName)
@@ -96,8 +96,8 @@ class ListView(wx.ListView):
     self.coldef=[]
     
     
-  def GetToolTipText(self, id):
-    return self.GetItemText(id, self.getToolTipCol)
+  def GetToolTipText(self, tid):
+    return self.GetItemText(tid, self.getToolTipCol)
 
   def GetSelection(self):
     lst=[]
@@ -138,7 +138,7 @@ class ListView(wx.ListView):
       self.getToolTipTextProc=proc
 
   def convert(self, x):
-    if isinstance(x, (str, unicode)):
+    if isinstance(x, str):
       w,_h=self.GetTextExtent(x)
       return w
     if x < 0:
@@ -175,21 +175,21 @@ class ListView(wx.ListView):
   def AddExtractorInfo(self, colname=None, proc=None):
     self.colInfos.append(ListView.__ColumnExtractor(proc, colname))
     
-  def AddColumnInfo(self, text, size=-1, colname=None, format=wx.LIST_FORMAT_LEFT, proc=None):
-    self.AddColumn(text, size, format)
+  def AddColumnInfo(self, text, size=-1, colname=None, fmt=wx.LIST_FORMAT_LEFT, proc=None):
+    self.AddColumn(text, size, fmt)
     self.AddExtractorInfo(colname, proc)
   
-  def AddColumn(self, text, size=-1, format=wx.LIST_FORMAT_LEFT):
+  def AddColumn(self, text, size=-1, fmt=wx.LIST_FORMAT_LEFT):
     if size in [None, -1, wx.LIST_AUTOSIZE]:
 #      size=wx.LIST_AUTOSIZE
       size=self.GetClientSize().GetWidth();
       for i in range(self.GetColumnCount()):
         size -= self.GetColumnWidth(i)
-    elif size > 0:
+    elif isinstance(size, str):
       size=self.convert(size) + self.MARGIN
       if not self.GetColumnCount():
         size += self.ICONWITDH
-    return self.InsertColumn(self.GetColumnCount(), text, format, size);
+    return self.InsertColumn(self.GetColumnCount(), text, fmt, size);
 
   def CreateColumns(self, left, right=None, leftSize=-1):
     if right != None:
@@ -261,14 +261,14 @@ class ListView(wx.ListView):
     if row < 0:
       row=self.GetItemCount()
 
-    row=self.InsertStringItem(row, unicode(vals[0]), icon)
+    row=super(ListView, self).InsertItem(row, str(vals[0]), icon)
 
     for col in range(1, len(vals)):
       val=vals[col]
       if val == None:
         val=""
-      val=unicode(val)
-      self.SetStringItem(row, col, val);
+      val=str(val)
+      super(ListView, self).SetItem(row, col, val)
     return row
 
   def AppendItem(self, icon, vals):
@@ -292,7 +292,7 @@ class ListView(wx.ListView):
       val=list(val)
 
     for col in range(len(val)):
-      self.SetStringItem(row, col, unicode(val[col]))
+      self.SetStringItem(row, col, str(val[col]))
     if image != None:
       self.SetItemImage(row, image)
 
@@ -319,12 +319,12 @@ class ListView(wx.ListView):
       
   def OnMouseMove(self, ev):
     if self.getToolTipTextProc:
-      id, unused_flags=self.HitTest(ev.GetPosition())
+      cid, unused_flags=self.HitTest(ev.GetPosition())
 
-      if id < 0:
-        self.SetToolTipString("")
+      if cid < 0:
+        self.SetToolTip("")
       else:
-        self.SetToolTipString(self.getToolTipTextProc(id))
+        self.SetToolTip(self.getToolTipTextProc(cid))
   
 
 xmlControlList={ 'whListView': ListView,

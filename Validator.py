@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2013-2014 Andreas Pflug
+# (c) 2013-2022 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -33,7 +33,7 @@ class Validator():
     return self.ctl.GetValue()
 
   def SetValue(self, val):
-    self.ctl.SetValue(unicode(val))
+    self.ctl.SetValue(str(val))
 
 
 class UIntValidator(Validator):
@@ -54,7 +54,7 @@ class UIntValidator(Validator):
 
   def SetValue(self, val):
     if val or isinstance(val, int):
-      self.ctl.SetValue(unicode(int(val)))
+      self.ctl.SetValue(str(int(val)))
     else:
       self.ctl.SetValue("")
 

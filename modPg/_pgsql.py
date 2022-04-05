@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2013-2014 Andreas Pflug
+# (c) 2013-2022 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -13,7 +13,6 @@ import adm
 import re
 import threading
 from wh import xlt, modPath
-from Crypto.PublicKey._slowmath import rsa_construct
 
 
 sqlKeywords=[]
@@ -50,8 +49,9 @@ def quoteIdent(ident):
 
 
 def quoteValue(val, conn=None):
-  if isinstance(val, unicode):  # psycopg2 quoting has some problems with unicode
+  if isinstance(val, str):
     return "'%s'" % val.replace("'", "''").replace("\\", "\\\\")
+  
   adapter=psycopg2.extensions.adapt(val)
   if conn and hasattr(adapter, 'prepare'):
     if isinstance(conn, pgConnection):
@@ -59,7 +59,7 @@ def quoteValue(val, conn=None):
     elif isinstance(conn, pgCursor):
       conn=conn.conn.conn
     adapter.prepare(conn)
-  return adapter.getquoted() 
+  return adapter.getquoted().decode("utf8") 
 
 
 class SqlException(adm.ServerException):
@@ -141,7 +141,7 @@ class pgRow(pgCursorResult):
   def __str__(self):
     cols=[]
     for i in range(len(self.colNames)):
-      val=unicode(self.getItem(i))
+      val=str(self.getItem(i))
       cols.append("%s=%s" % (self.colNames[i], val))
       
     return "( %s )" % ",".join(cols)
@@ -155,13 +155,13 @@ class pgRow(pgCursorResult):
   
   def getItem(self, i):
     val=self.row[i]
-    if isinstance(val, str):
+    if isinstance(val, bytes):
       return val.decode('utf8')
     return val
 
   def __getitem__(self, colName):
     try:
-      if isinstance(colName, (str, unicode)):
+      if isinstance(colName, str):
         i=self.colNames.index(colName)
       else:
         i=colName
@@ -223,7 +223,7 @@ class pgRowset(pgCursorResult):
       def __iter__(self):
         return self
       
-      def next(self):
+      def __next__(self):
         row=self.outer.Next()
         if row:
           return row
@@ -241,7 +241,7 @@ class pgConnection:
     self.inUse=False
     self.lastError=None
     self.trapSqlException=True
-    self.conn=psycopg2.connect(dsn, async=True)
+    self.conn=psycopg2.connect(dsn, async_=True)
     self.wait("Connect")
     self.cursor=self.conn.cursor()
       
@@ -254,7 +254,7 @@ class pgConnection:
       self.pool.RemoveConnection(self)
 
   def wait(self, spot=""):
-    if self.conn.async:
+    if self.conn.async_:
       while self.conn.isexecuting():
         try:
           state = self.conn.poll()
@@ -278,7 +278,7 @@ class pgConnection:
     else:
       cmd=None
 
-    exception.message=errlines=exception.message.decode('utf8')
+    exception.message=errlines=str(exception) # exception.message.decode('utf8')
     logger.querylog(cmd, error=errlines)
 
     if self.trapSqlException:
@@ -366,7 +366,6 @@ class pgCursor():
     try:
       self.cursor.execute(cmd, args)
     except Exception as e:
-      print "EXcept", e, unicode(e)
       self.conn._handleException(e)
 
   def wait(self, spot=""):
@@ -382,7 +381,7 @@ class pgCursor():
       adm.StopWaiting(frame)
       return rowset
     except Exception as e:
-      adm.StopWaiting(frame, e.error)
+      adm.StopWaiting(frame, str(e))
       raise e
   
   
@@ -412,7 +411,7 @@ class pgCursor():
     
     if row:
       row=pgRow(self, row)
-      logger.querylog(self.cursor.query, result=unicode(row))
+      logger.querylog(self.cursor.query, result=str(row))
       return row
     return None
     
@@ -482,9 +481,9 @@ class pgCursor():
 
 
   def ExecuteDict(self, cmd, args=None):
-    set=self.ExecuteSet(cmd, args)
+    dset=self.ExecuteSet(cmd, args)
     d={}
-    for row in set:
+    for row in dset:
       d[row[0]] = row[1]
     return d
 
@@ -550,7 +549,7 @@ class pgConnectionPool:
       conn=pgConnection(self.dsn, self)
       return conn
     except Exception as e:
-      self.lastError = unicode(e)
+      self.lastError = str(e)
       raise adm.ConnectionException(self.node, xlt("Connect"), self.lastError)   
 
 

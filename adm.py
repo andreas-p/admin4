@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2013-2014 Andreas Pflug
+# (c) 2013-2022 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -77,22 +77,13 @@ class ImageList(wx.ImageList):
   def __init__(self, w, h):
     wx.ImageList.__init__(self, w, h)
     self.list={}
-    data=["%d %d 1 1" % (w,h), "  c None"]
-    empty=""
-    for _i in range(w):
-      empty += " "
-    for _i in range(h):
-      data.append(empty)
-    self.Add(wx.BitmapFromXPMData(data))
+
+    data=b'\xff\xff\xff' *w*h
+    alpha=b'\x00' *w*h
+    self.Add(wx.Bitmap.FromBufferAndAlpha(w, h, data, alpha))
     self.list['']=0
 
-    data=["%d %d 1 1" % (w,h), "  c #FFFFFF"]
-    empty=""
-    for _i in range(w):
-      empty += " "
-    for _i in range(h):
-      data.append(empty)
-    self.Add(wx.BitmapFromXPMData(data))
+    self.Add(wx.Bitmap.FromBuffer(w, h, data))
     self.list['white']=1
 
   def GetModuleId(self, inst, name):
@@ -107,40 +98,39 @@ class ImageList(wx.ImageList):
       return ids[0]
 
     name="joined:%s" % "+".join(map(str, ids))
-    id=self.list.get(name)
-    if id:
-      return id
+    iid=self.list.get(name)
+    if iid:
+      return iid
     dc=wx.MemoryDC()
 
     w,h=self.GetSize(0)
-    bmp=wx.EmptyBitmap(w,h)
+    bmp=wx.Bitmap(w,h)
     dc.SelectObject(bmp)
 
     # TODO should rewrite using wx.GraphicsContext
-    if wx.Platform not in ("__WXMAC__"):
+    if True: # wx.Platform not in ("__WXMAC__"):
       b=self.GetBitmap(1)
       dc.DrawBitmap(b, 0, 0, True)
     
-    for id in ids:
-      if id > 0:
-        b=self.GetBitmap(id)
+    for iid in ids:
+      if iid > 0:
+        b=self.GetBitmap(iid)
         dc.DrawBitmap(b, 0, 0, True)
-        #self.Draw(id, dc, 0,0)
       dc.DrawBitmap(b, 0, 0, True)
     dc.SelectObject(wx.NullBitmap)
 
-    id=self.Add(bmp)
-    self.list[name]=id
-    return id
+    iid=self.Add(bmp)
+    self.list[name]=iid
+    return iid
 
   def GetId(self, name):
     if name == None:
       return -1
-    id=self.list.get(name)
-    if id:
-      return id
+    iid=self.list.get(name)
+    if iid:
+      return iid
 
-    id=-1
+    iid=-1
     bmp=wh.GetBitmap(name)
     if bmp:
       if bmp.GetSize() != self.GetSize(0):
@@ -149,24 +139,25 @@ class ImageList(wx.ImageList):
         dcs.SelectObject(bmp)
         dc=wx.MemoryDC()
         w,h=self.GetSize(0)
-        bmpneu=wx.EmptyBitmap(w,h)
+        bmpneu=wx.Bitmap(w,h)
         dc.SelectObject(bmpneu)
-        if wx.Platform not in ("__WXMAC__"):
+        if True: # wx.Platform not in ("__WXMAC__"):
+          # DC on mac isn't transparent any more
           b=self.GetBitmap(1)
           dc.DrawBitmap(b, 0, 0, True)
         dc.StretchBlit(0, 0, w, h, dcs, 0,0,w1,h1)
         dc.SelectObject(wx.NullBitmap)
         dcs.SelectObject(wx.NullBitmap)
-        id=self.Add(bmpneu)
+        iid=self.Add(bmpneu)
         logger.debug("Bitmap %s has wrong format. Need %s, is %s", name, self.GetSize(0), bmp.GetSize())
       else:
-        id=self.Add(bmp)
+        iid=self.Add(bmp)
     else:
       fn="%s.ico" % name
       if os.path.exists(fn):
-        id=self.AddIcon(wx.Icon(fn))
-    self.list[name]=id
-    return id
+        iid=self.AddIcon(wx.Icon(fn))
+    self.list[name]=iid
+    return iid
 
   def __getitem__(self, name):
     return self.GetId(name)
@@ -235,8 +226,8 @@ def RegisterServer(settings):
   mainframe.servers.RegisterServer(settings)
 
 def DisplayDialog(cls, parentWin, *params):
-  id="%s%s" % (cls.__name__, params)
-  dlg=dialogs.get(id)
+  did="%s%s" % (cls.__name__, params)
+  dlg=dialogs.get(did)
   if dlg:
     dlg.Iconize(False)
     dlg.Raise()
@@ -246,8 +237,8 @@ def DisplayDialog(cls, parentWin, *params):
       if not parentWin: break
       
     dlg=cls(parentWin, *params)
-    dlg.dialogId = id
-    dialogs[id]=dlg
+    dlg.dialogId = did
+    dialogs[did]=dlg
     dlg.Go()
     dlg.SetUnchanged()
     dlg.OnCheck()
@@ -258,7 +249,7 @@ def DisplayDialog(cls, parentWin, *params):
 def DisplayNewDialog(cls, parentWin, *params):
   if len(params) == 3:
     params = params + ( xlt("New %s") % params[2].name, )
-  print params
+#  print (params)
   return DisplayDialog(cls, parentWin, *params)
 
 
@@ -348,7 +339,7 @@ def StartWaiting(txt=None, mayAbort=False):
     frame.PushStatus(txt)
     if not mayAbort:
       wx.BeginBusyCursor()
-      frame.MakeModal(True)
+      frame.Enable(False)
   try:
     wx.SafeYield()
   except:
@@ -364,10 +355,9 @@ def StopWaiting(frame=None, txt=None):
       wx.EndBusyCursor()
     except:
       pass
-    try:
-      frame.PopStatus()
-    except:
-      pass
-    frame.MakeModal(False)
+    frame.PopStatus()
+    if not frame.messageLayer:
+      frame.Enable(True)
+
     if txt:
-      frame.SetStatus(unicode(txt).splitlines()[0])
+      frame.SetStatus(str(txt).splitlines()[0])

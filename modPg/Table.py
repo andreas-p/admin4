@@ -1,16 +1,16 @@
 # The Admin4 Project
-# (c) 2013-2014 Andreas Pflug
+# (c) 2013-2022 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
 
 
-from _objects import SchemaObject
-from _pgsql import pgQuery
+from ._objects import SchemaObject
+from ._pgsql import pgQuery
 import adm
 from wh import xlt, shlexSplit, localTimeMillis
 import logger
-from _pgsql import quoteIdent, quoteValue
+from ._pgsql import quoteIdent, quoteValue
 
 persistenceStr={'p': "persistent", 't': "temporary", 'u': "unlogged" }
 
@@ -281,10 +281,10 @@ class ColumnPanel(adm.NotebookPanel):
     self.Description=cd['description']
     self.Statistics = cd['attstattarget']
 
-    type=cd['typename']
-    ci=type.find('(')
+    ctype=cd['typename']
+    ci=ctype.find('(')
     if (ci > 0):
-      prec=type[ci+1:-1].split(',')
+      prec=ctype[ci+1:-1].split(',')
       self.Length=int(prec[0])
       if len(prec) > 1:
         self.Precision = int(prec[1])
@@ -426,15 +426,15 @@ class PrivilegePanel(adm.NotebookPanel):
         up = shlexSplit(acl, '=')
         if len(up) == 1:
           priv=up[0]
-          usr="public"
+          _usr="public"
         else:
-          usr=up[0]
+          _usr=up[0]
           priv=up[1]
         up=shlexSplit(priv, '/')
         priv=up[0]
-        if len(up) > 1: grantor=up[1]
-        else:           grantor=None
-        print usr, priv, grantor
+        if len(up) > 1: _grantor=up[1]
+        else:           _grantor=None
+#        print (usr, priv, grantor)
     pl.Show()       
 
   

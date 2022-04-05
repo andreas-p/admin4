@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2013-2016 Andreas Pflug
+# (c) 2013-2022 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -89,9 +89,9 @@ class OnlineUpdate:
       # https://www.dlitz.net/software/pycrypto/api/current/Crypto-module.html
       pubkey=Crypto.PublicKey.RSA.importKey(keyBytes)
       verifier = Crypto.Signature.PKCS1_v1_5.new(pubkey)
-      hash=Crypto.Hash.SHA.new(xmlText)
+      hashval=Crypto.Hash.SHA.new(xmlText)
 
-      if not verifier.verify(hash, signature):
+      if not verifier.verify(hashval, signature):
         self.message = xlt("Online update check failed:\nupdate.xml cryptographic signature not valid.")
         return
     
@@ -137,7 +137,7 @@ class UpdateDlg(adm.Dialog):
       self.Check()
   
        
-  def OnCheckUpdate(self, evt):
+  def OnCheckUpdate(self, _evt):
     self.ModuleInfo=xlt("Checking...")
     wx.Yield()
     adm.updateInfo=OnlineUpdate()
@@ -152,7 +152,7 @@ class UpdateDlg(adm.Dialog):
 
 
    
-  def OnSearch(self, evt):
+  def OnSearch(self, _evt):
     dlg=wx.FileDialog(self, xlt("Select Update dir or zip"), wildcard="Module ZIP (*.zip)|*.zip|Module (*.py)|*.py", style=wx.FD_CHANGE_DIR|wx.FD_FILE_MUST_EXIST|wx.FD_OPEN)
     if dlg.ShowModal() == wx.ID_OK:
       path=dlg.GetPath()
@@ -193,8 +193,8 @@ class UpdateDlg(adm.Dialog):
           self.Module = xlt("%s is no update zip.") % self.Source
           return False
         try:
-          zip=zipfile.ZipFile(self.Source)
-          names=zip.namelist()
+          fzip=zipfile.ZipFile(self.Source)
+          names=fzip.namelist()
           zipDir=names[0]
           if self.modid.lower() != "admin4":
             if zipDir.split('-')[0] != self.modid:
@@ -210,9 +210,9 @@ class UpdateDlg(adm.Dialog):
           if not initMod in names:
             initMod="%s__version.py" % zipDir
           if initMod in names:
-            f=zip.open(initMod)
+            f=fzip.open(initMod)
             modSrc=f.read()
-            zip.close()
+            fzip.close()
           
         except Exception as _e:
           self.ModuleInfo=xlt("Error while reading moduleinfo from zip %s") % self.Source
@@ -223,11 +223,11 @@ class UpdateDlg(adm.Dialog):
         version=None
         tagDate=revDate=modDate=None
         revLocalChange=revOriginChange=revDirty=False
-        requiredAdmVersion=admVersion.Version("2.2.0")
+        requiredAdmVersion=admVersion.Version("3.0.0")
         
         try:
           sys.skipSetupInit=True
-          exec modSrc
+          exec (modSrc)
           del sys.skipSetupInit
         except Exception as _e:
           self.ModuleInfo=xlt("Error executing version code in %s") % self.Source
@@ -388,10 +388,10 @@ class UpdateDlg(adm.Dialog):
   def DoInstall(self, tmpDir, source):
     if not os.path.isdir(source):
       try:
-        zip=zipfile.ZipFile(source)
-        zipDir=zip.namelist()[0]
-        zip.extractall(tmpDir)
-        zip.close()
+        fzip=zipfile.ZipFile(source)
+        zipDir=fzip.namelist()[0]
+        fzip.extractall(tmpDir)
+        fzip.close()
       except Exception as _e:
         self.ModuleInfo = xlt("Error extracting\n%s") % source
         logger.exception("Error extracting %s", source)
@@ -426,7 +426,7 @@ class UpdateDlg(adm.Dialog):
     except: pass
     return tmpDir
   
-  def DoDownload(self, tmpDir, url, hash):
+  def DoDownload(self, tmpDir, url, hashval):
       self.ModuleInfo = xlt("Downloading...\n\n%s") % url
       try:
         response=HttpGet(url, onlineTimeout*5)
@@ -437,7 +437,7 @@ class UpdateDlg(adm.Dialog):
       content=response.content
       hashResult=Crypto.Hash.SHA.new(content).hexdigest()
       
-      if hashResult != hash:
+      if hashResult != hashval:
         self.ModuleInfo = xlt("The download failed:\nSHA1 checksum invalid.\n\n%s") % url
         self['Ok'].Disable()
         return None

@@ -26,13 +26,13 @@
               <style>wxTE_PROCESS_ENTER</style>
             </object>
             <option>1</option>
-            <flag>wxEXPAND|wxALIGN_CENTRE_VERTICAL</flag>
+            <flag>wxALIGN_CENTRE_VERTICAL</flag>
           </object>
           <object class="sizeritem">
             <object class="wxBitmapButton" name="FindNext">
               <bitmap>find.png</bitmap>
             </object>
-            <flag>wxLEFT|wxRIGHT|wxALIGN_RIGHT|wxALIGN_CENTRE_VERTICAL</flag>
+            <flag>wxLEFT|wxRIGHT|wxALIGN_CENTRE_VERTICAL</flag>
             <border>5</border>
           </object>
         </object>

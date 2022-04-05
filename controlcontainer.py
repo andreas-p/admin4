@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2013-2014 Andreas Pflug
+# (c) 2013-2022 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -12,8 +12,9 @@ from wh import xlt, StringType, floatToTime, localTimeMillis
 from Validator import Validator
 import wx, os
 import xmlres
+from functools import reduce
 
-class MenuOwner:
+class MenuOwner(wx.Object):
   """
   MenuOwner
 
@@ -22,35 +23,38 @@ class MenuOwner:
   _menuIds={}
   lastid=500
   
+  def __init__(self):
+    super(MenuOwner, self).__init__()
+    
   def GetCallArgs(self, proc):
     args,_1,_2,_3 = inspect.getargspec(proc)
     return args
 
-  def GetMenuProc(self, id):
+  def GetMenuProc(self, nid):
     if not hasattr(self, '_menuProcs'):
       self._menuProcs={}
       return None
-    return self._menuProcs.get(id)
+    return self._menuProcs.get(nid)
   
   
   def GetMenuId(self, proc, registerNew=False):
-    id=None
+    nid=None
     foundId=self._menuIds.get(proc)
     if not registerNew:
-      id=foundId
-    if not id:
+      nid=foundId
+    if not nid:
       MenuOwner.lastid += 1
-      id=MenuOwner.lastid
+      nid=MenuOwner.lastid
       if not foundId:
-        self._menuIds[proc] = id
-    return id
+        self._menuIds[proc] = nid
+    return nid
 
   def BindMenuId(self, proc, registerNew=False):
-    id= self.GetMenuId(proc, registerNew)
-    if not self.GetMenuProc(id):
-      self._menuProcs[id] = proc
-      wx.Window.Bind(self, wx.EVT_MENU, self.OnCall, id=id)
-    return id
+    mid= self.GetMenuId(proc, registerNew)
+    if not self.GetMenuProc(mid):
+      self._menuProcs[mid] = proc
+      wx.Window.Bind(self, wx.EVT_MENU, self.OnCall, id=mid)
+    return mid
 
   def EnableMenu(self, menu, item, how):
     if how: how=True
@@ -63,37 +67,34 @@ class MenuOwner:
     if tb:
       tb.EnableTool(item, how)
   
-  def AddMenuItem(self, menu, onproc, name, desc=None, id=-1):
-    if id==-1: id=self.GetMenuId(onproc)
+  def AddMenuItem(self, menu, onproc, name, desc=None,mid=-1):
+    if mid==-1: mid=self.GetMenuId(onproc)
     if desc == None: desc=name
-    item=menu.Append(id, name, desc)
+    item=menu.Append(mid, name, desc)
     self.Bind(wx.EVT_MENU, onproc, item)
     return item
 
-  def AddMenuCheckItem(self, menu, onproc, name, desc=None, id=-1):
-    if id==-1: id=self.GetMenuId(onproc)
+  def AddMenuCheckItem(self, menu, onproc, name, desc=None, mid=-1):
+    if mid==-1: mid=self.GetMenuId(onproc)
     if desc == None: desc=name
-    item=menu.AppendCheckItem(id, name, desc)
+    item=menu.AppendCheckItem(mid, name, desc)
     self.Bind(wx.EVT_MENU, onproc, item)
     return item
 
-class ControlContainer():
+
+
+class ControlContainer(wx.Object):
   def SetAttr(self, name, value):
     object.__setattr__(self, name, value)
     
   def __init__(self, resname=None):
-#    object.__setattr__(self, "_ctls", {})
+    super(ControlContainer, self).__init__()
+
     self.SetAttr("_ctls", {})
     self.module=adm.getModule(self)
     self._ctlList=[]
 
-    if resname == None:
-      self.resname=self.__class__.__name__
-      if self.resname == "Dlg":
-        self.resname=self.__module__[self.__module__.rfind('.')+1:]
-    else:
-      self.resname=resname
-
+    self.setResname(resname)
 
   def AddExtraControls(self, res):
     """
@@ -204,6 +205,14 @@ class ControlContainer():
     return None
 
 
+  def setResname(self, resname=None):
+    if resname == None:
+      self.resname=self.__class__.__name__
+      if self.resname == "Dlg":
+        self.resname=self.__module__[self.__module__.rfind('.')+1:]
+    else:
+      self.resname=resname
+    
   def getResource(self):
     if self.resname.startswith('.'):
       path=os.path.join(adm.loaddir, "%s.xrc" % self.resname)
@@ -221,6 +230,7 @@ class ControlContainer():
     return res
 
   def _addControl(self, n, res):
+    
     ctl=xrc.XRCCTRL(self, n)
 
     if ctl:
@@ -256,34 +266,18 @@ class ControlContainer():
       if n == "StatusBar":
         self.addStatusBar(res)
 
-  if wx.VERSION > (2,9):
-    def _addControls(self, res, xmlnode):
-      if not xmlnode:
-        return
-      if xmlnode.GetName() == "object":
-        name=xmlnode.GetAttribute("name", "")
-        if name:
-          self._addControl(name, res)
-      self._addControls(res, xmlnode.GetChildren())
-      self._addControls(res, xmlnode.GetNext())
+  def _addControls(self, res, xmlnode):
+    if not xmlnode:
+      return
+    if xmlnode.GetName() == "object":
+      name=xmlnode.GetAttribute("name", "")
+      if name:
+        self._addControl(name, res)
+    self._addControls(res, xmlnode.GetChildren())
+    self._addControls(res, xmlnode.GetNext())
 
-
-    def addControls(self, res):
-      self._addControls(res, res.GetResourceNode(self.resname).GetChildren())
-
-  else: # wx2.8
-
-    def addControls(self, res):
-      from xmlhelp import Document as XmlDocument
-      module=self.module.replace(".", "/")
-      path = os.path.join(adm.loaddir, module, "%s.xrc" % self.resname)
-      doc=XmlDocument.parseFile(path)
-      root=doc.getElement('object')
-      objects=root.getElements('object')
-      for obj in objects:
-        name=obj.getAttribute('name')
-        if name:
-          self._addControl(name, res)
+  def addControls(self, res):
+    self._addControls(res, res.GetResourceNode(self.resname).GetChildren())
 
 
   def ctl(self, name):
@@ -334,6 +328,13 @@ class ControlContainer():
       else:
         adm.logger.debug("Control %s not found", cn)
         
+  def _getValueProc(self, ctl):
+    if hasattr(ctl, "GetCheckedItems"):
+      return  ctl.GetCheckedItems
+    elif hasattr(ctl, "GetValue"):
+      return ctl.GetValue
+    return None
+      
   def SetUnchanged(self):
     """
     SetUnchanged()
@@ -341,10 +342,11 @@ class ControlContainer():
     marks all controls as unchanged
     """
     for _key, ctl in self._ctls.items():
-      if hasattr(ctl, "GetValue"):
-        ctl.unchangedValue=ctl.GetValue()
+      getVal=self._getValueProc(ctl)
+      if getVal:
+        ctl.unchangedValue=getVal()
 
-
+  
   def HasChanged(self, name):
     names=name.split()
     if len(names) > 1:
@@ -356,7 +358,8 @@ class ControlContainer():
     if not hasattr(ctl, "unchangedValue"):
       raise AttributeError("control '%s' has no unchangedValue" % name)
 
-    return ctl.unchangedValue != ctl.GetValue()
+    getVal=self._getValueProc(ctl)
+    return ctl.unchangedValue != getVal()
 
 
   def GetChanged(self):
@@ -367,8 +370,10 @@ class ControlContainer():
     """
     cl=[]
     for key, ctl in self._ctls.items():
+      
       if hasattr(ctl, "unchangedValue"):
-        if ctl.unchangedValue != ctl.GetValue():
+        getVal=self._getValueProc(ctl)
+        if ctl.unchangedValue != getVal():
           cl.append(key)
     return cl
 
@@ -438,7 +443,7 @@ class ControlContainer():
         if value == None:
           ctl.SetLabel("")
         else:
-          ctl.SetLabel(unicode(value))
+          ctl.SetLabel(str(value))
       elif isinstance(ctl, wx.RadioBox):
         if value != None:
           ctl.SetSelection(value)
@@ -476,7 +481,8 @@ class Dialog(wx.Dialog, ControlContainer, MenuOwner):
     Usually CheckedDialog is used, which includes a status bar as well.
   """
   def __init__(self, parentWin, node=None, resname=None):
-    ControlContainer.__init__(self, resname)
+    super(Dialog, self).__init__(resname)
+
     self.statusbar=None
     self.node=node
     if node:
@@ -487,9 +493,10 @@ class Dialog(wx.Dialog, ControlContainer, MenuOwner):
     res=self.getResource()
     # TODO configurable from module
 
-    pre=wx.PreDialog()
-    res.LoadOnDialog(pre, parentWin, self.resname)
-    self.PostCreate(pre)
+#    pre=wx.PreDialog()
+#    res.LoadOnDialog(pre, parentWin, self.resname)
+#    self.PostCreate(pre)
+    res.LoadDialog(self, parentWin, self.resname)
 
     size, pos=adm.config.getWindowPositions(self)
     if pos:
@@ -525,7 +532,7 @@ class Dialog(wx.Dialog, ControlContainer, MenuOwner):
       return
     flags=0;
     if self.HasFlag(wx.RESIZE_BORDER):
-      flags = wx.ST_SIZEGRIP
+      flags = wx.STB_SIZEGRIP
     self.statusbar = wx.StatusBar(self, -1, flags)
     if res:
       res.AttachUnknownControl("StatusBar", self.statusbar)
@@ -534,7 +541,7 @@ class Dialog(wx.Dialog, ControlContainer, MenuOwner):
       dlgSize=self.GetSize()
       self.SetSize( (dlgSize.x, dlgSize.y+sbHeight) )
       clientSize=self.GetClientSize()
-      self.statusbar.SetDimensions(0, clientSize.y-sbHeight, clientSize.x, sbHeight)
+      self.statusbar.SetSize(0, clientSize.y-sbHeight, clientSize.x, sbHeight)
     self.statusbar.Show()
 
   def moduleClass(self):
@@ -546,15 +553,15 @@ class Dialog(wx.Dialog, ControlContainer, MenuOwner):
     return adm.images.GetId(os.path.join(self.module, name))
 
   def GetBitmap(self, name):
-    id=self.GetImageId(name)
-    if id > 0:
-      return adm.images.GetBitmap(id)
+    bid=self.GetImageId(name)
+    if bid > 0:
+      return adm.images.GetBitmap(bid)
     return None
 
   def BindMenuId(self, proc):
-    id=self.GetMenuId(proc)
-    wx.Window.Bind(self, wx.EVT_MENU, proc, id=id)
-    return id
+    mid=self.GetMenuId(proc)
+    wx.Window.Bind(self, wx.EVT_MENU, proc, id=mid)
+    return mid
 
   def Check(self):
     """
@@ -609,6 +616,10 @@ class Dialog(wx.Dialog, ControlContainer, MenuOwner):
     if not self.Check():
       return False
     if not self.DoSave():
+      try:
+        lastError=self.GetServer().GetLastError()
+        self.SetStatus(lastError)
+      except: pass
       return False
 
     if self.IsModal():

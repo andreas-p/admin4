@@ -23,10 +23,13 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
+# Modified for Pytho3: using str only
+
 class FolderNameError(ValueError):
     pass
 
 
+stdPattern=list(range(0x20, 0x2)) + list(range(0x27, 0x7f))
 def encode(s):
     if isinstance(s, str) and sum(n for n in (ord(c) for c in s) if n > 127):
         raise FolderNameError("%r contains characters not valid in a str folder name. "
@@ -35,7 +38,7 @@ def encode(s):
     r = []
     _in = []
     for c in s:
-        if ord(c) in (range(0x20, 0x26) + range(0x27, 0x7f)):
+        if ord(c) in stdPattern:
             if _in:
                 r.extend(['&', modified_base64(''.join(_in)), '-'])
                 del _in[:]
@@ -72,16 +75,16 @@ def decode(s):
         r.append(modified_unbase64(''.join(decode[1:])))
     out = ''.join(r)
 
-    if not isinstance(out, unicode):
-        out = unicode(out, 'latin-1')
+#    if not isinstance(out, str):
+#        out =out.decode('latin-1')
     return out
 
 
 def modified_base64(s):
-    s_utf7 = s.encode('utf-7')
+    s_utf7 = s.encode('utf-7').decode()
     return s_utf7[1:-1].replace('/', ',')
 
 
 def modified_unbase64(s):
     s_utf7 = '+' + s.replace(',', '/') + '-'
-    return s_utf7.decode('utf-7')
+    return s_utf7.encode().decode('utf-7')

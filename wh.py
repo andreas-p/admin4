@@ -1,4 +1,4 @@
-# (c) 2013-2014 Andreas Pflug
+# (c) 2013-2022 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -11,14 +11,16 @@ from shlex import shlex
 
 import logger
 loaddir=None
-localTimeMillis=wx.GetLocalTimeMillis
+
+def localTimeMillis():
+  return time.time()*1000
 
 
 def SetLoaddir(d):
   global loaddir
   loaddir=d
 
-StringType=(str, unicode)
+StringType=(str)
 
 class AcceleratorHelper:
   def __init__(self, frame):
@@ -48,6 +50,10 @@ class Grid(wx.grid.Grid):
     wx.grid.Grid.__init__(self, parent)
     self.Bind(wx.grid.EVT_GRID_LABEL_LEFT_CLICK, self.OnLabelLeftClick)
 
+  def SetTable(self, table):
+    super(Grid, self).SetTable(table, True)
+    self.table=table
+    
   def OnLabelLeftClick(self, evt):
     self.SetFocus()
     if not evt.ShiftDown():
@@ -69,10 +75,10 @@ class Grid(wx.grid.Grid):
   def quoteVal(self, val, quoteChar):
     try:
       _=float(val)
-      return unicode(val)
+      return str(val)
     except:
       val.replace(quoteChar, "%s%s" % (quoteChar, quoteChar))
-      return "%s%s%s" % (quoteChar, unicode(val), quoteChar) 
+      return "%s%s%s" % (quoteChar, str(val), quoteChar) 
     
     
   def GetAllSelectedCellValues(self, withLabel=True):
@@ -160,14 +166,15 @@ class ToolBar(wx.ToolBar):
     If text==None, proc is assumed to be an class with an OnExecute method, name and toolbitmap statics 
     """
     if text:
-      id=self.frame.GetMenuId(procOrCls)
+      mid=self.frame.GetMenuId(procOrCls)
       bmp=GetBitmap(bitmap, self.frame)
     else:
-      id=self.frame.BindMenuId(procOrCls.OnExecute)
+      mid=self.frame.BindMenuId(procOrCls.OnExecute)
       text=procOrCls.name
       bmp=GetBitmap(procOrCls.toolbitmap, procOrCls)
-    self.DoAddTool(id, text, bmp, kind=kind)
-    return id
+#    self.DoAddTool(id, text, bmp, kind=kind)
+    self.AddTool(mid, text, bmp, kind=kind)
+    return mid
   
   
 class FileManager:
@@ -186,7 +193,7 @@ class FileManager:
       self.lastFiles=[]
     self.firstId=self.frame.BindMenuId(self.OnSelectFile, True)
     for _ in range(self.maxLastFiles-1):
-      id=self.frame.BindMenuId(self.OnSelectFile, True)
+      _fid=self.frame.BindMenuId(self.OnSelectFile, True)
       
     self._handleConfig() # fill lastFiles array
     
@@ -261,9 +268,9 @@ class FileManager:
   
   
   def OnSelectFile(self, evt):
-    id=evt.GetId() 
-    id -= self.firstId
-    self.filename=self.lastFiles[id]
+    fid=evt.GetId() 
+    fid -= self.firstId
+    self.filename=self.lastFiles[fid]
     self.frame.OnRecentFileOpened(self.filename)
     self._handleConfig()
 
@@ -281,11 +288,11 @@ class FileManager:
   def _handleMenu(self):
     if self.recentMenu:
       for item in self.recentMenu.GetMenuItems():
-        self.recentMenu.DeleteItem(item)
-      id=self.firstId
+        self.recentMenu.Delete(item)
+      mid=self.firstId
       for file in self.lastFiles:
-        self.recentMenu.Append(id, file)
-        id +=1
+        self.recentMenu.Append(mid, file)
+        mid +=1
         
   def _handleConfig(self):
     if self.filename:
@@ -358,7 +365,7 @@ def GetBitmap(name, module=None):
   """
   name=modPath(name, module)
 
-  for ext in ["png"]:
+  for ext in ["png", "ico"]:
     fn="%s.%s" % (name, ext)
     if os.path.exists(fn):
       with wx.LogNull():
@@ -373,20 +380,22 @@ def GetBitmap(name, module=None):
         if line.startswith('"'):
           data.append(line[1:line.rfind('"')])
       f.close()
-      return wx.BitmapFromXPMData(data)
+      return wx.Bitmap(data)   # .FromXPMData
 
-  for ext in ["ico"]:
+  for ext in ["ico"]:  # superseded
     fn="%s.%s" % (name, ext)
     if os.path.exists(fn):
-      return wx.BitmapFromIcon(wx.Icon(fn))
+      bmp=wx.Bitmap().CopyFromIcon(wx.Icon(fn))
+      return bmp
   return None
 
 
 class Timer(wx.Timer):
   timerId=100
   def __init__(self, wnd, proc):
-    wx.Timer.__init__(self, wnd, Timer.timerId)
-    wx.EVT_TIMER(wnd, Timer.timerId, proc)
+    super(Timer, self).__init__(wnd, Timer.timerId)
+    wnd.Bind(wx.EVT_TIMER, proc, self)
+#    wx.EVT_TIMER(wnd, Timer.timerId, proc)
     Timer.timerId += 1
 
 class Menu(wx.Menu):
@@ -416,32 +425,32 @@ class Menu(wx.Menu):
   def IsChecked(self, something):
     return wx.Menu.IsChecked(self, self.getId(something))
     
-  def Add(self, onproc, name, desc=None, id=-1, macproc=None):
+  def Add(self, onproc, name, desc=None, mid=-1, macproc=None):
     if desc == None: desc=name
-    if id==-1:
-      id=self.menuOwner.BindMenuId(onproc)
-      item=self.Append(id, name, desc)
+    if mid==-1:
+      mid=self.menuOwner.BindMenuId(onproc)
+      item=self.Append(mid, name, desc)
     else:
-      item=self.Append(id, name, desc)
-      self.menuOwner.Bind(wx.EVT_MENU, onproc, id=id)
+      item=self.Append(mid, name, desc)
+      self.menuOwner.Bind(wx.EVT_MENU, onproc, id=mid)
       
     if macproc and wx.Platform == "__WXMAC__":
-      macproc(id)
+      macproc(mid)
     return item
 
   def AddCheck(self, onproc, name, desc, how=True):
     if desc == None: desc=name
-    id=self.menuOwner.BindMenuId(onproc)
-    item=self.AppendCheckItem(id, name, desc)
-    self.Check(id, how)
+    mid=self.menuOwner.BindMenuId(onproc)
+    item=self.AppendCheckItem(mid, name, desc)
+    self.Check(mid, how)
     return item
   
-  def AppendOneMenu(self, menu, txt, help=None):
-    if not help:
-      help=""
+  def AppendOneMenu(self, menu, txt, hlp=None):
+    if not hlp:
+      hlp=""
     ic = menu.GetMenuItemCount()
     if ic > 1:
-      return self.AppendSubMenu(menu, txt, help)
+      return self.AppendSubMenu(menu, txt, hlp)
     if ic == 1:
       i=menu.GetMenuItems()[0]
       item=self.Append(i.GetId(), i.GetItemLabel(), i.GetHelp())
@@ -493,7 +502,7 @@ def removeSmartQuote(txt):
   
   Changes typographic quotation marks back to straight ones
   """
-  return txt.replace(unichr(0x201c), '"').replace(unichr(0x201d), '"').replace(unichr(0x2018), "'").replace(unichr(0x2019), "'")
+  return txt.replace(chr(0x201c), '"').replace(chr(0x201d), '"').replace(chr(0x2018), "'").replace(chr(0x2019), "'")
 
 
 def quoteIfNeeded(txt, quoteChar='"'):
@@ -507,15 +516,17 @@ def quoteIfNeeded(txt, quoteChar='"'):
   return txt
 
   
-def shlexSplit(str, sep):
+def shlexSplit(txt, sep):
   """
   shlexSplit(str, sep)
   
   split string by separator, observing quotes
   """
-  if not str:
+  if not txt:
     return []
-  lex=shlex(str, posix=True)
+  if isinstance(txt, bytes):
+    txt=txt.decode()
+  lex=shlex(txt, posix=True)
   lex.whitespace=sep
   lex.commenters=''
   lex.whitespace_split=True
@@ -554,27 +565,27 @@ def copytree(src, dst, symlinks=False, ignore=None, replace=True):
         shutil.copy2(srcname, dstname)
     # catch the Error from the recursive copytree so that we can
     # continue with other files
-    except shutil.Error, err:
+    except shutil.Error as err:
       errors.extend(err.args[0])
-    except EnvironmentError, why:
+    except EnvironmentError as why:
       errors.append((srcname, dstname, str(why)))
   try:
     shutil.copystat(src, dst)
-  except OSError, why:
-    if shutil.WindowsError is not None and isinstance(why, shutil.WindowsError):
+  except OSError as why:
+    if hasattr(shutil, "WindowsError") and shutil.WindowsError is not None and isinstance(why, shutil.WindowsError):
       # Copying file access times may fail on Windows
       pass
     else:
       errors.append((src, dst, str(why)))
   if errors:
-    raise shutil.Error, errors
+    raise shutil.Error(errors)
 
 
 class ParamDict(dict):
-  def __init__(self, str=None):
+  def __init__(self, txt=None):
     dict.__init__(self)
-    if str:
-      self.setString(str)
+    if txt:
+      self.setString(txt)
 
   def setString(self, items):
     if not isinstance(items, list):
@@ -744,31 +755,31 @@ def floatToTime(value, nk=1):
     sec= val % 60
     val -= sec
     val = int(val+.1)/60
-    min = val % 60
+    mins = val % 60
     val /= 60
     hour= val % 24
     day=val/24
 
     if day:
       if nk < 0:
-        if not min:
+        if not mins:
           if not hour:
             return "%dd" % day
           else:
             return "%dd %dh" % (day, hour) 
-      return "%dd %dh %dm" % (day, hour, min)
+      return "%dd %dh %dm" % (day, hour, mins)
     elif hour:
       if nk < 0:
         if not sec:
-          if not min:
+          if not mins:
             return "%dh" % hour
           else:
-            return "%dh %dm" % (hour, min)
-      return "%dh %dm %ds" % (hour, min, int(sec))
+            return "%dh %dm" % (hour, mins)
+      return "%dh %dm %ds" % (hour, mins, int(sec))
     elif min:
       if nk < 0 and not sec:
-        return "%dm" % min
-      return "%dm %ds" % (min, int(sec))
+        return "%dm" % mins
+      return "%dm %ds" % (mins, int(sec))
     else:
       return fmt%sec
   elif not val:

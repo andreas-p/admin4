@@ -1,26 +1,32 @@
 # The Admin4 Project
-# (c) 2014 Andreas Pflug
+# (c) 2022 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
 
 
-import ssl
 import imaplib
 import adm
 from wh import shlexSplit
-from imap_utf7 import decode as decodeUtf7, encode as encodeUtf7 # @UnusedImport
+from .imap_utf7 import encode as encodeUtf7
+from .imap_utf7 import decode as decodeUtf7
 
+_x=encodeUtf7
+_x=decodeUtf7
 imaplib.Commands['STARTTLS'] ='NONAUTH'
 #imaplib.Commands['ID'] ='NONAUTH'
 
-GetImapDate=imaplib.Internaldate2tuple
+def GetImapDate(do):
+  return imaplib.Internaldate2tuple(do.encode())
 
 class Annotations(dict):
   def Get(self, key, default=None):
     for k in self.keys():
       if k.endswith(key):
-        return self.get(k)
+        val=self.get(k)
+        if val == "NIL":
+          return None
+        return val
     return default
     
 
@@ -29,20 +35,24 @@ class ImapServer(imaplib.IMAP4_SSL):
     self.sslobj=None
     self.tls=False
     self.lastError=None
-    if security == 'SSL':
-      self.callClass=imaplib.IMAP4_SSL
-    else:
-      self.callClass=imaplib.IMAP4
+    self.security=security
       
-    imaplib.IMAP4_SSL.__init__(self, host, port)
+    super(ImapServer,self).__init__(host, port)
     
+    
+  def _create_socket(self):
+    sock = imaplib.IMAP4._create_socket(self)
+    if self.security == 'SSL':
+      sock=self.ssl_context.wrap_socket(sock, server_hostname=self.host)
+    return sock
+  
   @staticmethod
   def Create(node):
     security=node.settings['security']
     server=ImapServer(node.address, node.port, security)
     if security.startswith('TLS'):
-      if "STARTTLS" in server.capabilities: 
-        server._starttls()
+      if security != "SSL" and "STARTTLS" in server.capabilities: 
+        server.starttls()
       else:
         if security == 'TLS-req':
           raise adm.ConnectionException(node, "Connect", "STARTTLS not supported")
@@ -50,45 +60,31 @@ class ImapServer(imaplib.IMAP4_SSL):
     return server
 
 
-  def _starttls(self):
-    typ, dat = self._simple_command('STARTTLS')
-    if typ != 'OK':
-      raise self.error(dat[-1])
-    self.sock=ssl.wrap_socket(self.sock)
-    self.file=self.sock.makefile()
-    self.tls=True
-
-    typ, dat = self.capability()
-    if dat == [None]:
-      raise self.error('no CAPABILITY response from server')
-    self.capabilities = tuple(dat[-1].upper().split())
-
-
   def ok(self):
     return self.lastError == None
   
-  def getresult(self, result):
-    typ,dat=result
+  def getresult(self, response):
+    typ,dat=response
     if typ == "OK":
       self.lastError=None
-      return dat
+      result=[]
+      for d in dat:
+        if isinstance(d, list):
+          result.append(list(map(lambda x: x.decode(), d)))
+        elif d == None:
+          result.append(None)
+        else:
+          result.append(d.decode())
+      return result
     else:
-      self.lastError=dat[0]
+      self.lastError=dat[0].decode()
       return None
     
     
   def HasFailed(self):
     return False
-  
-  def open(self, host, port):
-    return self.callClass.open(self, host, port)
-
-  def send(self, data):
-    return self.callClass.send(self, data)
-  
-  def shutdown(self):
-    return self.callClass.shutdown(self)
-  
+ 
+   
   def xatomResult(self, cmd, *params):
     typ,dat=self.xatom(cmd, *params)  
     if typ == "OK":
@@ -96,8 +92,12 @@ class ImapServer(imaplib.IMAP4_SSL):
     return typ,dat
   
   def GetAnnotations(self, mailbox):
-    dat=self.getresult(self.getannotation(mailbox, '"*"', '"value.shared"'))
-    if not dat:
+    try:
+      dat=self.getresult(self.getannotation(self._quote(mailbox), '"*"', '"value.shared"'))
+      if not dat:
+        return None
+    except Exception as e:
+      print("GEtAnn", e)
       return None
     annotations=Annotations()
     
@@ -109,27 +109,28 @@ class ImapServer(imaplib.IMAP4_SSL):
       if not ann or ann == ")":
         continue
       if isinstance(ann, str):
-        parts=shlexSplit(ann.decode('utf-8'), " ")
+        parts=shlexSplit(ann, " ")
         annotations[parts[1]] = parts[-1][:-1]
       elif isinstance(ann, tuple):
-        parts=shlexSplit(ann[0].decode('utf-8'), " ")
+        parts=shlexSplit(ann[0], " ")
         annotations[parts[1]] = ann[1].decode('utf-8')
       else:
         # whats that?
         pass
     return annotations
 
-  def quote(self, txt):
-    if not txt:
-      return "NIL"
-    return self._quote(txt)
   
   
   def SetAnnotation(self, mailbox, name, value):
+    def quoteNil(txt):
+      if not txt:
+        return "NIL"
+      return self._quote(txt)
+
     if value == "":   value=None
-    else: value=value.encode('utf-8')
-    set='(%s ("value.shared" %s))' % (self.quote(name), self.quote(value))
-    return self.getresult(self.setannotation(mailbox, set ))
+
+    dset='(%s ("value.shared" %s))' % (quoteNil(name), quoteNil(value))
+    return self.getresult(self.setannotation(self._quote(mailbox), dset ))
     return self.ok()
   
   
@@ -138,7 +139,8 @@ class ImapServer(imaplib.IMAP4_SSL):
       res=self.login_cram_md5(user, password)
     else:
       res=self.login(user, password)
-    if self.getresult(res):
+    capabilities=self.getresult(res)
+    if capabilities:
       self.id={}
       typ,dat=self.xatomResult('ID', 'NIL')
       if typ == "OK":
@@ -149,7 +151,7 @@ class ImapServer(imaplib.IMAP4_SSL):
     return self.ok()
   
   def GetAcl(self, mailbox):
-    result=self.getresult(self.getacl(mailbox))
+    result=self.getresult(self.getacl(self._quote(mailbox)))
     if result:
       acls={}
       for line in result:
@@ -164,7 +166,7 @@ class ImapServer(imaplib.IMAP4_SSL):
 
   def SetAcl(self, mailbox, who, acl=None):
     if isinstance(who, list):
-      lst=[mailbox]
+      lst=[self._quote(mailbox)]
       for item in who:
         if isinstance(item, tuple):
           lst.append(item[0])
@@ -173,31 +175,31 @@ class ImapServer(imaplib.IMAP4_SSL):
           lst.append(item)
       return self.getresult(self._simple_command('SETACL', *lst))
     else:
-      return self.getresult(self.setacl(mailbox, who, acl))
+      return self.getresult(self.setacl(self._quote(mailbox), who, acl))
   
   def DelAcl(self, mailbox, who):
     if isinstance(who, list):
-      lst=[mailbox]
+      lst=[self._quote(mailbox)]
       lst.extend(who)
       return self.getresult(self._simple_command('DELETEACL', *lst))
     else:
-      return self.getresult(self.deleteacl(mailbox, who))
+      return self.getresult(self.deleteacl(self._quote(mailbox), who))
   
   def MyRights(self, mailbox):
-    result=self.getresult(self.myrights(mailbox))
+    result=self.getresult(self.myrights(self._quote(mailbox)))
     if result:
       return result[0].split()[-1]
     return None
   
   def CreateMailbox(self, mailbox):
-    return self.getresult(self.create(mailbox))
+    return self.getresult(self.create(self._quote(mailbox)))
   
   def RenameMailbox(self, oldmailbox, newmailbox):
-    rc= self.getresult(self.rename(oldmailbox, newmailbox))
+    rc= self.getresult(self.rename(self._quote(oldmailbox), self._quote(newmailbox)))
     return rc
 
   def DeleteMailbox(self, mailbox):
-    rc= self.getresult(self.delete(mailbox))
+    rc= self.getresult(self.delete(self._quote(mailbox)))
     return rc
 
   def Reconstruct(self, mailbox, recursive):
@@ -205,7 +207,7 @@ class ImapServer(imaplib.IMAP4_SSL):
       res=self.xatom("RECONSTRUCT", self._quote(mailbox), "RECURSIVE")
     else:
       res=self.xatom("RECONSTRUCT", self._quote(mailbox))
-    print res
+#    print (res)
     return self.getresult(res)
   
 
@@ -217,16 +219,17 @@ class ImapServer(imaplib.IMAP4_SSL):
       limits="(%s)" % " ".join(l)
     else:
       limits="()"
-    res=self.getresult(self.setquota(root, limits))
+    res=self.getresult(self.setquota(self._quote(root), limits))
     return res
   
   def GetQuota(self, mailbox):
+    mbx=self._quote(mailbox)
     quotas={}
-    res=self.getresult(self.getquotaroot(mailbox))
+    res=self.getresult(self.getquotaroot(mbx))
     if res and len(res) == 2:
       res=res[1]
     else:
-      res=self.getresult(self.getquota(mailbox))
+      res=self.getresult(self.getquota(mbx))
     if res:
       for quota in res:
         parts=shlexSplit(quota, ' ')
@@ -244,7 +247,7 @@ class ImapServer(imaplib.IMAP4_SSL):
   
   
   def List(self, directory, pattern):
-    res=self.getresult(self.list(directory, pattern))
+    res=self.getresult(self.list(self._quote(directory), self._quote(pattern)))
     if res and len(res) == 1 and res[0] == None:
       return []
     return res

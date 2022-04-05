@@ -1,6 +1,6 @@
-#!/usr/bin/python2.7
+#!/usr/bin/python3
 # The Admin4 Project
-# (c) 2013-2014 Andreas Pflug
+# (c) 2013-2022 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage

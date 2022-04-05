@@ -24,7 +24,7 @@ class Config(wx.Config):
 
   def Decorate(self, name, obj=None, subname=None):
     if subname:
-      name="%s/%s" % (name, subname)
+      return "%s/%s" % (name, subname)
     if obj:
       return "%s/%s" % (obj.__module__, name)
     else:
@@ -91,8 +91,8 @@ class Config(wx.Config):
       pos -= win.GetParent().GetPosition()
     self.Write("%sPosition" % name, ((size.x, size.y), (pos.x, pos.y)))
     if hasattr(win, "manager"):
-      str=win.manager.SavePerspective()
-      self.Write("%sPerspective" % name, str)
+      txt=win.manager.SavePerspective()
+      self.Write("%sPerspective" % name, txt)
 
   def GetPerspective(self, win):
     if ignoreStoredPositions:

@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2013-2014 Andreas Pflug
+# (c) 2013-2022 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -35,7 +35,7 @@ class XmlResourceHandler(xrc.XmlResourceHandler):
     ctl=None
     if cls:
 #      self.AddStyle("whEXTRAStyle", 4711)
-      ctl=cls(self.GetParentAsWindow(), id=self.GetID(), pos=self.GetPosition(), size=self.GetSize(), style=self.GetStyle())
+      ctl=cls(self.GetParentAsWindow(), cid=self.GetID(), pos=self.GetPosition(), size=self.GetSize(), style=self.GetStyle())
       self.SetupWindow(ctl)
     return ctl
 

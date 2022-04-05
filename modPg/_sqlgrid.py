@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2013-2014 Andreas Pflug
+# (c) 2013-2022 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -7,18 +7,47 @@
 import adm
 import wx.grid, wx.aui
 from wh import xlt, ToolBar, floatToTime, localTimeMillis
-from _pgsql import pgQuery, quoteIdent, quoteValue
+from ._pgsql import pgQuery, quoteIdent, quoteValue
 
 HMARGIN=5
 VMARGIN=5
 
+if wx.VERSION > (4,1,1):
+  StringTable=wx.grid.GridStringTable
+else:
+  class StringTable(wx.grid.GridTableBase):
+    def __init__(self, rows, cols):
+      super(StringTable, self).__init__()
+      self.rows=rows
+      self.cols=cols
+      self.data={}
+      self.colnames={}
+    
+    def GetNumberCols(self):
+      return self.cols
+    def GetNumberRows(self):
+      return self.rows
+    def GetColsCount(self):
+      return self.cols
+    def GetRowsCount(self):
+      return self.rows
+    def GetValue(self, row, col):
+      return self.data.get((row,col))
+    def SetValue(self, row, col, value):
+      self.data[(row,col)]=value
+    def CanHaveAttributes(self):
+      return False
+    def SetColLabelValue(self, col, text):
+      self.colnames[col]=text
+    def GetColLabelValue(self, col):
+      return self.colnames[col]
 
 #################################################################################
 
 
-class EditTable(wx.grid.PyGridTableBase):
+class EditTable(wx.grid.GridTableBase):
   def __init__(self, grid, tableSpecs, rowset):
-    wx.grid.PyGridTableBase.__init__(self)
+    wx.grid.GridTableBase.__init__(self)
     self.grid=grid
     self.hasoids=self.grid.tableSpecs.hasoids
     self.colNames=rowset.colNames
@@ -40,13 +69,13 @@ class EditTable(wx.grid.PyGridTableBase):
     Delete(rows) expects rows in reverse sorted order
     """
     query=pgQuery(self.tableSpecs.tabName, self.tableSpecs.GetCursor())
-    all=[]
+    allWhere=[]
     for row in rows:
       wh=[]
       for colname in self.tableSpecs.keyCols:
         wh.append("%s=%s" % (quoteIdent(colname), quoteValue(self.rows[row][colname])))
-      all.append("(%s)" % " AND ".join(wh))
-    query.AddWhere("\n    OR ".join(all))
+      allWhere.append("(%s)" % " AND ".join(wh))
+    query.AddWhere("\n    OR ".join(allWhere))
     rc=query.Delete()
     
     self.grid.Freeze()
@@ -257,21 +286,21 @@ class SqlFrame(adm.Frame):
          wx.aui.AUI_MGR_HINT_FADE| wx.aui.AUI_MGR_TRANSPARENT_DRAG)
     self.Bind(wx.EVT_CLOSE, self.OnClose)
     self.toolbar=ToolBar(self, 32)
-    self.CreateStatusBar(4, wx.ST_SIZEGRIP)
+    self.CreateStatusBar(4, wx.STB_SIZEGRIP)
     w,_h=self.StatusBar.GetTextExtent('Mg')
     self.SetStatusWidths([-1, 5*w,6*w,5*w])
 
-  def OnCut(self, evt):
+  def OnCut(self, _evt):
     wnd=wx.Window.FindFocus()
     if wnd:
       wnd.Cut()
   
-  def OnCopy(self, evt):
+  def OnCopy(self, _evt):
     wnd=wx.Window.FindFocus()
     if wnd:
       wnd.Copy()
   
-  def OnPaste(self, evt):
+  def OnPaste(self, _evt):
     wnd=wx.Window.FindFocus()
     if wnd:
       wnd.Paste()
@@ -300,9 +329,9 @@ class SqlFrame(adm.Frame):
     
   def restorePerspective(self, skipConfig=False):
     if not skipConfig:
-      str=adm.config.GetPerspective(self)
-      if str:
-        self.manager.LoadPerspective(str)
+      desc=adm.config.GetPerspective(self)
+      if desc:
+        self.manager.LoadPerspective(desc)
 
     self.manager.Update()
         

@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2013-2014 Andreas Pflug
+# (c) 2013-2022 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -14,7 +14,7 @@ import logger
 from wh import xlt, YesNo, evalAsPython, StringType
 from . import AttrVal, ConvertResult
 
-from _ldap import LdapServer, ldap
+from ._ldap import LdapServer, ldap
 
 standardSystemAttributes="structuralObjectClass hasSubordinates creatorsName modifiersName createTimestamp modifyTimestamp"
 standardSystemClasses="subschema$ subentry$ openldaprootdse$ olc.*"
@@ -89,14 +89,14 @@ class Server(adm.ServerNode):
       return self.connection.lastError
 
   
-  def SearchSubConverted(self, filter="(objectClass=*)", attrs=["*"]):
-    if isinstance(filter, list):
-      more =filter[1:]
-      filter="(%s)" % filter[0]
+  def SearchSubConverted(self, dfilter="(objectClass=*)", attrs=["*"]):
+    if isinstance(dfilter, list):
+      more =dfilter[1:]
+      dfilter="(%s)" % dfilter[0]
       for f in more:
-        filter = "(&%s(%s))" % (filter, f)
+        dfilter = "(&%s(%s))" % (dfilter, f)
         
-    res=self.connection.SearchSub(self.dn, filter, attrs)
+    res=self.connection.SearchSub(self.dn, dfilter, attrs)
     return ConvertResult(res)
 
   def IsConnected(self, deep=False):
@@ -177,10 +177,10 @@ class Server(adm.ServerNode):
     return None
 
   def Split_DN(self, dnstr):
-    dn_s=ldap.dn.explode_dn(dnstr.encode('utf8'))
+    dn_s=ldap.dn.explode_dn(dnstr)
     dn=[]
     for rdn in dn_s:
-      dn.append(rdn.decode('utf8'))
+      dn.append(rdn)
     return dn
 
 
@@ -463,11 +463,11 @@ class ServerConfig(adm.Dialog):
     self.grid.Freeze()
     for key in Server.panelClassDefault:
       val=self.node.GetPanelClasses(key)
-      property=wxpg.StringProperty(key, key, val)
+      prop=wxpg.StringProperty(key, key, val)
 #      bmp=self.GetBitmap(key)
 #      if bmp:
-#        self.grid.SetPropertyImage(property, bmp)  crashes?!?
-      self.grid.Append(property)
+#        self.grid.SetPropertyImage(prop, bmp)  crashes?!?
+      self.grid.Append(prop)
     self.grid.Thaw()
     self.IdGeneratorStyle =  self.node.GetIdGeneratorStyle()
     self.sambaUnixIdPoolDN = self.node.GetSambaUnixIdPoolDN() 
@@ -485,8 +485,8 @@ class ServerConfig(adm.Dialog):
   def Save(self):
     pc={}
     for name in Server.panelClassDefault:
-      property=self.grid.GetProperty(name)
-      val=property.GetValue()
+      prop=self.grid.GetProperty(name)
+      val=prop.GetValue()
       if val:
         pc[name] = val 
     config={}

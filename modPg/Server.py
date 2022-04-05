@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2013-2014 Andreas Pflug
+# (c) 2013-2022 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -7,8 +7,9 @@
 
 import adm
 from wh import xlt, YesNo, StringType
-from _pgsql import pgConnectionPool, pgQuery, pgTypeCache, psycopg2, quoteIdent, quoteValue
-from _objects import SchemaObject
+from ._pgsql import pgConnectionPool, pgQuery, pgTypeCache, psycopg2, quoteIdent, quoteValue
+from ._objects import SchemaObject
+#from psycopg2.extensions import _param_escape
 
 adminProcs=['pg_terminate_backend', 'pg_rotate_logfile', 'pg_reload_conf']
 
@@ -60,7 +61,7 @@ class Server(adm.ServerNode):
             ('client_encoding', 'UTF8'),
             ('application_name', application)
             ]
-    return ' '.join(["%s=%s" % (key, psycopg2._param_escape(unicode(val))) for (key, val) in params])
+    return ' '.join(["%s=%s" % (key, psycopg2.extensions._param_escape(str(val))) for (key, val) in params])
     
 
   def GetType(self, oid):
@@ -104,18 +105,18 @@ class Server(adm.ServerNode):
         SELECT 'version', version()
         UNION
         SELECT 'lastsysoid', datlastsysoid::text FROM pg_database
-         WHERE datname=%(datname)s
+         WHERE datname='%(datname)s'
         UNION
         SELECT proname, proname FROM pg_proc
          WHERE proname IN ( %(adminprocs)s ) AND pronamespace=11 
         UNION
-        SELECT 'adminspace', nspname FROM pg_namespace WHERE nspname=%(adminspace)s
+        SELECT 'adminspace', nspname FROM pg_namespace WHERE nspname='%(adminspace)s'
         UNION
         SELECT 'fav_table', relname FROM pg_class JOIN pg_namespace nsp ON nsp.oid=relnamespace 
-         WHERE nspname=%(adminspace)s AND relname=%(fav_table)s
-        """ % {'datname': quoteValue(self.maintDb), 
-         'adminspace': quoteValue(self.GetPreference("AdminNamespace")),
-         'fav_table': quoteValue("Admin_Fav_%s" % self.user),
+         WHERE nspname='%(adminspace)s' AND relname='%(fav_table)s'
+        """ % {'datname': self.maintDb, 
+         'adminspace': self.GetPreference("AdminNamespace"),
+         'fav_table': "Admin_Fav_%s" % self.user,
          'adminprocs': ", ".join(map(lambda p: "'%s'" % p, adminProcs))
          }]
 
@@ -146,7 +147,7 @@ class Server(adm.ServerNode):
     return self.info.get(name)
   
   def GetLastSysOid(self):
-    return int(self.info['lastsysoid'])
+    return int(self.info.get('lastsysoid', 0))
   
   def GetLastError(self):
     if self.connection:
@@ -182,7 +183,7 @@ class Server(adm.ServerNode):
       node=node.parentNode
     db=node.GetDatabase()
     
-    from Schema import Schema
+    from .Schema import Schema
     if isinstance(patterns, StringType):
       patterns=patterns.split()
     

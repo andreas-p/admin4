@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2013-2014 Andreas Pflug
+# (c) 2013-2022 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -63,34 +63,34 @@ class GenericEntry(adm.NotebookPanel):
       icon="attribMay"
 
     if attr.IsBinary():
-      property=wxpg.StringProperty(attr.name, "", xlt("<binary data; can't edit>"))
+      prop=wxpg.StringProperty(attr.name, "", xlt("<binary data; can't edit>"))
     elif attr.IsSingleValue():
       if attr.IsInteger():
-          property=wxpg.IntProperty(attr.name, oid, value)
+          prop=wxpg.IntProperty(attr.name, oid, value)
       else:
         if not value:
           value=""
-        property=wxpg.StringProperty(attr.name, oid, value)
+        prop=wxpg.StringProperty(attr.name, oid, value)
     else:
       if not value:
         value=[]
-      property=wxpg.ArrayStringProperty(attr.name, oid, value)
-    self.grid.Append(property)
-    self.grid.SetPropertyImage(property, self.dialog.GetBitmap(icon))
+      prop=wxpg.ArrayStringProperty(attr.name, oid, value)
+    self.grid.Append(prop)
+    self.grid.SetPropertyImage(prop, self.dialog.GetBitmap(icon))
 
     if not attr.IsBinary():
-      attr.items[self.grid]=property
-    return property
+      attr.items[self.grid]=prop
+    return prop
 
   def updateRdnOid(self, attr):
     if self.lastRdnOid:
-      property=self.dialog.attribs[self.lastRdnOid].items.get(self.grid)
-      if property:
-        self.grid.SetPropertyImage(property, self.dialog.GetBitmap("attribMust"))
+      prop=self.dialog.attribs[self.lastRdnOid].items.get(self.grid)
+      if prop:
+        self.grid.SetPropertyImage(prop, self.dialog.GetBitmap("attribMust"))
     if self.dialog.rdnOid:
-      property=attr.items.get(self.grid)
-      if property:
-        self.grid.SetPropertyImage(property, self.dialog.GetBitmap("attribRDN"))
+      prop=attr.items.get(self.grid)
+      if prop:
+        self.grid.SetPropertyImage(prop, self.dialog.GetBitmap("attribRDN"))
     self.lastRdnOid=self.dialog.rdnOid
 
 
@@ -145,7 +145,7 @@ class GenericEntry(adm.NotebookPanel):
       must.remove(ocoid)
       self.may.remove(ocoid)
 
-      oids=self.dialog.attribs.keys()
+      oids=list(self.dialog.attribs.keys())
       oids.remove(ocoid)
 
       for oid in must:
@@ -169,8 +169,8 @@ class GenericEntry(adm.NotebookPanel):
         pass
                                 
       if newOids:
-        property=self.grid.Append(wxpg.MultiChoiceProperty(xlt("<new>"), "", newOids, ""))
-        self.grid.SetPropertyImage(property, self.dialog.GetBitmap("attribEmpty"))
+        prop=self.grid.Append(wxpg.MultiChoiceProperty(xlt("<new>"), "", newOids, []))
+        self.grid.SetPropertyImage(prop, self.dialog.GetBitmap("attribEmpty"))
 
     self.grid.Thaw()
 
@@ -229,9 +229,9 @@ class GenericEntry(adm.NotebookPanel):
     txt=""
     pos=self.grid.HitTest(ev.GetPosition())
     if pos:
-      property=pos.GetProperty()
-      if property:
-        oid=property.GetName()
+      prop=pos.GetProperty()
+      if prop:
+        oid=prop.GetName()
         if oid:
           attr=self.dialog.attribs[oid]
           syntax=""
@@ -243,22 +243,22 @@ class GenericEntry(adm.NotebookPanel):
               else:
                 syntax="(%s)" % synSch.desc
           txt="%s %s\nOID: %s\n\n%s"  % (attr.name, syntax, oid, attr.schema.desc)
-    self.grid.SetToolTipString(txt)
+    self.grid.SetToolTip(txt)
 
 
 
   def OnDelAttrs(self, evt):
-    property=self.grid.GetSelection()
-    if property:
-      oid=property.GetName()
+    prop=self.grid.GetSelection()
+    if prop:
+      oid=prop.GetName()
       if oid:
         self.dialog.DelValue(oid, None)
         self.dialog.OnCheck()
 
   def OnGridRightClick(self, evt):
-    property=self.grid.GetSelection()
-    if property:
-      oid=property.GetName()
+    prop=self.grid.GetSelection()
+    if prop:
+      oid=prop.GetName()
       if oid:
         name=self.dialog.attribs[oid].name
         cm=Menu(self.dialog)
@@ -269,13 +269,13 @@ class GenericEntry(adm.NotebookPanel):
   def OnGridChange(self, ev):
     if not self.IsShown():
       return
-    property=ev.GetProperty()
+    prop=ev.GetProperty()
 
-    if property:
-      if property.GetName():
-        self.dialog.SetValue(property.GetName(), property.GetValue())
+    if prop:
+      if prop.GetName():
+        self.dialog.SetValue(prop.GetName(), prop.GetValue())
       else: # <new>
-        names=property.GetValue()
+        names=prop.GetValue()
         if names:
           for name in names:
             self.dialog.SetValue(self.GetServer().GetOid(name), None)
@@ -286,25 +286,25 @@ class GenericEntry(adm.NotebookPanel):
 
 
   def DelValue(self, attrval):
-    property=attrval.items.get(self.grid)
-    if property:
-      self.grid.DeleteProperty(property)
+    prop=attrval.items.get(self.grid)
+    if prop:
+      self.grid.DeleteProperty(prop)
       del attrval.items[self.grid]
 
 
   def SetValue(self, attrval):
     if attrval.GetOid() == self.dialog.rdnOid:
-      rdn="%s=%s" % (attrval.name, attrval.value[0].decode('utf8'))
+      rdn="%s=%s" % (attrval.name, attrval.value[0])
       if rdn != self.RDN:
         self.RDN=rdn
-    property=attrval.items.get(self.grid)
-    if not property:
+    prop=attrval.items.get(self.grid)
+    if not prop:
       oid=attrval.GetOid()
       if oid in self.may:
-        property=self.addProp(oid)
-    if property:
+        prop=self.addProp(oid)
+    if prop:
       value=attrval.GetValue()
-      if property.GetValue() != value:
-        property.SetValue(value)
+      if prop.GetValue() != value:
+        prop.SetValue(value)
 
 nodeinfo=[]

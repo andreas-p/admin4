@@ -59,7 +59,7 @@
                 <object class="wxButton" name="RidGen">
                   <label>Generate</label>
                 </object>
-                <flag>wxALIGN_RIGHT</flag>
+                <flag></flag>
               </object>
             </object>
             <option>1</option>
@@ -116,7 +116,7 @@
                   <label>Must Change Password</label>
                 </object>
                 <option>1</option>
-                <flag>wxLEFT|wxEXPAND|wxALIGN_RIGHT</flag>
+                <flag>wxLEFT|wxEXPAND</flag>
                 <border>20</border>
               </object>
               <object class="sizeritem">
@@ -124,7 +124,7 @@
                   <label></label>
                   <size>-1,12d</size>
                 </object>
-                <flag>wxALIGN_RIGHT|wxBOTTOM|wxLEFT</flag>
+                <flag>wxBOTTOM|wxLEFT</flag>
                 <border>4</border>
               </object>
             </object>

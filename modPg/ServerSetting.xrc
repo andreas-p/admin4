@@ -46,7 +46,7 @@
                 <object class="wxButton" name="Reset">
                   <label>Reset</label>
                 </object>
-                <flag>wxLEFT|wxALIGN_RIGHT|wxALIGN_CENTRE_VERTICAL</flag>
+                <flag>wxLEFT|wxALIGN_CENTRE_VERTICAL</flag>
                 <border>10</border>
               </object>
             </object>
@@ -127,14 +127,14 @@
             <object class="wxButton" name="Cancel">
               <label>Cancel</label>
             </object>
-            <flag>wxLEFT|wxRIGHT|wxALIGN_RIGHT</flag>
+            <flag>wxLEFT|wxRIGHT</flag>
             <border>10</border>
           </object>
           <object class="sizeritem">
             <object class="wxButton" name="Ok">
               <label>Ok</label>
             </object>
-            <flag>wxALIGN_RIGHT</flag>
+            <flag></flag>
           </object>
         </object>
         <flag>wxTOP|wxBOTTOM|wxLEFT|wxRIGHT|wxGROW</flag>

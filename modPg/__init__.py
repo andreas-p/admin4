@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2013-2014 Andreas Pflug
+# (c) 2013-2022 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -30,7 +30,7 @@ if not hasattr(sys, 'skipSetupInit'):
     order=800
 
     def __init__(self, notebook):
-      from _sqledit import SqlEditor
+      from ._sqledit import SqlEditor
       self.control=SqlEditor(notebook)
       self.control.SetMarginWidth(1, 2)
       self.notebook=notebook
@@ -57,4 +57,4 @@ if not hasattr(sys, 'skipSetupInit'):
     configDefaults={ 'AdminNamespace':  "Admin4",
                     'SettingCategorySort': "Reporting Query" }
 
-  import Server
+  from . import Server

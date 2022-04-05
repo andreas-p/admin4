@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2013-2014 Andreas Pflug
+# (c) 2013-2022 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -72,7 +72,7 @@ class Entry(adm.Node):
           ( "objectClasses", ",".join(self.objectClasses), self.GetImageId("objectClass") ),
           ]
 
-      oids=self.attribs.keys()
+      oids=list(self.attribs.keys())
       try:
         oids.remove(self.GetServer().GetObjectClassOid())
       except:
@@ -89,7 +89,7 @@ class Entry(adm.Node):
 
       def checkUC(v):
         
-        return unicode(v)
+        return str(v)
       
       def addSingle(oid):
         if oid in oids:
@@ -111,21 +111,20 @@ class Entry(adm.Node):
               val=attrval.value
           if isinstance(val, list):
             try:
-              map(unicode, val)
+              list(map(str, val))
             except:
               val = " ".join(map(lambda y: "".join(map(lambda x: "%02x" % ord(x), y)), val))
           else:
             try:
-              unicode(val)
+              str(val)
             except:
               val = "".join(map(lambda x: "%02x" % ord(x), val))
 
           self.AddChildrenProperty(val, attrval.name, self.GetImageId(icon))
           oids.remove(oid)
 
-      map(addSingle, self.GetServer().GetSystemAttrOids())
-      map(addSingle, self.GetServer().GetAttrOrder())
-      map(addSingle, oids[:])
+      for oid in self.GetServer().GetSystemAttrOids() + self.GetServer().GetAttrOrder() + oids:
+        addSingle(oid)
 
     return self.properties
 
@@ -158,8 +157,8 @@ class Entry(adm.Node):
       if False: # We could suppress the admin config entry here
         if dn == adminLdapDn:
           continue
-      array[dn.decode('utf8')]=attribs
-    dns=array.keys()
+      array[dn]=attribs
+    dns=list(array.keys())
     dns.sort()
 
     for dn in dns:
@@ -275,7 +274,7 @@ class Entry(adm.Node):
 
       self.mustAttribs, self.mayAttribs= self.GetServer().GetClassSchemaMustMayOids(self.objectClasses)
 
-      for oid in self.attribs.keys():
+      for oid in list(self.attribs.keys()):
         if oid not in self.mayAttribs:
           del self.attribs[oid]
 
@@ -335,7 +334,7 @@ class Entry(adm.Node):
       else:
         attrval.SetValue(value)
       if oid == self.rdnOid:
-        self.rdn="%s=%s" % (attrval.name, attrval.value[0].decode('utf8'))
+        self.rdn="%s=%s" % (attrval.name, attrval.value[0])
       for panel in self.panels:
         if panel != originPanel:
           panel.SetValue(attrval)
@@ -477,35 +476,35 @@ class EntryPassword:
       addList=[]
       chgList=[]
 
-      def EncryptPassword(passwd, hash):
-        if hash == "CLEARTEXT":
+      def EncryptPassword(passwd, hashAlg):
+        if hashAlg == "CLEARTEXT":
           return passwd
         salt=""
-        if hash == "SHA":
+        if hashAlg == "SHA":
           alg="SHA1"
-        elif hash == "SSHA":
+        elif hashAlg == "SSHA":
           salt=os.urandom(4)
           alg="SHA1"
-        elif hash == "MD5":
+        elif hashAlg == "MD5":
           alg="MD5"
-        elif hash == "SMD5":
+        elif hashAlg == "SMD5":
           salt=os.urandom(4)
           alg="MD5"
         else:
           return None
-        hl=hashlib.new(alg, passwd.encode('utf8'))
+        hl=hashlib.new(alg, passwd.encode())
         if salt:
           hl.update(salt)
         crypted=base64.b64encode(hl.digest() + salt)
-        return str("{%s}%s" % (hash, crypted))
+        return str("{%s}%s" % (hashAlg, crypted))
 
 
       _must,may=node.GetServer().GetClassSchemaMustMayOids(node.objectClasses)
 
       userPasswordSchema=node.GetServer().GetAttributeSchema("userPassword")
       if userPasswordSchema.oid in may:
-        hash=EncryptPassword(passwd, node.GetServer().GetPreference("PasswordHash"))
-        userPassword=AttrVal(None, hash, userPasswordSchema)
+        pwhash=EncryptPassword(passwd, node.GetServer().GetPreference("PasswordHash"))
+        userPassword=AttrVal(None, pwhash, userPasswordSchema)
 
         if userPasswordSchema.oid in node.attribs:
           chgList.append(userPassword)
@@ -548,5 +547,5 @@ menuinfo=[
         ]
 
 
-from SpecificEntry import SpecificEntry
-from GenericEntry import GenericEntry
+from .SpecificEntry import SpecificEntry
+from .GenericEntry import GenericEntry

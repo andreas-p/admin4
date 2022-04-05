@@ -50,7 +50,7 @@
                 <object class="wxStaticText" name="RootStorageQuota">
                   <label></label>
                 </object>
-                <flag>wxALIGN_RIGHT</flag>
+                <flag></flag>
               </object>
             </object>
             <flag>wxGROW</flag>

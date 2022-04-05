@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2013-2014 Andreas Pflug
+# (c) 2013-2022 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -119,7 +119,7 @@ def _log(level, fmt, args, tb=None):
       if tb:
         f.write("%s\n" % tb)
     except Exception as e:
-      print "CANNOT LOG", e
+      print ("CANNOT LOG", e)
       pass
 
 
@@ -131,7 +131,7 @@ def trace(offset, level, fmt, *args):
     for i in range(len(stack)-offset, len(stack)-offset-level, -1):
       file=stack[i][0].split('/')[-1]
       lst.append("%s (%s:%d)" % (stack[i][2], file, stack[i][1]))
-    print txt, "Stack:", "  ".join(lst)
+    print (txt, "Stack:", "  ".join(lst))
   
 def debug(fmt, *args):
   _log(LOGLEVEL.DEBUG, fmt, args)
@@ -148,12 +148,16 @@ def exception(fmt, *args):
   _log(LOGLEVEL.ERROR, fmt, args, traceback.format_exc())
   
 def sysexception(extype, args, tb):
-  _log(LOGLEVEL.ERROR, "%s: %s", (extype.__name__, " ".join(args)),   "".join(traceback.format_tb(tb)))
+  try:    txtargs= " ".join(args)
+  except: txtargs=""
+  try:    txttb="".join(traceback.format_tb(tb))
+  except: txttb=""
+  _log(LOGLEVEL.ERROR, "%s: %s %s", (extype.__name__, txtargs, txttb))
 
 def querylog(cmd, result=None, error=None):
-  if isinstance(cmd, str):
-    try:  cmd=cmd.decode('utf8')
-    except: pass
+  if not isinstance(cmd, str):
+    try: cmd=cmd.decode('utf8')
+    except: cmd=str(cmd)
     
   line=None
   if querylevel > LOGLEVEL.DEBUG or error:

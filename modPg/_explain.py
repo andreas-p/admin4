@@ -15,8 +15,6 @@ ARROWMARGIN=5
 
 wxOgl.OGLInitialize()
 
-def round(n):
-  return int(n+.5)
 
 class ExplainText(wx.TextCtrl):
   def __init__(self, parent):
@@ -33,24 +31,24 @@ class ExplainText(wx.TextCtrl):
    
    
 class ExplainShape(wxOgl.BitmapShape):
-  def __init__(self, bmpname, str, tokenNo=-1, detailNo=-1):
+  def __init__(self, bmpname, desc, tokenNo=-1, detailNo=-1):
     wxOgl.BitmapShape.__init__(self)
     self.kidCount=0
     self.totalShapes=0
     self.usedShapes=0
     self.upperShape=None
-    self.description=str
+    self.description=desc
     self.condition=""
     self.detail=""
     self.SetBitmap(GetBitmap(bmpname, self))
 
     if tokenNo < 0:
-      self.label=str
+      self.label=desc
     else:
-      strList=str.split(' ')
+      strList=desc.split(' ')
       self.label = strList[tokenNo]
       if detailNo < 0:
-        self.description = str
+        self.description = desc
           
 #      if detailNo > 0:
 #        self.description=(self.description + " ".join(strList[0:detailNo])).lstrip()
@@ -98,13 +96,13 @@ class ExplainShape(wxOgl.BitmapShape):
     self.GetCanvas().ShowPopup(self)
   
   @staticmethod
-  def Create(level, last, str):
+  def Create(level, last, desc):
     costPos=str.find("(cost=");
     if costPos>0:
-      descr=str[0:costPos]
+      descr=desc[0:costPos]
     else:
-      descr=str
-    strList=str.split(' ')
+      descr=desc
+    strList=desc.split(' ')
     token=strList[0]
     if len(strList) > 1:
       token2=strList[1]
@@ -359,7 +357,7 @@ class ExplainCanvas(wxOgl.ShapeCanvas):
         lines.append(shape.condition)
       lines.append(cost)
       lines.append("rows=%d, size=%d" % (shape.width, shape.rows))
-      self.SetToolTipString("\n".join(lines))
+      self.SetToolTip("\n".join(lines))
     else:
-      self.SetToolTipString("")
+      self.SetToolTip("")
     

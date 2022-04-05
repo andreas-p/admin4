@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2013-2014 Andreas Pflug
+# (c) 2013-2022 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -183,7 +183,8 @@ class Node(object):
     if len(names)==1:
       return adm.images.GetId(os.path.join(self.module, names[0]))
 
-    return adm.images.GetJoinedId(map(lambda name: self.GetImageId(name), names))
+    ids=list(map(lambda name: self.GetImageId(name), names))
+    return adm.images.GetJoinedId(ids)
 
   def GetInfo(self):
     return ""
@@ -425,12 +426,12 @@ class Group(Node):
       self.memberIcon=-1
 
   def GetIcon(self):
-    id=-1;
+    iid=-1;
     if self.memberclass:
-      id=adm.images.GetId(os.path.join(self.module, "%ss" % self.memberclass.__name__))
-    if id == -1:
+      iid=adm.images.GetId(os.path.join(self.module, "%ss" % self.memberclass.__name__))
+    if iid == -1:
       return self.memberIcon
-    return id
+    return iid
 
 
   def GetItemNode(self, page, index):
@@ -504,10 +505,10 @@ class Collection(Node):
     self.id=NodeId(self, parentNode)
 
   def GetIcon(self):
-    id=adm.images.GetId(os.path.join(self.module, "%ss" % self.nodeclass.__name__))
-    if id == -1:
+    iid=adm.images.GetId(os.path.join(self.module, "%ss" % self.nodeclass.__name__))
+    if iid == -1:
       return adm.images.GetId(os.path.join(self.module, self.nodeclass.__name__))
-    return id
+    return iid
 
   def IsPageAvailable(self, cls, _detached):
     return False
@@ -527,11 +528,11 @@ class Collection(Node):
   def GetProperties(self):
     if not len(self.childnodes):
       self.PopulateChildren()
-    list=[]
+    plist=[]
     icon=self.GetImageId(self.nodeclass.__name__)
     for child in self.childnodes:
-      list.append((child.name, child.GetComment(), icon))
-    return list
+      plist.append((child.name, child.GetComment(), icon))
+    return plist
 
 
 class ServerNode(Node):

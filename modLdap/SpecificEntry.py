@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2013-2014 Andreas Pflug
+# (c) 2013-2022 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -268,9 +268,9 @@ class SpecificEntry(adm.NotebookPanel):
       if dn:
         res=ConvertResult(self.GetConnection().SearchBase(dn, "(objectClass=sambaUnixIdPool)", attrName))
         if res:
-          id=int(res[0][1].get(attrName.lower())[0])
-          self.dialog.SetValue(attrName, id)
-          self.GetConnection().Modify(dn, {attrName: id+1})
+          sid=int(res[0][1].get(attrName.lower())[0])
+          self.dialog.SetValue(attrName, sid)
+          self.GetConnection().Modify(dn, {attrName: sid+1})
           return True
         else:
           self.dialog.SetStatus(xlt("Couldn't read %s from %s") % (attrName, dn))

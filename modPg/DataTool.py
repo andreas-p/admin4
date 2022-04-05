@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2013-2014 Andreas Pflug
+# (c) 2013-2022 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -10,10 +10,10 @@ import wx.aui
 import wx.grid
 import adm
 
-from _pgsql import pgQuery, pgConnectionPool, quoteValue, quoteIdent
-from _sqlgrid import SqlFrame, EditTable, HMARGIN, VMARGIN
-from _sqledit import SqlEditor
-from Table import Table
+from ._pgsql import pgQuery, pgConnectionPool, quoteIdent
+from ._sqlgrid import SqlFrame, EditTable, HMARGIN, VMARGIN
+from ._sqledit import SqlEditor
+from .Table import Table
 import logger
 
 
@@ -76,7 +76,7 @@ class SqlEditGrid(Grid):
     self.Bind(wx.grid.EVT_GRID_LABEL_RIGHT_CLICK, self.OnLabelRightClick)
     self.Bind(wx.grid.EVT_GRID_CELL_CHANGED, self.OnCellChanged)
 
-  def OnChangeColSize(self, evt):
+  def OnChangeColSize(self, _evt):
     adm.config.storeGridPositions(self, self, self.tableSpecs.tabName)
 
   def RegisterDataType(self, typename, renderer, editor):
@@ -156,7 +156,7 @@ class SqlEditGrid(Grid):
           self.DoCommit()
     self.lastRow = evt.Row
   
-  def OnEditorShown(self, evt):
+  def OnEditorShown(self, _evt):
     self.dirty=True
     self.frame.SetStatus()
     self.frame.SetStatusText("", SqlFrame.STATUSPOS_SECS)
@@ -192,7 +192,7 @@ class SqlEditGrid(Grid):
         else:             cm.Add(self.OnDeleteRows, xlt("Delete row"))
         cm.Popup(evt)
         
-  def OnDeleteRows(self, evt):
+  def OnDeleteRows(self, _evt):
     rows=self.GetAllSelectedRows()
     try:  rows.remove(len(self.table.rows))
     except: pass
@@ -216,7 +216,7 @@ class SqlEditGrid(Grid):
     self.frame.SetStatusText(xlt("%d rows") % len(self.table.rows), self.frame.STATUSPOS_ROWS)
 
 
-  def OnSetNull(self, evt):  
+  def OnSetNull(self, _evt):  
     self.SetCellValue(self.cmRow, self.cmCol, "")
     self.table.SetValue(self.cmRow, self.cmCol, None)  
     
@@ -233,14 +233,13 @@ class SqlEditGrid(Grid):
     
   def SetEmpty(self):
     self.table=None
-    self.SetTable(wx.grid.GridStringTable(0,0))
     self.SetColLabelSize(0)
     self.SetRowLabelSize(0)
     self.AutoSize()
     
   def SetData(self, rowset):
-    self.table=EditTable(self, self.tableSpecs, rowset)
-    self.SetTable(self.table)
+    self.SetTable(EditTable(self, self.tableSpecs, rowset))
+
     self.Freeze()
     self.BeginBatch()
     w,h=self.GetTextExtent('Colname')
@@ -286,8 +285,8 @@ class ColSpec:
     elif self.category == 'N':  # numeric
       return int
     elif self.category == 'S':
-      return unicode
-    return unicode 
+      return str
+    return str 
 
 
 class TableSpecs:
@@ -316,7 +315,7 @@ class TableSpecs:
 
     self.colSpecs={}
     self.colNames=[]
-    set=cursor.ExecuteSet("""
+    rowset=cursor.ExecuteSet("""
         SELECT attname, attnotnull, atttypid, atttypmod, t.typcategory, CASE WHEN typbasetype >0 THEN format_type(typbasetype,typtypmod) ELSE format_type(atttypid, atttypmod) END as formatted
          FROM pg_attribute a
          JOIN pg_type t ON t.oid=atttypid
@@ -324,7 +323,7 @@ class TableSpecs:
           AND (attnum>0 OR attnum = -2) AND NOT attisdropped
         ORDER BY attnum
     """ % self.oid)
-    for row in set:
+    for row in rowset:
       attname=row['attname']
       self.colNames.append(attname)
       self.colSpecs[attname]=ColSpec(row)
@@ -420,7 +419,7 @@ class FilterPanel(adm.NotebookPanel):
     res=query.Select()
     for row in res:
       limit=row['querylimit']
-      filter=row['filter']
+      datafilter=row['filter']
       sort=evalAsPython(row['sort'])
       display=evalAsPython(row['display'])
       sql=row['sql']
@@ -441,8 +440,8 @@ class FilterPanel(adm.NotebookPanel):
           if col.endswith(' DESC'): colpure=col[:-5]
           else:                     colpure=col
           if colpure in cols:
-            id=sc.Append(col)
-            sc.Check(id, True)
+            cid=sc.Append(col)
+            sc.Check(cid, True)
             cols.remove(colpure)
         sc.AppendItems(cols)
       if display:
@@ -451,15 +450,15 @@ class FilterPanel(adm.NotebookPanel):
         cols=self.tableSpecs.colNames[:]
         for col in display:
           if col in cols:
-            id=dc.Append(col)
-            dc.Check(id, True)
+            cid=dc.Append(col)
+            dc.Check(cid, True)
             cols.remove(col)
         dc.AppendItems(cols)
           
-      if filter:
+      if datafilter:
         self.FilterCheck=True
         self.OnFilterCheck()
-        self.FilterValue.SetText(filter)
+        self.FilterValue.SetText(datafilter)
         self.OnFilterValidate(evt)
       else:
         self.FilterCheck=False
@@ -468,7 +467,7 @@ class FilterPanel(adm.NotebookPanel):
     
     self.OnPresetChange(evt)
     
-  def OnPresetChange(self, evt):
+  def OnPresetChange(self, _evt):
     self.EnableControls("FilterSave", self.FilterPreset)
     
   def OnClickCol(self, evt):
@@ -501,21 +500,21 @@ class FilterPanel(adm.NotebookPanel):
     self['SortCols'].SetString(evt.Selection, colname)
   
   
-  def OnFilterSave(self, evt):
+  def OnFilterSave(self, _evt):
     preset=self.FilterPreset
     if self.LimitCheck:   limit=self.LimitValue
     else:                 limit=None
-    if self.FilterCheck:  filter=self.FilterValue.GetText()
-    else:                 filter=None
+    if self.FilterCheck:  datafilter=self.FilterValue.GetText()
+    else:                 datafilter=None
     sort=self['SortCols'].GetCheckedStrings()
     display=self['DisplayCols'].GetCheckedStrings()
     sql=self.dialog.editor.GetText()
     
     query=pgQuery(self.dialog.querypreset_table, self.dialog.server.GetCursor())
     query.AddColVal('querylimit', limit)
-    query.AddColVal('filter', filter)
-    query.AddColVal('sort', unicode(sort))
-    query.AddColVal('display', unicode(display))
+    query.AddColVal('filter', datafilter)
+    query.AddColVal('sort', str(sort))
+    query.AddColVal('display', str(display))
     query.AddColVal('sql', sql)
     
     fp=self['FilterPreset']
@@ -531,7 +530,7 @@ class FilterPanel(adm.NotebookPanel):
       query.AddWhere('presetname', preset)
       query.Update()
     
-  def OnLimitCheck(self, evt=None):
+  def OnLimitCheck(self, _evt=None):
     self.EnableControls("LimitValue", self.LimitCheck)
 
   def OnFilterCheck(self, evt=None):
@@ -539,11 +538,11 @@ class FilterPanel(adm.NotebookPanel):
     self.FilterValue.Enable(self.FilterCheck)
     self.OnFilterValueChanged(evt)
 
-  def OnFilterValueChanged(self, evt):
+  def OnFilterValueChanged(self, _evt):
     self.valid=not self.FilterCheck
     self.dialog.updateMenu()
   
-  def OnFilterValidate(self, evt):
+  def OnFilterValidate(self, _evt):
     self.valid=False
     
     sql="EXPLAIN " + self.GetQuery()
@@ -577,7 +576,7 @@ class FilterPanel(adm.NotebookPanel):
         fp.Append(row[0])
       
       default=fp.FindString('default')
-      if id >= 0:
+      if default >= 0:
         fp.SetSelection(default)
         self.OnPresetSelect(None)
         
@@ -591,8 +590,8 @@ class FilterPanel(adm.NotebookPanel):
       else:
         query.AddOrder(colName, True)
     if self.FilterCheck:
-      filter=self.FilterValue.GetText().strip()
-      query.AddWhere(filter)
+      datafilter=self.FilterValue.GetText().strip()
+      query.AddWhere(datafilter)
     
     sql= query.SelectQueryString()
     if self.LimitCheck:
@@ -709,7 +708,7 @@ class DataFrame(SqlFrame):
                 "Caution: Don't mess with table and column names!\nYou may experience unwanted behaviour or data loss."), 
                                               self.filter.GetQuery()))
 
-  def OnHelp(self, evt):
+  def OnHelp(self, _evt):
     wx.LaunchDefaultBrowser("http://www.admin4.org/docs/pgsql/datatool")
     
   def OnAuiCloseEvent(self, evt):
@@ -790,12 +789,12 @@ class DataFrame(SqlFrame):
       self.output.SetData(worker.GetResult())
       
 
-  def OnSave(self, evt):
+  def OnSave(self, _evt):
     self.output.DoCommit()
     self.output.Refresh()
     
     
-  def OnRefresh(self, evt=None):
+  def OnRefresh(self, _evt=None):
     if self.notebook.GetSelection():
       sql=self.editor.GetSelectedText()
       if not sql:
@@ -806,12 +805,12 @@ class DataFrame(SqlFrame):
       sql=self.filter.GetQuery()
     self.executeQuery(sql)
   
-  def OnCancelRefresh(self, evt):
+  def OnCancelRefresh(self, _evt):
     self.EnableMenu(self.datamenu, self.OnCancelRefresh, False)
     if self.worker:
       self.worker.Cancel()
   
-  def OnUndo(self, evt):
+  def OnUndo(self, _evt):
     self.output.RevertEdit()
     
 
@@ -840,9 +839,9 @@ class DataTool:
   @staticmethod
   def GetInstrumentQuery(server):
     sql="""SELECT 'querypreset_table', relname FROM pg_class JOIN pg_namespace nsp ON nsp.oid=relnamespace 
-         WHERE nspname=%(adminspace)s AND relname=%(querypreset_table)s""" % {
-         'adminspace': quoteValue(server.GetPreference("AdminNamespace")),
-         'querypreset_table': quoteValue("Admin_QueryPreset_%s" % server.user)
+         WHERE nspname='%(adminspace)s' AND relname='%(querypreset_table)s'""" % {
+         'adminspace': server.GetPreference("AdminNamespace"),
+         'querypreset_table': "Admin_QueryPreset_%s" % server.user
           }
     return sql
 

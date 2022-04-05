@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2013-2014 Andreas Pflug
+# (c) 2013-2022 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -211,6 +211,7 @@ def loadModule(modid, path, modlist=None):
             ncs.append(nc)
           mi['nodeclasses'] = ncs
         menus.append(mi)
+
       mod.moduleinfo['menus']=sorted(menus, key=lambda mi: mi.get('sort'))
       tools=[]
       for mi in mod.moduleinfo['menus']:

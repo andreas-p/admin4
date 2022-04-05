@@ -1,12 +1,12 @@
 # The Admin4 Project
-# (c) 2014 Andreas Pflug
+# (c) 2022 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
 
 import adm
 from wh import xlt, YesNo
-from _imap import ImapServer
+from ._imap import ImapServer
 
 class Server(adm.ServerNode):
   shortname=xlt("IMAP4 Server")
@@ -52,7 +52,7 @@ class Server(adm.ServerNode):
         if self.connection.tls:  sec="TLS"
         else:                    sec=xlt("unsecured connection")
         
-      self.annotations=self.connection.GetAnnotations('')
+      self.annotations=self.connection.GetAnnotations("")
         
       self.properties= [
          ( xlt("Name"),self.name),
@@ -66,9 +66,10 @@ class Server(adm.ServerNode):
          ]
       self.AddProperty("Server", self.connection.id.get('name'))
       self.AddProperty("Version", self.connection.id.get('version'))
-      fs=self.annotations.Get('/freespace')
-      if fs != None:
-        self.AddSizeProperty(xlt("Free space"), float(fs)*1024)
+      if self.annotations:
+        fs=self.annotations.Get('/freespace')
+        if fs != None:
+          self.AddSizeProperty(xlt("Free space"), float(fs)*1024)
               
 #      if self.IsConnected():
 #        self.AddChildrenProperty(list(self.connection.capabilities), xlt("Capabilities"), -1)
@@ -82,7 +83,7 @@ class Server(adm.ServerNode):
       self.Bind("HostName HostAddress Port User Password Autoconnect")
       self.Bind("Security", self.OnChangeSecurity)
 
-    def OnChangeSecurity(self, evt):
+    def OnChangeSecurity(self, _evt):
       if self.security == "SSL":
         self.port=993
       else:

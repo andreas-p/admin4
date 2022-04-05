@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2013-2014 Andreas Pflug
+# (c) 2013-2022 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -9,7 +9,7 @@ import adm
 from wh import xlt, YesNo
 
 
-from _dns import BindConnection
+from ._dns import BindConnection
 
 
 class Server(adm.ServerNode):
@@ -50,7 +50,7 @@ class Server(adm.ServerNode):
     return zones
   
   def GetZoneName(self, dns):
-    if not isinstance(dns, (unicode,str)):
+    if not isinstance(dns, str):
       dns=dns.to_text(True)
     found=""
     for zone in self.knownZones:

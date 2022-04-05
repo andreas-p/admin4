@@ -16,7 +16,7 @@
                   <style>wxCB_DROPDOWN</style>
                 </object>
                 <option>1</option>
-                <flag>wxGROW|wxALIGN_CENTRE_VERTICAL</flag>
+                <flag>wxGROW</flag>
               </object>
               <object class="sizeritem">
                 <object class="wxButton" name="FilterSave">

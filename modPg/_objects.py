@@ -1,12 +1,12 @@
 # The Admin4 Project
-# (c) 2013-2014 Andreas Pflug
+# (c) 2013-2022 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
 
 
 from node import Node, Collection, NodeId
-from _pgsql import quoteIdent, quoteValue
+from ._pgsql import quoteIdent, quoteValue
 from wh import shlexSplit
 
 rightString={'r': "SELECT",
@@ -100,7 +100,7 @@ class ServerObject(Node):
   
                
   def GrantCommentSql(self):
-    str=""
+    sql=""
     acl=self.info.get('acl')
     if acl:
       for grant in shlexSplit(acl[1:-1], ','):
@@ -118,12 +118,12 @@ class ServerObject(Node):
           for right in rights:
             rightlist.append(rightString[right])
           rights=",".join(rightlist)
-        str += "GRANT %s ON %s TO %s\n" % (rights, self.ObjectSql(), user)
+        sql += "GRANT %s ON %s TO %s\n" % (rights, self.ObjectSql(), user)
       
     des=self.info.get('description')
     if des:
-      str += "\nCOMMENT ON %s IS %s\n" % (self.ObjectSql(), quoteValue(des)) 
-    return str
+      sql += "\nCOMMENT ON %s IS %s\n" % (self.ObjectSql(), quoteValue(des)) 
+    return sql
   
   def TablespaceSql(self):
     ts=self.info['spcname']
@@ -181,10 +181,10 @@ class DatabaseObject(ServerObject):
   def GetInstancesFromClass(cls, parentNode):
     instances=[]
     sql=cls.InstancesQuery(parentNode)
-    set=parentNode.GetConnection().GetCursor().ExecuteSet(sql.SelectQueryString())
+    rowset=parentNode.GetConnection().GetCursor().ExecuteSet(sql.SelectQueryString())
 
-    if set:
-      for row in set:
+    if rowset:
+      for row in rowset:
         if not row:
           break
         instances.append(cls(parentNode, row.getDict()))
@@ -194,8 +194,8 @@ class DatabaseObject(ServerObject):
   def Refresh(self):
     sql=self.InstancesQuery(self.parentNode)
     sql.AddWhere("%s=%d" % (self.refreshOid, self.GetOid()))
-    set=self.parentNode.GetConnection().GetCursor().ExecuteSet(sql.SelectQueryString())
-    n=set.Next()
+    rowset=self.parentNode.GetConnection().GetCursor().ExecuteSet(sql.SelectQueryString())
+    n=rowset.Next()
     if n: self.info = n.getDict()
     else: n={}
     self.DoRefresh()

@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2013-2014 Andreas Pflug
+# (c) 2013-2022 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -26,19 +26,19 @@
 def GetPrerequisites(info=False):
   try:
     import ldap
-    if ldap.__version__ < "2.4":
+    if ldap.__version__ < "3.4":
       if info:
-        print "ldap too old"
+        print ("ldap too old")
       return None
     import wx
-    if wx.VERSION < (2,9):
+    if wx.VERSION < (4,1):
       if info:
-        print "wxPython too old"
+        print ("wxPython too old")
       return None
     
     return "ldap"
   except:
     if info:
-      print "ldap missing"
+      print ("ldap missing")
     pass
   return None

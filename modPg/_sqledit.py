@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2013-2014 Andreas Pflug
+# (c) 2013-2022 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -8,7 +8,7 @@
 # http://www.scintilla.org/
 import wx
 import wx.stc as stc
-from _pgsql import getSqlKeywords, colKeywords
+from ._pgsql import getSqlKeywords, colKeywords
 
 
 class SqlEditor(stc.StyledTextCtrl):

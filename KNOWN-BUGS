@@ -1,16 +1,3 @@
-Windows
-- http://trac.wxwidgets.org/ticket/15967  Crash in _propgrid.py (fixed in 3.0.1.1)
-
-Mac OSX
-- http://trac.wxwidgets.org/ticket/10916  SetToolBitmapSize() ignored
-- http://trac.wxwidgets.org/ticket/16204  ShowModal regression in 3.0 (still present in 3.0.2.0)
-- http://trac.wxwidgets.org/ticket/16268  no wx.CANCEL_DEFAULT (OSX restriction)
-- http://trac.wxwidgets.org/ticket/14523  Installation needs signing (fixed in 3.0.1.1, back in 3.0.2.0)
-- http://trac.wxwidgets.org/ticket/16722  wx.Notebook.Freeze/Thaw with InsertPage blocking msg queue (still present in 3.0.2.0)
-- wxTreeCtrl.EnsureVisible not working on with 2.9.4 (3.0.1 not tested) (fixed in 3.0.2)
-
-psycopg2
-- doesn't handle unicode as expected, http://initd.org/psycopg/docs/usage.html#unicode-handling won't work
-    psycopg2.extensions.register_type(psycopg2.extensions.UNICODE)
-    psycopg2.extensions.register_type(psycopg2.extensions.UNICODEARRAY)
-  have no effect
+wxPython < 4.1.2:
+ GridStringTable misses base class https://github.com/wxWidgets/wxWidgets/pull/22258
+ 

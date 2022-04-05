@@ -1,16 +1,15 @@
 # The Admin4 Project
-# (c) 2014 Andreas Pflug
+# (c) 2022 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
 
 
 import adm
-from wh import shlexSplit, xlt, Menu, floatToSize, prettyDate, prettySize,\
-  sizeToFloat
+from wh import shlexSplit, xlt, Menu, floatToSize, prettyDate, prettySize, sizeToFloat
 import wx
 import re
-from _imap import GetImapDate, decodeUtf7, encodeUtf7
+from ._imap import GetImapDate, decodeUtf7, encodeUtf7
 
 squatAnnotation='/vendor/cmu/cyrus-imapd/squat'
 
@@ -194,11 +193,11 @@ class Mailbox(adm.Node):
 
     def OnMouseMoveRights(self, evt):
       pt=evt.GetPosition() - self['Rights'].GetPosition()
-      id=self['Rights'].HitTest(pt)
+      mid=self['Rights'].HitTest(pt)
 
-      if id < 0:txt=""
-      else:     txt=xlt(self.rightDict[self.rightList[id]][1])
-      self['Rights'].SetToolTipString(txt)
+      if mid < 0:txt=""
+      else:     txt=xlt(self.rightDict[self.rightList[mid]][1])
+      self['Rights'].SetToolTip(txt)
 
     
     def setAcl(self, acl):
@@ -206,16 +205,16 @@ class Mailbox(adm.Node):
         self['Rights'].Check(i, self.rightList[i] in acl)
       self.OnCheck()
       
-    def OnRoClick(self, evt):
+    def OnRoClick(self, _evt):
       self.setAcl('lr')
     
-    def OnRwClick(self, evt):
+    def OnRwClick(self, _evt):
       self.setAcl('lrswit')
     
-    def OnAllClick(self, evt):
+    def OnAllClick(self, _evt):
       self.setAcl('lrswipkxteacd')
     
-    def OnNoClick(self, evt):
+    def OnNoClick(self, _evt):
       self.setAcl('')
     
     
@@ -300,7 +299,7 @@ class Mailbox(adm.Node):
       cm.Popup(evt)
     
     
-    def OnDelAcl(self, evt):
+    def OnDelAcl(self, _evt):
       sel=self['ACL'].GetSelection()
       sel.sort(reverse=True)
       
@@ -309,12 +308,12 @@ class Mailbox(adm.Node):
       self.OnCheck()
         
     
-    def OnEditAcl(self, evt):
+    def OnEditAcl(self, _evt):
       sel=self['ACL'].GetSelection()
       if len(sel) == 1:
         self.editAcl(sel[0])
       
-    def OnAddAcl(self, evt):
+    def OnAddAcl(self, _evt):
       self.editAcl()
     
     def OnClickAcl(self, evt):

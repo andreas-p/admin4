@@ -1,13 +1,13 @@
 # The Admin4 Project
-# (c) 2013-2014 Andreas Pflug
+# (c) 2013-2022 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
 
 
 nodeinfo=[]
-from SpecificEntry import SpecificEntry
-from Entry import Entry
+from .SpecificEntry import SpecificEntry
+from .Entry import Entry
 from wh import xlt
 
 SAMBANEVER=int('0x7fffffff', 16)
@@ -175,13 +175,13 @@ class SambaAccount(SpecificEntry, _SambaRidObject):
     self['sambaPrimaryGroupSID'].AppendKey("", "")
 
     sdn=self.ctl('sambadomainname')
-    id=sdn.FindString(self.sambaDomainName)
+    sid=sdn.FindString(self.sambaDomainName)
 
-    if id <0:
+    if sid <0:
       self.sambaDomainSid=None
       return
     else:
-      self.sambaDomainSid=sdn.GetClientData(id)
+      self.sambaDomainSid=sdn.GetClientData(sid)
 
     domsid="%s-" % self.sambaDomainSid
 
@@ -215,7 +215,7 @@ class SambaAccount(SpecificEntry, _SambaRidObject):
       self.AccountEnabled= not "D" in flags
       self.PasswordNeverExpires= "X" in flags
 
-    self.CantChangePassword = (self.dialog.GetAttrValue("sambaPwdCanChange") > 0)
+    self.CantChangePassword = True if self.dialog.GetAttrValue("sambaPwdCanChange") else False
     pwmc=self.dialog.GetAttrValue("sambaPwdMustChange")
     self.MustChangePassword = (pwmc == 0)
     self.OnCheckboxes()
@@ -228,12 +228,12 @@ class SambaAccount(SpecificEntry, _SambaRidObject):
     if self['CantChangePassword'].IsEnabled():
       self['MustChangePassword'].Enable(not self.CantChangePassword)
 
-    def setFlag(id, how):
+    def setFlag(lid, how):
       if how:
-        if self.flags.find(id) < 0:
-          self.flags = self.flags + id
+        if self.flags.find(lid) < 0:
+          self.flags = self.flags + lid
       else:
-        self.flags = self.flags.replace(id, '')
+        self.flags = self.flags.replace(lid, '')
 
 
     self.flags=self.dialog.GetAttrValue("sambaAcctFlags")

@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2013-2014 Andreas Pflug
+# (c) 2013-2022 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -7,11 +7,11 @@
 
 import adm
 from wh import xlt
-from Schema import Schema
-from Table import Table
-from Sequence import Sequence
-from View import View
-from Function import Function
+from .Schema import Schema
+from .Table import Table
+from .Sequence import Sequence
+from .View import View
+from .Function import Function
 
 class Favourites(adm.Node):
   typename=xlt("Favourites")

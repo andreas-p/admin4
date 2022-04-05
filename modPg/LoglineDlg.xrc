@@ -20,7 +20,7 @@
             <object class="wxButton" name="QueryTool">
               <label>Query Tool</label>
             </object>
-            <flag>wxALIGN_LEFT</flag>
+            <flag></flag>
           </object>
           <object class="spacer">
             <option>1</option>
@@ -31,7 +31,7 @@
               <pos>100,180d</pos>
               <default>1</default>
             </object>
-            <flag>wxALIGN_RIGHT</flag>
+            <flag></flag>
           </object>
         </object>
         <flag>wxTOP|wxBOTTOM|wxLEFT|wxRIGHT|wxGROW</flag>
