@@ -404,7 +404,11 @@ class Menu(wx.Menu):
     self.menuOwner=menuOwner
   
   def Popup(self, evt):
-    evt.EventObject.PopupMenu(self, evt.GetPosition())
+    try:
+      point=evt.GetPosition()
+    except:
+      point=evt.GetPoint()
+    evt.EventObject.PopupMenu(self, point)
        
   def getId(self, something):
     if isinstance(something, wx.MenuItem):
