@@ -76,6 +76,16 @@
           </object>
           <object class="sizeritem">
             <object class="wxStaticText">
+              <label>Algorithm</label>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="whComboBox" name="Algorithm">
+              <size>100,-1d</size>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText">
               <label>Timout</label>
             </object>
           </object>

@@ -10,18 +10,27 @@
 
 try:
   import dns.query, dns.update, dns.message, dns.resolver, dns.tokenizer
-  import dns.zone, dns.tsigkeyring, dns.reversename
+  import dns.zone, dns.reversename, dns.tsig
   from dns.name import Name
   import dns.ipv4, dns.ipv6
   import dns.rdata, dns.rdataset
-  import dns.rdatatype as rdatatype, dns.rdataclass as rdataclass # @UnusedImport
+  # These imports are needed; silence PyDev
+  import dns.rdatatype as rdatatype  # @UnusedImport
+  import dns.rdataclass as rdataclass # @UnusedImport
   import dns.rcode as rcode # @UnusedImport
 except:
   dns=None
 
 import requests
 import xml.etree.cElementTree as xmltree
+import logger
 
+DnsSupportedAlgorithms={}
+for n in dns.tsig.__dict__.keys():
+  v=getattr(dns.tsig, n)
+  if isinstance(v, Name) and (n.startswith("HMAC") or n.find('TSIG') > 0):
+    DnsSupportedAlgorithms[n]=n
+    
 
 DnsSupportedTypes={'A':           "IPV4 Address",
                    'AAAA':        "IPV6 Address",
@@ -88,7 +97,7 @@ def DnsAbsName(*args):
   return Name(lst)
 
 def RdataClass(rdClass, rdType):
-  return dns.rdata.get_rdata_class(rdClass, rdType)
+  return dns.rdata.get_rdata_class(rdClass, rdType)  # @UndefinedVariable
 
 def Rdata(dset, *args):
   cls=RdataClass(dset.rdclass, dset.rdtype)
@@ -109,13 +118,11 @@ def Rdataset(ttl, rdclass, rdtype, *args):
     rds.add(RdataEmpty(rds), ttl)
   return rds
 
-
 def DnsRevName(address):
   return dns.reversename.from_address(address)
 
 def DnsRevAddress(name):
   return dns.reversename.to_address(name)
-
 
 def checkIpAddress(address):
   try:
@@ -129,56 +136,69 @@ def checkIpAddress(address):
       pass
   return None
 
+
+
 class BindConnection():
+
   def __init__(self, server):
     self.server=server
     self.hasFailed=False
-    
+    self.queryProc=dns.query.tcp # or udp
+
   def HasFailed(self):
     return self.hasFailed
   
-  def Updater(self, zonename):
-    return dns.update.Update(zonename, keyring=self.GetKeyring())
   
-  def Query(self, name, rdtype=dns.rdatatype.A, rdclass=dns.rdataclass.IN):
+  def execute(self, name, rdtype, rdclass):  
     if not isinstance(name, Name):
       name=DnsName(name)
-    request = dns.message.make_query(name, rdtype, rdclass)
-    keyring=self.GetKeyring()
-    if keyring:
-      request.use_tsig(keyring)
-    try:
-      response=dns.query.tcp(request, self.server.settings['host'], timeout=self.server.settings.get('timeout', 1.), port=self.server.settings['port'])
-      if response:
-        answer=dns.resolver.Answer(name, rdtype, rdclass, response)
-        return answer.rrset
-    except:
-      return None
+    request=dns.message.make_query(name, rdtype, rdclass)
+    tsig=self.GetTsig()
+    if tsig:
+      request.use_tsig(tsig)
+
+    response=self.queryProc(request, self.server.settings['host'], timeout=self.server.settings.get('timeout', 1.), port=self.server.settings['port'])
+    if response:
+      answer=dns.resolver.Answer(name, rdtype, rdclass, response)
+      return answer.rrset
     return []
+
+  def Updater(self, zonename):
+    return dns.update.Update(zonename, keyring=self.GetTsig())
   
   def GetVersion(self):
     rdtype=dns.rdatatype.TXT
     rdclass=dns.rdataclass.CH
-    name=DnsAbsName("version.bind")
-    request=dns.message.make_query(name, rdtype, rdclass)
-    keyring=self.GetKeyring()
-    if keyring:
-      request.use_tsig(keyring)
     try:
-      response=dns.query.tcp(request, self.server.settings['host'], timeout=self.server.settings.get('timeout', 1.), port=self.server.settings['port'])
-      if response:
-        answer=dns.resolver.Answer(name, rdtype, rdclass, response)
-        rdata=answer.rrset[0]
-        return " ".join(rdata.strings)
+      name=Name("version.bind.".split('.'))
+#      rrset=self.execute(DnsAbsName("version.bind"), rdtype, rdclass)
+      rrset=self.execute(name, rdtype, rdclass)
+      return b" ".join(rrset[0].strings).decode()
     except dns.resolver.NoAnswer:
       return ""
-    except Exception as _e:
+    except Exception as e:
+      print(e)
+      logger.exception("Error getting Bind version")
       return None
     return ""
-    
-  def GetKeyring(self):
+
+  def Query(self, name, rdtype=dns.rdatatype.A, rdclass=dns.rdataclass.IN):
+    try:
+      rrset=self.execute(name, rdtype, rdclass)
+      return rrset
+    except:
+      logger.exception("Error querying %s", str(name))
+      return None
+    return []
+
+  def GetTsig(self):
     if self.server.password and self.server.settings['keyname']:
-      return dns.tsigkeyring.from_text({ self.server.settings['keyname'] : self.server.password })
+      name=self.server.settings['keyname']
+      name=dns.name.from_text(name)
+      algtext=self.server.settings.get('algorithm', "HMAC_MD5") # backward compatibility
+      alg=getattr(dns.tsig, algtext)
+      tsig=dns.tsig.Key(name, self.server.password, alg)
+      return tsig;
     else:
       return None
 
@@ -195,7 +215,7 @@ class BindConnection():
     try:
       root=xmltree.fromstring(txt)
     except Exception as _e:
-      import logger, adm, time
+      import adm, time
       fname="%s/xml-%s_%s.xml" % (adm.loaddir, self.server.settings['host'], time.strftime("%Y%m%d%H%M%S", time.localtime(time.time())))
       logger.exception("Error parsing BIND response %s", fname)
       f=open(fname, "w")
@@ -205,10 +225,10 @@ class BindConnection():
     return root
   
   def Send(self, updater):
-    return dns.query.tcp(updater, self.server.settings['host'], timeout=self.server.settings.get('timeout', 1.), port=self.server.settings['port'])
+    return self.queryProc(updater, self.server.settings['host'], timeout=self.server.settings.get('timeout', 1.), port=self.server.settings['port'])
 
   def GetZone(self, zone):
-    xfr = dns.query.xfr(self.server.settings['host'], zone, timeout=self.server.settings.get('timeout', 1.)*10., port=self.server.settings['port'], keyring=self.GetKeyring())
+    xfr = dns.query.xfr(self.server.settings['host'], zone, timeout=self.server.settings.get('timeout', 1.)*10., port=self.server.settings['port'], keyring=self.GetTsig())
     zoneObj = dns.zone.from_xfr(xfr)
     return zoneObj
 

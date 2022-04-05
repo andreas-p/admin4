@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2013-2014 Andreas Pflug
+# (c) 2013-2022 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -10,9 +10,9 @@ import time
 from Validator import Validator
 from wh import xlt, floatToTime, timeToFloat, Menu, shlexSplit, removeSmartQuote,\
   quoteIfNeeded
-from _dns import Rdataset, Rdata, RdataClass, rdatatype, rdataclass, rcode
-from _dns import Name, DnsName, DnsAbsName, DnsRevName, DnsRevAddress, DnsSupportedTypes, checkIpAddress
-from Server import Server
+from ._dns import Rdataset, Rdata, RdataClass, rdatatype, rdataclass, rcode
+from ._dns import Name, DnsName, DnsAbsName, DnsRevName, DnsRevAddress, DnsSupportedTypes, checkIpAddress
+from .Server import Server
 
 prioTypes=['MX', 'NS', 'SRV', 'TXT']
 individualTypes=['A', 'AAAA', 'CNAME', 'PTR']
@@ -397,11 +397,11 @@ class PageNewAskRecord:
   def OnExecute(parentWin, page):
     rdtype=None
     rtypes=[]
-    for type in prioTypes:
-      rtypes.append("%s - %s" % (type, DnsSupportedTypes[type]))
-    for type in sorted(DnsSupportedTypes.keys()):
-      if type not in prioTypes and type not in individualTypes:
-        rtypes.append("%s - %s" % (type, DnsSupportedTypes[type]))
+    for ptype in prioTypes:
+      rtypes.append("%s - %s" % (ptype, DnsSupportedTypes[ptype]))
+    for ptype in sorted(DnsSupportedTypes.keys()):
+      if ptype not in prioTypes and ptype not in individualTypes:
+        rtypes.append("%s - %s" % (ptype, DnsSupportedTypes[ptype]))
       
     dlg=wx.SingleChoiceDialog(parentWin, xlt("record type"), "Select record type", rtypes)
     if dlg.ShowModal() == wx.ID_OK:
@@ -944,7 +944,7 @@ class zonePage(adm.NotebookPage):
   def restoreLastItem(self):
     self.control.SetSelectFocus(self.lastHost)
     
-  def OnItemDoubleClick(self, evt):
+  def OnItemDoubleClick(self, _evt):
     PageEditRecord.OnExecute(self.control, self)
 
   def GetName(self, idx):
@@ -965,10 +965,10 @@ class zonePage(adm.NotebookPage):
     updater=node.Updater()
     for i in range(len(names)):
       if isinstance(types, list):
-        type=types[i]
+        rtype=types[i]
       else:
-        type=types
-      updater.delete(names[i], type)
+        rtype=types
+      updater.delete(names[i], rtype)
 
     msg=node.GetServer().Send(updater)
     if msg.rcode() != rcode.NOERROR:
@@ -1032,8 +1032,8 @@ class HostsPage(zonePage):
 
 
   def SortedByHost(self):
-    hostnames=self.lastNode.hosts4.keys()
-    hostnames.extend(self.lastNode.hosts6.keys())
+    hostnames=list(self.lastNode.hosts4.keys())
+    hostnames.extend(list(self.lastNode.hosts6.keys()))
     hostnames = sorted(set(hostnames), key=lambda n: n.lower())
 
     self.control.DeleteAllItems()

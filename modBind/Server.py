@@ -9,7 +9,7 @@ import adm
 from wh import xlt, YesNo
 
 
-from ._dns import BindConnection
+from ._dns import BindConnection, DnsSupportedAlgorithms
 
 
 class Server(adm.ServerNode):
@@ -214,11 +214,12 @@ class Server(adm.ServerNode):
     
       
   class Dlg(adm.ServerPropertyDialog):
-    adm.ServerPropertyDialog.keyvals.extend( [ 'statsport', 'keyname', 'timeout' ] )
+    adm.ServerPropertyDialog.keyvals.extend( [ 'algorithm', 'statsport', 'keyname', 'timeout' ] )
 
     def __init__(self, parentWin, node):
       adm.PropertyDialog.__init__(self, parentWin, node, None)
-      self.Bind("HostName HostAddress Port Password Autoconnect StatsPort Keyname Timeout")
+      self['Algorithm'].Append( DnsSupportedAlgorithms )
+      self.Bind("HostName HostAddress Port Password Algorithm Autoconnect StatsPort Keyname Timeout")
 
 
     def Go(self):

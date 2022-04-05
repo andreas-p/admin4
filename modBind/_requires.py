@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2013-2014 Andreas Pflug
+# (c) 2013-2022 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -24,11 +24,11 @@ def GetPrerequisites(info=False):
     import dns.version
     if dns.version.version < "1.10.":
       if info:
-        print "dnspython too old"
+        print ("dnspython too old")
       return None
     return "dns requests"
   except:
     if info:
-      print "dnspython missing"
+      print ("dnspython missing")
     pass
   return None
