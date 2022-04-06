@@ -35,8 +35,11 @@ class ServerObject(Node):
     return self.info['oid']
   
   def getAclDef(self, aclName, allRights='ZZ'):
+    aclList=self.info[aclName]
+    if not aclList:
+      return []
     acls=[]
-    for acl in shlexSplit(self.info[aclName][1:-1], ','):
+    for acl in shlexSplit(aclList[1:-1], ','):
       if acl.startswith('='):
         user='public'
         b=shlexSplit(acl[1:], '/')
