@@ -12,9 +12,7 @@ from ._pgsql import pgQuery, quoteIdent, quoteValue
 HMARGIN=5
 VMARGIN=5
 
-if wx.VERSION > (4,1,1):
-  StringTable=wx.grid.GridStringTable
-else:
+if wx.VERSION < (4,1,2):
   class StringTable(wx.grid.GridTableBase):
     def __init__(self, rows, cols):
       super(StringTable, self).__init__()
@@ -41,6 +39,8 @@ else:
       self.colnames[col]=text
     def GetColLabelValue(self, col):
       return self.colnames[col]
+else:
+    StringTable=wx.grid.GridStringTable
 
 #################################################################################
 
