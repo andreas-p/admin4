@@ -71,9 +71,9 @@ class StatisticsPage(adm.NotebookPage):
             for i in range(len(rowset.colNames)):
               vals.append(row[i])
             self.control.AppendItem(icon, vals)
-                
-              
-            
+
+        adm.config.restoreListviewPositions(self.control, self)
+
       self.lastNode=node
     
 def _getSelectedPids(page):
