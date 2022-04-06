@@ -7,6 +7,7 @@
 
 import imaplib
 import adm
+import logger
 from wh import shlexSplit
 from .imap_utf7 import encode as encodeUtf7
 from .imap_utf7 import decode as decodeUtf7
@@ -53,6 +54,7 @@ class ImapServer(imaplib.IMAP4_SSL):
     if security.startswith('TLS'):
       if security != "SSL" and "STARTTLS" in server.capabilities: 
         server.starttls()
+        server.tls=True
       else:
         if security == 'TLS-req':
           raise adm.ConnectionException(node, "Connect", "STARTTLS not supported")
@@ -73,8 +75,10 @@ class ImapServer(imaplib.IMAP4_SSL):
           result.append(list(map(lambda x: x.decode(), d)))
         elif d == None:
           result.append(None)
-        else:
+        elif isinstance(d, bytes):
           result.append(d.decode())
+        else:
+          result.append(d)
       return result
     else:
       self.lastError=dat[0].decode()
@@ -96,8 +100,8 @@ class ImapServer(imaplib.IMAP4_SSL):
       dat=self.getresult(self.getannotation(self._quote(mailbox), '"*"', '"value.shared"'))
       if not dat:
         return None
-    except Exception as e:
-      print("GEtAnn", e)
+    except Exception as _e:
+      logger.exception("Failed to get annotation for %s" % mailbox)
       return None
     annotations=Annotations()
     
