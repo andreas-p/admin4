@@ -269,7 +269,7 @@ class Group(SpecificEntry):
       if len(res) == 1:
         _dn, info=res[0]
         name=info.get("displayName", info.get("cn"))[0]
-        lv.SetStringItem(row, 1, name)
+        lv.SetItem(row, 1, name)
 
 
   def OnAddMember(self, evt):
