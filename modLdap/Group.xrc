@@ -39,7 +39,7 @@
                 <object class="wxButton" name="GenerateGid">
                   <label>Generate</label>
                 </object>
-                <flag>wxALIGN_RIGHT</flag>
+                <flag></flag>
               </object>
             </object>
             <flag>wxEXPAND</flag>
