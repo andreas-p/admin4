@@ -25,7 +25,7 @@
               <label>Cancel</label>
               <pos>50,180d</pos>
             </object>
-            <flag>wxLEFT|wxRIGHT|wxALIGN_RIGHT</flag>
+            <flag>wxLEFT|wxRIGHT</flag>
             <border>10</border>
           </object>
           <object class="sizeritem">
@@ -33,7 +33,7 @@
               <label>OK</label>
               <pos>100,180d</pos>
             </object>
-            <flag>wxALIGN_RIGHT</flag>
+            <flag></flag>
           </object>
         </object>
         <flag>wxTOP|wxBOTTOM|wxLEFT|wxRIGHT|wxGROW</flag>

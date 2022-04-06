@@ -55,9 +55,9 @@ class AboutDlg(adm.Dialog):
     licenses=[xlt("%s\nFor details see LICENSE.TXT") % admVersion.license]
 
     lv=self['Modules']
-    lv.AddColumn(xlt("Module"), "PostgreSQL")
-    lv.AddColumn(xlt("Ver."), "2.4.5")
-    lv.AddColumn(xlt("Rev."), "2014-01-01++")
+    lv.AddColumn(xlt("Module"), 10)
+    lv.AddColumn(xlt("Ver."), 5)
+    lv.AddColumn(xlt("Rev."), 12)
     lv.AddColumn(xlt("Description"), 30)
     
     vals=["Core", str(admVersion.version), rev, xlt("Admin4 core framework")]
@@ -65,7 +65,7 @@ class AboutDlg(adm.Dialog):
 
     wxver=wx.version().split(' ')
     v=wxver[0].split('.')
-    vals=["wxWidgets", '.'.join(v[:3]), '.'.join(v[3:]), "wxWidgets %s" % ' '.join(wxver[1:])]
+    vals=["wxPython", '.'.join(v[:3]), '.'.join(v[3:]), "wxPython %s" % ' '.join(wxver[1:])]
     lv.AppendItem(adm.images.GetId("wxWidgets"), vals)
 
     for modid, mod in adm.modules.items():
