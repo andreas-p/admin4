@@ -1,16 +1,21 @@
+#! /usr/bin/python3
 # The Admin4 Project
-# (c) 2013-2019 Andreas Pflug
+# (c) 2013-2022 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
 
 
+# pip3 install gitpython
+# pip3 install py2app
+
 filePatterns=['.png', '.ico', '.xrc', '.py', '.html']
 ignoredirs=['xrced', 'build', 'dist', '_update', 'release']
 ignoredfiles=['createBundle.py', 'Dockerfile', 'admin4-docker.sh']
-moreFiles=["LICENSE.TXT", 'CHANGELOG', 'admin4.pubkey']
+moreFiles=["LICENSE.TXT", 'CHANGELOG']
 
-requiredMods=['wx.lib.ogl', 'xml', 'Crypto.Signature']
+requiredMods=['wx.lib.ogl', 'xml']
+# requiredMods=['wx.lib.ogl', 'xml', 'Crypto.Signature'] TODO
 appEntry='admin4.py'
 packages=['wx']
 includes=['ast']
@@ -19,7 +24,7 @@ excludes=['lib2to3', 'hotshot', 'distutils', 'ctypes', 'unittest']
 buildDir=".build"
 releaseDir="release/"
 versionTag=None
-requiredAdmVersion="2.2.0" # this is written to __version.py
+requiredAdmVersion="3.0.0" # this is written to __version.py
 checkGit=True
 checkGitCommits=False
 recentlyChanged=[]
@@ -27,7 +32,7 @@ recentlyChanged=[]
 if __name__ == '__main__':
   import sys, os, platform, time
   import shutil, zipfile
-  import Crypto.Hash.SHA
+  import hashlib
   import version
   
   appName=version.appName
@@ -75,10 +80,10 @@ if __name__ == '__main__':
     if not recentlyChanged or name in recentlyChanged:
       lst.append(name)
       
-  def cleanWxDir(dir):
+  def cleanWxDir(wxdir):
     remainder=0
-    for fn in os.listdir(dir):
-      path=os.path.join(dir, fn)
+    for fn in os.listdir(wxdir):
+      path=os.path.join(wxdir, fn)
       if os.path.isdir(path):
         r=cleanWxDir(path)
         if path.endswith(requiredDirs):
@@ -91,13 +96,13 @@ if __name__ == '__main__':
         os.unlink(path)
     return remainder
         
-  def searchFiles(dir, stripdirlen, addFiles=[]):
+  def searchFiles(searchdir, stripdirlen, addFiles=[]):
     lst=[]
     filenames=addFiles
-    for fn in os.listdir(dir):
+    for fn in os.listdir(searchdir):
       if fn.startswith('.'):
         continue
-      path=os.path.join(dir, fn)
+      path=os.path.join(searchdir, fn)
       if os.path.isdir(path):
         lst.extend(searchFiles(path, stripdirlen))
       else:
@@ -106,15 +111,14 @@ if __name__ == '__main__':
           appendChanged(filenames, path)
     
     if filenames:
-      lst.append( (dir[stripdirlen:], filenames) )
+      lst.append( (searchdir[stripdirlen:], filenames) )
     return lst
 
   def readVersion():
     version=None
     try:
-      f=open('__version.py')
-      verSrc=f.read()
-      f.close()
+      with open('__version.py') as f:
+        verSrc=f.read()
       exec (verSrc)
     except:
       pass
@@ -123,7 +127,6 @@ if __name__ == '__main__':
 
   def writeVersion():
     # https://pythonhosted.org/GitPython/0.3.2/index.html
-    # https://pythonhosted.org/GitPython/0.1/index.html
     global versionTag
     
     if checkGit:
@@ -163,28 +166,27 @@ if __name__ == '__main__':
               if path not in recentlyChanged:
                 recentlyChanged.append(path)
             
-        f=open("__version.py", "w")
-        f.write("# Automatically created from GIT by createBundle.\n# Do not edit manually!\n\n")
-        f.write("version='%s'\n" % tag.name)
-        f.write("requiredAdmVersion='%s'\n" % requiredAdmVersion)
-        f.write("tagDate='%s'\n" % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(tag.commit.committed_date)))
-        f.write("revDate='%s'\n" % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(lastOriginCommit.committed_date)))
-        f.write("modDate='%s'\n" % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(lastCommit.committed_date)))
-        if repo.is_dirty() or str(lastCommit) != str(lastOriginCommit):
-          f.write("revLocalChange=True\n")
-        else:
-          f.write("revLocalChange=False\n")
-        if str(lastOriginCommit) != str(tag.commit):
-          f.write("revOriginChange=True\n")
-        else:
-          f.write("revOriginChange=False\n")
-        if repo.is_dirty():
-          versionTag="tmp"
-          f.write("revDirty=True\n")
-        else:
-          f.write("revDirty=False\n")
-        f.write("standardInstallDir='%s'" % standardInstallDir)
-        f.close()
+        with open("__version.py", "w") as f:
+          f.write("# Automatically created from GIT by createBundle.\n# Do not edit manually!\n\n")
+          f.write("version='%s'\n" % tag.name)
+          f.write("requiredAdmVersion='%s'\n" % requiredAdmVersion)
+          f.write("tagDate='%s'\n" % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(tag.commit.committed_date)))
+          f.write("revDate='%s'\n" % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(lastOriginCommit.committed_date)))
+          f.write("modDate='%s'\n" % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(lastCommit.committed_date)))
+          if repo.is_dirty() or str(lastCommit) != str(lastOriginCommit):
+            f.write("revLocalChange=True\n")
+          else:
+            f.write("revLocalChange=False\n")
+          if str(lastOriginCommit) != str(tag.commit):
+            f.write("revOriginChange=True\n")
+          else:
+            f.write("revOriginChange=False\n")
+          if repo.is_dirty():
+            versionTag="tmp"
+            f.write("revDirty=True\n")
+          else:
+            f.write("revDirty=False\n")
+          f.write("standardInstallDir='%s'" % standardInstallDir)
         
         return repo.is_dirty()
       else:
@@ -261,7 +263,7 @@ if __name__ == '__main__':
   elif versionTag:
     distDir += "-%s" % versionTag
     
-  print ("Required:", ", ".join(packages))
+  print ("Requirements detected:", ", ".join(packages))
   
   if installer == 'srcUpdate':
     if recentlyChanged:
@@ -321,22 +323,33 @@ if __name__ == '__main__':
       distutils.core.setup(windows=[{'script': appEntry, 'icon_resources': [(1, '%s.ico' % appName)] }], **info)
     elif platform == "Darwin":
       py2app=__import__(installer)
-      if py2app.__version__ < '0.8':
+      if tuple(map(int, py2app.__version__.split('.'))) < (0, 27):
         raise Exception("py2app too old: must be 0.8 or newer")
+
       # if you're getting "Cannot include subpackages using the 'packages' option" py2app is too old
       distutils.core.setup(app=[appEntry], **info)
-      libdir='%s/%s.app/Contents/Resources/lib/python2.7/wx' % (distDir, appName)
+      libdir='%s/%s.app/Contents/Resources/lib/python%d.%d/wx' % (distDir, appName, sys.version_info.major, sys.version_info.minor)
       if not '-A' in sys.argv:
         cleanWxDir(libdir)
-        shutil.rmtree('%s/%s.app/Contents/Resources/mpl-data' % (distDir, appName))
-  
+        # not necessary any more shutil.rmtree('%s/%s.app/Contents/Resources/mpl-data' % (distDir, appName))
   if installer == 'py2app':
     print ("\nWriting dmg.")
-    zipOut=distDir+".dmg"
-    os.system("hdiutil create -format UDBZ -volname %s -noanyowners -nospotlight -srcfolder %s %s" % (appName, distDir, zipOut))
+    distribPackage=distDir+".dmg"
+    import subprocess
+    with subprocess.Popen( [
+          "hdiutil", "create",
+          "-format", "UDBZ",
+          "-volname", appName,
+          "-noanyowners", "-nospotlight",
+          "-srcfolder", distDir,
+          distribPackage
+          ] )as proc:
+      proc.communicate()
+      if proc.returncode:
+        sys.exit(8)
   else:
     def zipwrite(path, stripLen):
-      zip.write(path, path[stripLen:])
+      fzip.write(path, path[stripLen:])
       if os.path.isdir(path):
         for f in os.listdir(path):
           if f in ['.', '..']:
@@ -344,22 +357,22 @@ if __name__ == '__main__':
           zipwrite(os.path.join(path, f), stripLen)
   
     print ("\nWriting zip.")
-    zipOut=distDir+".zip"
-    zip=zipfile.ZipFile(zipOut, 'w', zipfile.ZIP_DEFLATED)
+    distribPackage=distDir+".zip"
+    fzip=zipfile.ZipFile(distribPackage, 'w', zipfile.ZIP_DEFLATED)
     zipwrite(distDir, len(os.path.dirname(distDir))+1)
-    zip.close()
+    fzip.close()
   
-  f=open(zipOut, 'rb')
-  txt=f.read(102400)
-  hash=Crypto.Hash.SHA.new()
-  while txt != "":
-    hash.update(txt)
-    txt=f.read(102400)
-  f.close()
-  digest=hash.hexdigest()
+  with open(distribPackage, 'rb') as f:
+    data=f.read(102400)
+    m=hashlib.sha1()
+    while data != b"":
+      m.update(data)
+      data=f.read(102400)
+
+  digest=m.hexdigest()
   
-  f=open(distDir+".sha1", 'w')
-  f.write(digest)
-  f.close()
-  print ("SHA1 Hash for %s: %s" % (zipOut, digest))
+  with open(distDir+".sha1", 'w') as f:
+    f.write(digest)
+
+  print ("SHA1 Hash for %s: %s" % (distribPackage, digest))
   print ("\ndone.")
