@@ -32,45 +32,60 @@ for n in dns.tsig.__dict__.keys():
     DnsSupportedAlgorithms[n]=n
     
 
+# https://en.wikipedia.org/wiki/List_of_DNS_record_types
+
 DnsSupportedTypes={'A':           "IPV4 Address",
                    'AAAA':        "IPV6 Address",
+                   'AFSDB':       "AFS Database",
+                   'APL':         "Address Prefix List",
+                   "CAA":         "CA Authorization",
+                   'CDNSKEY':     "Child DS Key",
+                   'CDNS':        "Child DS",
+                   'CERT':        "Certificate",
                    'CNAME':       "Canonical Name",
-                   'PTR':         "Domain Name Pointer",
-                   'SOA':         "Start Of Authority",
-                   'MX':          "Mail Exchange", 
-                   'NS':          "Name Server", 
-                   'TXT':         "Text Record",
-                   'SRV':         "Service Locator",         
-                   'RRSIG':       "DNSSEC Signature",
+                   'CSYNC':       "Child-To-Parent Synchronization",
+                   'DHCID':       "DHCP Identifier",
+                   'DLV':         "DNSSEC Lookaside Validation Record",
+                   'DNAME':       "Delegation Name",
                    'DNSKEY':      "DNS Key",
+                   'DS':          "Delegation Signer",
+                   'EUI48':       "MAC Address EUI-48",
+                   'EUI64':       "MAC Address EUI-64",
+                   'GPOS':        "Geographical Position", # outdated
+                   'HINFO':       "Host Information", # obsolete
+                   'HIP':         "Host Identifier Protocol",
+                   'HTTPS':       "HTTPS Binding",
+                   'IPSECKEY':    "IPSEC Key",
+#                  'ISDN':        "ISDN Address", # outdated, never used 
+                   'KEY':         "DNSSEC Key",   # obsolete
+                   'KX':          "Key Exchange",
+                   'LOC':         "Location",
+                   'MX':          "Mail Exchange", 
+                   'NAPTR':       "Naming Authority Pointer",
+                   'NS':          "Name Server", 
                    'NSEC':        "Next Secure Record",
                    'NSEC3':       "Next Secure Record V3",
                    'NSEC3PARAM':  "NSEC3 Parameters",
-                   'SPF':         "Sender Policy Framework",
-                   'APL':         "Address Prefix List",
-                   'LOC':         "Location",
-                   'AFSDB':       "AFS database",
-                   'CERT':        "Certificate",
-                   "CAA":         "CA Authorization",
-                   'DHCID':       "DHCP Identifier",
-                   'DNAME':       "Delegation Name",
-                   'DS':          "Delegation Signer",
-                   'GPOS':        "Geographical Position",
-                   'HINFO':       "Host Information",
-                   'HIP':         "Host Identifier Protocol",
-                   'IPSECKEY':    "IPSEC Key",
-                   'ISDN':        "ISDN Address",
-                   'KX':          "Key Exchange",
-                   'NAPTR':       "Naming Authority Pointer",
+                   'OPENPGPKEY':  "OpenPGP Public Key Record",
+                   'PTR':         "Domain Name Pointer",
+                   'RRSIG':       "DNSSEC Signature",
                    'RP':          "Responsible Person",
-                   'SIG':         "DNSSEC Signature",
-                   'KEY':         "DNSSEC Key",
+                   'SIG':         "DNSSEC Signature", # obsolete
+                   'SMIMEA':      "S/MIME Cert Association",
+                   'SOA':         "Start Of Authority",
+                   'SPF':         "Sender Policy Framework", # outdated
+                   'SRV':         "Service Locator",         
                    'SSHFP':       "SSH Public Key Fingerprint",
+                   'SVCB':        "Service Binding",
+                   'TA':          "Trust Authority",
                    'TKEY':        "Secret Key Record",
                    'TLSA':        "TLSA Certificate Association",
                    'TSIG':        "Transaction Signature",
+                   'TXT':         "Text Record",
+                   'URI':         "Uniform Resource Identifier",
                    'WKS':         "Well known service description",
-                   'X25':         "X25 Address",
+#                  'X25':         "X25 Address", # outdated, never used
+                   'ZONEMD':      "Message Digests for DNS Zones"
                    }
 
 def DnsName(*args):
