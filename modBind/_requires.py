@@ -22,7 +22,7 @@
 def GetPrerequisites(info=False):
   try:
     import dns.version
-    if dns.version.version < "2.2.":
+    if dns.version.version < "2.0.":
       if info:
         print ("dnspython too old")
       return None
