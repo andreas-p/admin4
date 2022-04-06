@@ -19,4 +19,4 @@ moduleinfo={ 'name': "BIND DNS Server",
 import sys
 if not hasattr(sys, 'skipSetupInit'):
   from . import Server
-      
+

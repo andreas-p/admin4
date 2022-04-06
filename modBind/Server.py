@@ -11,7 +11,6 @@ from wh import xlt, YesNo
 
 from ._dns import BindConnection, DnsSupportedAlgorithms
 
-
 class Server(adm.ServerNode):
   shortname=xlt("BIND Server")
   typename=xlt("BIND Server")

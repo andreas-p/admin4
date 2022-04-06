@@ -533,6 +533,8 @@ class SingleValRecords(Record):
 
   def _save(self, rds):
     updater=self.node.Updater()
+    if self.RecordName!=self.RecordName.lower():
+      self.RecordName =self.RecordName.lower()
     if self.rdtype == rdatatype.SOA:
       updater.replace(self.RecordName, rds)
     elif self.rdtype == rdatatype.NS:
@@ -570,7 +572,7 @@ class SingleValRecords(Record):
       vlist=[]
       for rd in self.rds:
         value=eval("rd.%s" % rd.__slots__[0])
-        if isinstance(value, list):
+        if isinstance(value, (list, tuple)):
           value=" ".join(map(quoteIfNeeded, value))
         vlist.append(str(value))
       self.value="\n".join(vlist)
@@ -600,11 +602,11 @@ class SingleValRecords(Record):
       value=value.strip()
       if not value:
         continue
-      if self.dataclass == list:
+      if self.dataclass in (list, tuple):
         value=removeSmartQuote(value)
         data=shlexSplit(value, ' ')
-      else:
-        data=self.dataclass(value)
+#      else:
+#        data=self.dataclass(value)
       if not rds:
         rds=Rdataset(ttl, rdataclass.IN, self.rdtype, data)
       else:
@@ -1271,10 +1273,10 @@ class OTHERsPage(zonePage):
             values=[]
             for slot in rd.__slots__:
               value=eval("rd.%s" % slot)
-              if isinstance(value, list):
+              if isinstance(value, (list, tuple)):
                 if len(value) > 1:
                   logger.debug("Value list dimensions > 1: %s", str(value))
-                value=" ".join(value)
+                value=" ".join(map(lambda x: x.decode(), value))
                 
               values.append("%s=%s" % (slot, value))
             self.control.AppendItem(icon, [name, dnstype, ", ".join(values), floatToTime(rds.ttl, -1)])

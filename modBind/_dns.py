@@ -30,64 +30,93 @@ for n in dns.tsig.__dict__.keys():
   v=getattr(dns.tsig, n)
   if isinstance(v, Name) and (n.startswith("HMAC") or n.find('TSIG') > 0):
     DnsSupportedAlgorithms[n]=n
-    
 
 # https://en.wikipedia.org/wiki/List_of_DNS_record_types
+# https://www.ionos.de/digitalguide/hosting/hosting-technik/dns-records/
+dnsKnownTypes= {
+  'A':           "IPV4 Address",
+  'AAAA':        "IPV6 Address",
+  'AFSDB':       "AFS Database",
+  'AMTRELAY':    "Automatic Multicast Tunneling Relay",
+  'APL':         "Address Prefix List",
+  'AVC':         "Application Visibility and Control",
+  "CAA":         "CA Authorization",
+  'CDNSKEY':     "Child DS Key",
+  'CDS':         "Child DS",
+  'CERT':        "Certificate",
+  'CNAME':       "Canonical Name",
+  'CSYNC':       "Child-To-Parent Synchronization",
+  'DHCID':       "DHCP Identifier",
+  'DLV':         "DNSSEC Lookaside Validation Record",
+  'DNAME':       "Delegation Name",
+  'DNSKEY':      "DNS Key",
+  'DS':          "Delegation Signer",
+  'EUI48':       "MAC Address EUI-48",
+  'EUI64':       "MAC Address EUI-64",
+  'GPOS':        "Geographical Position", # outdated
+  'HINFO':       "Host Information", # obsolete
+  'HIP':         "Host Identifier Protocol",
+  'HTTPS':       "HTTPS Binding",
+  'IPSECKEY':    "IPSEC Key",
+  'ISDN':        "ISDN Address", # outdated, never used 
+  'KEY':         "DNSSEC Key",   # obsolete
+  'KX':          "Key Exchange",
+  'LOC':         "Location",
+  'MX':          "Mail Exchange", 
+  'NAPTR':       "Naming Authority Pointer",
+  'NS':          "Name Server", 
+  'NSEC':        "Next Secure Record",
+  'NSEC3':       "Next Secure Record V3",
+  'NSEC3PARAM':  "NSEC3 Parameters",
+  'OPENPGPKEY':  "OpenPGP Public Key Record",
+  'PTR':         "Domain Name Pointer",
+  'RRSIG':       "DNSSEC Signature",
+  'RP':          "Responsible Person",
+  'SIG':         "DNSSEC Signature", # obsolete
+  'SMIMEA':      "S/MIME Cert Association",
+  'SOA':         "Start Of Authority",
+  'SPF':         "Sender Policy Framework", # outdated
+  'SRV':         "Service Locator",         
+  'SSHFP':       "SSH Public Key Fingerprint",
+  'SVCB':        "Service Binding",
+  'TA':          "Trust Authority",
+  'TKEY':        "Secret Key Record",
+  'TLSA':        "TLSA Certificate Association",
+  'TSIG':        "Transaction Signature",
+  'TXT':         "Text Record",
+  'URI':         "Uniform Resource Identifier",
+  'WKS':         "Well known service description",
+  'X25':         "X25 Address", # outdated, never used
+  'ZONEMD':      "Message Digests for DNS Zones"
+  }
+dnsObsoleteTypes= [
+  'MD', 'MF', 'MAILA', # RFC883
+  'MB', 'MG', 'MR', 'MINFO', 'MAILB', # RFC883
+  'NULL', # RFC883
+  'NID', 'L32', 'L64','LP', # RFC6742
+  'RT', # RFC1183
+  'NSAP', 'NSAP_PTR', # RFC1706
+  'PX', # RFC2163
+  'NXT',
+  'A6', # RFC2874
+  'NINFO',
+  'UNSPEC',
+  'AVC', 'AMTRELAY'
+]
+dnsPseudoTypes= [
+  'AXFR', 'IXFR', 'OPT', 'ANY'
+  ]
 
-DnsSupportedTypes={'A':           "IPV4 Address",
-                   'AAAA':        "IPV6 Address",
-                   'AFSDB':       "AFS Database",
-                   'APL':         "Address Prefix List",
-                   "CAA":         "CA Authorization",
-                   'CDNSKEY':     "Child DS Key",
-                   'CDNS':        "Child DS",
-                   'CERT':        "Certificate",
-                   'CNAME':       "Canonical Name",
-                   'CSYNC':       "Child-To-Parent Synchronization",
-                   'DHCID':       "DHCP Identifier",
-                   'DLV':         "DNSSEC Lookaside Validation Record",
-                   'DNAME':       "Delegation Name",
-                   'DNSKEY':      "DNS Key",
-                   'DS':          "Delegation Signer",
-                   'EUI48':       "MAC Address EUI-48",
-                   'EUI64':       "MAC Address EUI-64",
-                   'GPOS':        "Geographical Position", # outdated
-                   'HINFO':       "Host Information", # obsolete
-                   'HIP':         "Host Identifier Protocol",
-                   'HTTPS':       "HTTPS Binding",
-                   'IPSECKEY':    "IPSEC Key",
-#                  'ISDN':        "ISDN Address", # outdated, never used 
-                   'KEY':         "DNSSEC Key",   # obsolete
-                   'KX':          "Key Exchange",
-                   'LOC':         "Location",
-                   'MX':          "Mail Exchange", 
-                   'NAPTR':       "Naming Authority Pointer",
-                   'NS':          "Name Server", 
-                   'NSEC':        "Next Secure Record",
-                   'NSEC3':       "Next Secure Record V3",
-                   'NSEC3PARAM':  "NSEC3 Parameters",
-                   'OPENPGPKEY':  "OpenPGP Public Key Record",
-                   'PTR':         "Domain Name Pointer",
-                   'RRSIG':       "DNSSEC Signature",
-                   'RP':          "Responsible Person",
-                   'SIG':         "DNSSEC Signature", # obsolete
-                   'SMIMEA':      "S/MIME Cert Association",
-                   'SOA':         "Start Of Authority",
-                   'SPF':         "Sender Policy Framework", # outdated
-                   'SRV':         "Service Locator",         
-                   'SSHFP':       "SSH Public Key Fingerprint",
-                   'SVCB':        "Service Binding",
-                   'TA':          "Trust Authority",
-                   'TKEY':        "Secret Key Record",
-                   'TLSA':        "TLSA Certificate Association",
-                   'TSIG':        "Transaction Signature",
-                   'TXT':         "Text Record",
-                   'URI':         "Uniform Resource Identifier",
-                   'WKS':         "Well known service description",
-#                  'X25':         "X25 Address", # outdated, never used
-                   'ZONEMD':      "Message Digests for DNS Zones"
-                   }
-
+DnsSupportedTypes={} #dnsKnownTypes
+for n in rdatatype.__dict__.keys():
+  v=getattr(rdatatype, n)
+  if isinstance(v, int) and v and n not in dnsObsoleteTypes + dnsPseudoTypes:
+    info=dnsKnownTypes.get(n)
+    if not info:
+      info="%s Record" % n
+#      print(n)
+    DnsSupportedTypes[n]=info
+      
 def DnsName(*args):
   lst=[]
   for arg in args:
