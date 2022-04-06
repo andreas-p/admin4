@@ -515,6 +515,8 @@ def quoteIfNeeded(txt, quoteChar='"'):
   
   surrounds txt with quotes if txt includes spaces or the quote char
   """
+  if isinstance(txt, bytes):
+    txt=txt.decode()
   if txt.find(quoteChar) or txt.find(' '):
     return "%s%s%s" % (quoteChar, txt.replace(quoteChar, "\\%s" % quoteChar), quoteChar)
   return txt
