@@ -291,7 +291,9 @@ class Node(object):
     """
     if childlist == None:
       return False
-    if not isinstance(childlist, list):
+    if isinstance(childlist, map):
+      childlist=list(childlist)
+    elif not isinstance(childlist, list):
       childlist=[childlist]
     if isinstance(className, int):
       imageid=className

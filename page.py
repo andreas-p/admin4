@@ -130,8 +130,7 @@ class NotebookPage(ControlledPage):
       adm.config.restoreListviewPositions(self.control, self)
       for props in node.GetProperties():
         img=-1
-
-        if isinstance(props, tuple):
+        if isinstance(props, (map, tuple)):
           props=list(props)
         if isinstance(props, list):
           if len(props) > 2:
