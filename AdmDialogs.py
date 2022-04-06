@@ -156,13 +156,13 @@ class HintDlg(adm.Dialog):
     
 
   def Go(self):
-    f=open(localizePath(modPath(os.path.join("hints", "%s.html" % self.hint), self.hintModule)))
+    f=open(localizePath(modPath(os.path.join("hints", "%s.html" % self.hint), self.hintModule)), 'rt')
     html=f.read()
     f.close()
     for tag, value in self.args.items():
-      html=html.replace("$%s" % tag.upper(), value.encode('utf-8'))
+      html=html.replace("$%s" % tag.upper(), value)
       
-    self.browser.SetPage(html.decode('utf-8'))
+    self.browser.SetPage(html)
     if not self.title:
       self.title=self.browser.GetOpenedPageTitle()
     if self.title:

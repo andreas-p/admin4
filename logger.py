@@ -111,8 +111,6 @@ def _log(level, fmt, args, tb=None):
   loglines.append(line)
 
   if logfile:
-    try:    txt=txt.encode('utf8')
-    except: pass
     try:
       f=open(logfile, 'a')
       f.write("%s %s: %s\n" % (line.Timestamp(), line.LevelText(), txt))
@@ -155,10 +153,7 @@ def sysexception(extype, args, tb):
   _log(LOGLEVEL.ERROR, "%s: %s %s", (extype.__name__, txtargs, txttb))
 
 def querylog(cmd, result=None, error=None):
-  if not isinstance(cmd, str):
-    try: cmd=cmd.decode('utf8')
-    except: cmd=str(cmd)
-    
+  cmd=str(cmd)
   line=None
   if querylevel > LOGLEVEL.DEBUG or error:
     line=QueryLine(LOGLEVEL.ERROR, cmd, error, result)
