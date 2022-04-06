@@ -9,20 +9,16 @@ import wx
 
 # Global constants
 progname = 'XRCed'
-version = '0.1.8-4'
+version = '0.1.8-4-admin4'
 # Minimal wxWidgets version
 MinWxVersion = (2,6,0)
 if wx.VERSION[:3] < MinWxVersion:
-    print '''\
+    print ('''\
 ******************************* WARNING **************************************
   This version of XRCed may not work correctly on your version of wxWidgets.
   Please upgrade wxWidgets to %d.%d.%d or higher.
-******************************************************************************''' % MinWxVersion    
+******************************************************************************''' % MinWxVersion)    
 
-# Can be changed to set other default encoding different
-#defaultEncoding = ''
-# you comment above and can uncomment this:
-defaultEncoding = wx.GetDefaultPyEncoding()
 
 
 # Global variables
@@ -36,7 +32,6 @@ class Globals:
     testWin = None
     testWinPos = wx.DefaultPosition
     currentXXX = None
-    currentEncoding = defaultEncoding
 
     def _makeFonts(self):
         self._sysFont = wx.SystemSettings.GetFont(wx.SYS_SYSTEM_FONT)

@@ -87,7 +87,7 @@ class ParamBinaryOr(PPanel):
                 if self.equal.has_key(i):
                     listBox.Check(self.values.index(self.equal[i]))
                 else:
-                    print 'WARNING: unknown flag: %s: ignored.' % i
+                    print ('WARNING: unknown flag: %s: ignored.' % i)
                     ignored.append(i)
         if dlg.ShowModal() == wx.ID_OK:
             value = []
@@ -162,7 +162,7 @@ class ParamStyle(ParamBinaryOr):
                 if self.equal.has_key(i):
                     listBoxGeneric.Check(self.valuesGeneric.index(self.equal[i]))
                 else:
-                    print 'WARNING: unknown flag: %s: ignored.' % i
+                    print ('WARNING: unknown flag: %s: ignored.' % i)
                     ignored.append(i)
         if dlg.ShowModal() == wx.ID_OK:
             value = [self.valuesSpecific[i]
@@ -263,7 +263,7 @@ class ParamFont(PPanel):
         PPanel.OnChange(self, evt)
         self.textModified = True
     def _defaultValue(self):
-        return [`g._sysFont.GetPointSize()`, 'default', 'normal', 'normal', '0', '', '']
+        return [g._sysFont.GetPointSize(), 'default', 'normal', 'normal', '0', '', '']
     def GetValue(self):
         if self.textModified:           # text has newer value
             try:
@@ -417,7 +417,7 @@ class ParamUnit(PPanel):
                 self.SetModified()
         except:
             # !!! Strange, if I use wx.LogWarning, event is re-generated
-            print 'ERROR: incorrect unit format'
+            print ('ERROR: incorrect unit format')
         self.freeze = False
     def OnSpinUp(self, evt):
         self.freeze = True

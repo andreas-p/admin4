@@ -129,7 +129,7 @@ class UndoReplace:
     def destroy(self):
         if self.elem: self.elem.unlink()
     def undo(self):
-        print 'Sorry, UndoReplace is not yet implemented.'
+        print ('Sorry, UndoReplace is not yet implemented.')
         return
         item = g.tree.ItemAtFullIndex(self.itemIndex)
         xxx = g.tree.GetPyData(item)

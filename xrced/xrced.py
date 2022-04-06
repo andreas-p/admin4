@@ -1,4 +1,4 @@
-#! /usr/bin/python2.7
+#! /usr/bin/python3
 # Name:         xrced.py
 # Purpose:      XRC editor, main module
 # Author:       Roman Rolinsky <rolinsky@mema.ucl.ac.be>
@@ -25,8 +25,9 @@ import wx
 import wx.xrc as xrc
 
 from globals import g
-import os, sys, getopt, re, traceback, tempfile, shutil, cPickle
+import os, sys, getopt, re, traceback, tempfile, shutil, pickle
 from xml.parsers import expat
+from functools import reduce
 
 # Local modules
 from tree import *                      # imports xxx which imports params
@@ -48,6 +49,13 @@ else:
 
 # 1 adds CMD command to Help menu
 debug = 0
+
+globalId=0
+def NewId():
+  global globalId
+  globalId += 1
+  return globalId
+wx.NewId=NewId
 
 g.helpText = """\
 <HTML><H2>Welcome to XRC<font color="blue">ed</font></H2><H3><font color="green">DON'T PANIC :)</font></H3>
@@ -93,7 +101,7 @@ class ScrolledMessageDialog(wx.Dialog):
 # Event handler for using during location
 class Locator(wx.EvtHandler):
     def ProcessEvent(self, evt):
-        print evt
+        print (evt)
 
 class Frame(wx.Frame):
     def __init__(self, pos, size):
@@ -102,7 +110,7 @@ class Frame(wx.Frame):
         frame = g.frame = self
         bar = self.CreateStatusBar(2)
         bar.SetStatusWidths([-1, 40])
-        self.SetIcon(images.getIconIcon())
+  #      self.SetIcon(images.getIconIcon())
 
         # Idle flag
         self.inIdle = False
@@ -115,7 +123,7 @@ class Frame(wx.Frame):
             self.res = xrc.XmlResource(path)
             self.res.Load(path)
         except wx._core.PyAssertionError:
-            print 'PyAssertionError was ignored'
+            print ('PyAssertionError was ignored')
 
         # Make menus
         menuBar = wx.MenuBar()
@@ -126,7 +134,7 @@ class Frame(wx.Frame):
         menu.Append(wx.ID_OPEN, '&Open...\tCtrl-O', 'Open XRC file')
         self.recentMenu = wx.Menu()
         self.AppendRecent(self.recentMenu)
-        menu.AppendMenu(-1, 'Open Recent', self.recentMenu, 'Open a recent file')
+        menu.AppendSubMenu(self.recentMenu, 'Open Recent', 'Open a recent file')
         menu.AppendSeparator()
         menu.Append(wx.ID_SAVE, '&Save\tCtrl-S', 'Save XRC file')
         menu.Append(wx.ID_SAVEAS, 'Save &As...', 'Save XRC file under different name')
@@ -211,35 +219,35 @@ class Frame(wx.Frame):
         copy_bmp = wx.ArtProvider.GetBitmap(wx.ART_COPY, wx.ART_TOOLBAR)
         paste_bmp= wx.ArtProvider.GetBitmap(wx.ART_PASTE, wx.ART_TOOLBAR)
         
-        tb.AddSimpleTool(wx.ID_NEW, new_bmp, 'New', 'New file')
-        tb.AddSimpleTool(wx.ID_OPEN, open_bmp, 'Open', 'Open file')
-        tb.AddSimpleTool(wx.ID_SAVE, save_bmp, 'Save', 'Save file')
+        tb.AddTool(wx.ID_NEW, 'New', new_bmp, 'New file')
+        tb.AddTool(wx.ID_OPEN, 'Open', open_bmp, 'Open file')
+        tb.AddTool(wx.ID_SAVE, 'Save', save_bmp, 'Save file')
         tb.AddControl(wx.StaticLine(tb, -1, size=(-1,23), style=wx.LI_VERTICAL))
-        tb.AddSimpleTool(wx.ID_UNDO, undo_bmp, 'Undo', 'Undo')
-        tb.AddSimpleTool(wx.ID_REDO, redo_bmp, 'Redo', 'Redo')
+        tb.AddTool(wx.ID_UNDO, 'Undo', undo_bmp, 'Undo')
+        tb.AddTool(wx.ID_REDO, 'Redo', redo_bmp, 'Redo')
         tb.AddControl(wx.StaticLine(tb, -1, size=(-1,23), style=wx.LI_VERTICAL))
-        tb.AddSimpleTool(wx.ID_CUT, cut_bmp, 'Cut', 'Cut')
-        tb.AddSimpleTool(wx.ID_COPY, copy_bmp, 'Copy', 'Copy')
-        tb.AddSimpleTool(self.ID_TOOL_PASTE, paste_bmp, 'Paste', 'Paste')
+        tb.AddTool(wx.ID_CUT, 'Cut', cut_bmp, 'Cut')
+        tb.AddTool(wx.ID_COPY, 'Copy', copy_bmp, 'Copy')
+        tb.AddTool(self.ID_TOOL_PASTE, 'PASTE', paste_bmp, 'Paste')
         tb.AddControl(wx.StaticLine(tb, -1, size=(-1,23), style=wx.LI_VERTICAL))
-        tb.AddSimpleTool(self.ID_TOOL_LOCATE,
+        tb.AddTool(self.ID_TOOL_LOCATE, 'Locate', 
                         images.getLocateBitmap(), #images.getLocateArmedBitmap(),
-                        'Locate', 'Locate control in test window and select it', True)
+                       'Locate control in test window and select it', True)
         tb.AddControl(wx.StaticLine(tb, -1, size=(-1,23), style=wx.LI_VERTICAL))
-        tb.AddSimpleTool(self.ID_TEST, images.getTestBitmap(), 'Test', 'Test window')
-        tb.AddSimpleTool(self.ID_REFRESH, images.getRefreshBitmap(),
-                         'Refresh', 'Refresh view')
-        tb.AddSimpleTool(self.ID_AUTO_REFRESH, images.getAutoRefreshBitmap(),
-                         'Auto-refresh', 'Toggle auto-refresh mode', True)
+        tb.AddTool(self.ID_TEST, 'Test', images.getTestBitmap(), 'Test window')
+        tb.AddTool(self.ID_REFRESH, 'Refresh', images.getRefreshBitmap(),
+                         'Refresh view')
+        tb.AddTool(self.ID_AUTO_REFRESH, 'Auto-refresh', images.getAutoRefreshBitmap(),
+                         'Toggle auto-refresh mode', True)
         tb.AddControl(wx.StaticLine(tb, -1, size=(-1,23), style=wx.LI_VERTICAL))
-        tb.AddSimpleTool(self.ID_MOVEUP, images.getToolMoveUpBitmap(),
-                         'Up', 'Move before previous sibling')
-        tb.AddSimpleTool(self.ID_MOVEDOWN, images.getToolMoveDownBitmap(),
-                         'Down', 'Move after next sibling')
-        tb.AddSimpleTool(self.ID_MOVELEFT, images.getToolMoveLeftBitmap(),
-                         'Make Sibling', 'Make sibling of parent')
-        tb.AddSimpleTool(self.ID_MOVERIGHT, images.getToolMoveRightBitmap(),
-                         'Make Child', 'Make child of previous sibling')
+        tb.AddTool(self.ID_MOVEUP,  'Up', images.getToolMoveUpBitmap(),
+                        'Move before previous sibling')
+        tb.AddTool(self.ID_MOVEDOWN, 'Down', images.getToolMoveDownBitmap(),
+                         'Move after next sibling')
+        tb.AddTool(self.ID_MOVELEFT, 'Make Sibling', images.getToolMoveLeftBitmap(),
+                         'Make sibling of parent')
+        tb.AddTool(self.ID_MOVERIGHT, 'Make Child', images.getToolMoveRightBitmap(),
+                         'Make child of previous sibling')
 #        if wx.Platform == '__WXGTK__':
 #            tb.AddSeparator()   # otherwise auto-refresh sticks in status line
         tb.ToggleTool(self.ID_AUTO_REFRESH, conf.autoRefresh)
@@ -355,9 +363,9 @@ class Frame(wx.Frame):
     
     def AppendRecent(self, menu):
         # add recently used files to the menu
-        for id,name in conf.recentfiles.iteritems():
+        for id,name in conf.recentfiles.items():
             menu.Append(id,name)
-            wx.EVT_MENU(self,id,self.OnRecentFile)
+            self.Bind(wx.EVT_MENU, self.OnRecentFile, id=id)
         return 
         
     def OnRecentFile(self,evt):
@@ -374,11 +382,11 @@ class Frame(wx.Frame):
             self.SetStatusText('No such file')
         wx.EndBusyCursor()
 
-    def OnNew(self, evt):
+    def OnNew(self, _evt):
         if not self.AskSave(): return
         self.Clear()
 
-    def OnOpen(self, evt):
+    def OnOpen(self, _evt):
         if not self.AskSave(): return
         dlg = wx.FileDialog(self, 'Open', os.path.dirname(self.dataFile),
                            '', '*.xrc', wx.OPEN | wx.CHANGE_DIR)
@@ -405,8 +413,6 @@ class Frame(wx.Frame):
                                wx.SAVE | wx.OVERWRITE_PROMPT | wx.CHANGE_DIR)
             if dlg.ShowModal() == wx.ID_OK:
                 path = dlg.GetPath()
-                if isinstance(path, unicode):
-                    path = path.encode(sys.getfilesystemencoding())
                 dlg.Destroy()
             else:
                 dlg.Destroy()
@@ -479,19 +485,19 @@ class Frame(wx.Frame):
         dlg.Destroy()
 
         
-    def OnExit(self, evt):
+    def OnExit(self, _evt):
         self.Close()
 
-    def OnUndo(self, evt):
+    def OnUndo(self, _evt):
         # Extra check to not mess with idle updating
         if undoMan.CanUndo():
             undoMan.Undo()
 
-    def OnRedo(self, evt):
+    def OnRedo(self, _evt):
         if undoMan.CanRedo():
             undoMan.Redo()
 
-    def OnCopy(self, evt):
+    def OnCopy(self, _evt):
         selected = tree.selection
         if not selected: return         # key pressed event
         xxx = tree.GetPyData(selected)
@@ -500,7 +506,7 @@ class Frame(wx.Frame):
             # Set encoding in header
             # (False,True)
             s = xxx.element.toxml(encoding=expat.native_encoding)
-            data.SetData(cPickle.dumps(s))
+            data.SetData(pickle.dumps(s))
             wx.TheClipboard.SetData(data)
             wx.TheClipboard.Close()
             self.SetStatusText('Copied')
@@ -547,7 +553,7 @@ class Frame(wx.Frame):
                 "Error")
             return
 
-        xml = cPickle.loads(data.GetData()) # xml representation of element
+        xml = pickle.loads(data.GetData()) # xml representation of element
         elem = minidom.parseString(xml).childNodes[0]
         
         # Tempopary xxx object to test things
@@ -648,7 +654,7 @@ class Frame(wx.Frame):
             return False
         return True
 
-    def OnMoveUp(self, evt):
+    def OnMoveUp(self, _evt):
         selected = tree.selection
         if not selected: return
 
@@ -677,7 +683,7 @@ class Frame(wx.Frame):
 
         return
 
-    def OnMoveDown(self, evt):
+    def OnMoveDown(self, _evt):
         selected = tree.selection
         if not selected: return
 
@@ -707,7 +713,7 @@ class Frame(wx.Frame):
 
         return
     
-    def OnMoveLeft(self, evt):
+    def OnMoveLeft(self, _evt):
         selected = tree.selection
         if not selected: return
 
@@ -856,7 +862,7 @@ class Frame(wx.Frame):
                 data = wx.CustomDataObject('XRCED')
                 # (False, True)
                 s = elem.toxml(encoding=expat.native_encoding)
-                data.SetData(cPickle.dumps(s))
+                data.SetData(pickle.dumps(s))
                 wx.TheClipboard.SetData(data)
                 wx.TheClipboard.Close()
             else:
@@ -930,11 +936,11 @@ class Frame(wx.Frame):
             self.toolsSizer.Remove(g.tools)
         self.toolsSizer.Layout()
         
-    def OnTest(self, evt):
+    def OnTest(self, _evt):
         if not tree.selection: return   # key pressed event
         tree.ShowTestWindow(tree.selection)
 
-    def OnTestHide(self, evt):
+    def OnTestHide(self, _evt):
         tree.CloseTestWindow()
 
     # Find object by relative position
@@ -1007,7 +1013,7 @@ class Frame(wx.Frame):
         self.menuBar.Check(self.ID_AUTO_REFRESH, conf.autoRefresh)
         self.tb.ToggleTool(self.ID_AUTO_REFRESH, conf.autoRefresh)
 
-    def OnAbout(self, evt):
+    def OnAbout(self, _evt):
         str = '''\
 XRCed version %s
 
@@ -1018,26 +1024,26 @@ Homepage: http://xrced.sourceforge.net\
         dlg.ShowModal()
         dlg.Destroy()
 
-    def OnReadme(self, evt):
+    def OnReadme(self, _evt):
         text = open(os.path.join(basePath, 'README.txt'), 'r').read()
         dlg = ScrolledMessageDialog(self, text, "XRCed README")
         dlg.ShowModal()
         dlg.Destroy()
 
     # Simple emulation of python command line
-    def OnDebugCMD(self, evt):
+    def OnDebugCMD(self, _evt):
         while 1:
             try:
-                exec raw_input('C:\> ')
+                print("NOT IMPLEMENTED: exec raw_input('C:\> ')")
             except EOFError:
-                print '^D'
+                print ('^D')
                 break
             except:
                 (etype, value, tb) =sys.exc_info()
                 tblist =traceback.extract_tb(tb)[1:]
                 msg =' '.join(traceback.format_exception_only(etype, value)
                         +traceback.format_list(tblist))
-                print msg
+                print (msg)
 
     def OnCreate(self, evt):
         selected = tree.selection
@@ -1180,7 +1186,7 @@ Homepage: http://xrced.sourceforge.net\
         xxx = MakeXXXFromDOM(xxx.parent, elem)
         # Remove incompatible style flags
         if 'style' in xxx.params:
-            styles = map(string.strip, xxx.params['style'].value().split('|'))
+            styles = map(str.strip, xxx.params['style'].value().split('|'))
             newStyles = [s for s in styles if s in klass.winStyles or s in genericStyles]
             if newStyles != styles:
                 if newStyles:
@@ -1231,10 +1237,10 @@ Homepage: http://xrced.sourceforge.net\
         self.SetModified()
 
     # Expand/collapse subtree
-    def OnExpand(self, evt):
+    def OnExpand(self, _evt):
         if tree.selection: tree.ExpandAll(tree.selection)
         else: tree.ExpandAll(tree.root)
-    def OnCollapse(self, evt):
+    def OnCollapse(self, _evt):
         if tree.selection: tree.CollapseAll(tree.selection)
         else: tree.CollapseAll(tree.root)
 
@@ -1288,7 +1294,7 @@ Homepage: http://xrced.sourceforge.net\
             self.inIdle = False
 
     # We don't let close panel window
-    def OnCloseMiniFrame(self, evt):
+    def OnCloseMiniFrame(self, _evt):
         return
 
     def OnIconize(self, evt):
@@ -1497,7 +1503,7 @@ class PythonOptions(wx.Dialog):
         self.GettextCB.SetValue(self.cfg.ReadBool("genGettext", False))
         
                   
-    def OnBrowse(self, evt):
+    def OnBrowse(self, _evt):
         path = self.FileNameTC.GetValue()
         dirname = os.path.abspath(os.path.dirname(path))
         name = os.path.split(path)[1]
@@ -1509,7 +1515,7 @@ class PythonOptions(wx.Dialog):
         dlg.Destroy()
     
 
-    def OnGenerate(self, evt):
+    def OnGenerate(self, _evt):
         pypath = self.FileNameTC.GetValue()
         embed = self.EmbedCB.GetValue()
         genGettext = self.GettextCB.GetValue()
@@ -1517,7 +1523,7 @@ class PythonOptions(wx.Dialog):
         self.OnSaveOpts()
 
     
-    def OnSaveOpts(self, evt=None):
+    def OnSaveOpts(self, _evt=None):
         self.cfg.Write("filename", self.FileNameTC.GetValue())
         self.cfg.WriteBool("autogenerate", self.AutoGenerateCB.GetValue())
         self.cfg.WriteBool("embedResource", self.EmbedCB.GetValue())
@@ -1551,7 +1557,7 @@ Please upgrade wxWidgets to %d.%d.%d or higher.''' % MinWxVersion)
                 elif o == '-d':
                     debug = True
                 elif o == '-v':
-                    print 'XRCed version', version
+                    print ('XRCed version', version)
                     sys.exit(0)
             
         except getopt.GetoptError:

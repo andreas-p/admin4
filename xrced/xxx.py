@@ -40,23 +40,11 @@ class xxxParam(xxxNode):
         # Use convertion from unicode to current encoding
         self.textNode = text
     # Value returns string
-    if wx.USE_UNICODE:   # no conversion is needed
+    if True:
         def value(self):
             return self.textNode.data
         def update(self, value):
             self.textNode.data = value
-    else:
-        def value(self):
-            try:
-                return self.textNode.data.encode(g.currentEncoding)
-            except LookupError:
-                return self.textNode.data.encode()
-        def update(self, value):
-            try: # handle exception if encoding is wrong
-                self.textNode.data = unicode(value, g.currentEncoding)
-            except UnicodeDecodeError:
-                self.textNode.data = unicode(value)
-                #wx.LogMessage("Unicode error: set encoding in file\nglobals.py to something appropriate")
 
 # Integer parameter
 class xxxParamInt(xxxParam):
@@ -237,8 +225,7 @@ class xxxObject:
                 if tag in ['object', 'object_ref']:
                     continue            # do nothing for object children here
                 elif tag not in self.allParams and tag not in self.styles:
-                    print 'WARNING: unknown parameter for %s: %s' % \
-                          (self.className, tag)
+                    print ('WARNING: unknown parameter for %s: %s' % (self.className, tag))
                 elif tag in self.specials:
                     self.special(tag, node)
                 elif tag == 'content':
@@ -983,8 +970,8 @@ paramIDs = {'fg': wx.NewId(), 'bg': wx.NewId(), 'exstyle': wx.NewId(), 'font': w
             }
 for cl in xxxDict.values():
     if cl.allParams:
-        for param in cl.allParams + cl.paramDict.keys():
-            if not paramIDs.has_key(param):
+        for param in cl.allParams + list(cl.paramDict.keys()):
+            if not param in paramIDs:
                 paramIDs[param] = wx.NewId()
 
 ################################################################################
@@ -1008,7 +995,7 @@ def MakeXXXFromDOM(parent, element):
         klass = xxxDict[cls]
     except KeyError:
         # If we encounter a weird class, use unknown template
-        print 'WARNING: unsupported class:', element.getAttribute('class')
+        print ('WARNING: unsupported class:', element.getAttribute('class'))
         klass = xxxUnknown
     return klass(parent, element, refElem)
 

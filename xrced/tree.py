@@ -5,7 +5,10 @@
 # RCS-ID:       $Id: tree.py,v 1.38 2007/03/08 15:49:35 ROL Exp $
 
 
-import wx.wizard
+try:
+  import wx.wizard
+except: pass
+
 from xxx import *                       # xxx imports globals and params
 import types
 import traceback
@@ -566,7 +569,7 @@ class XML_Tree(wx.TreeCtrl):
         try:
             xxx = MakeXXXFromDOM(xxxParent, node)
         except:
-            print 'ERROR: MakeXXXFromDom(%s, %s)' % (xxxParent, node)
+            print ('ERROR: MakeXXXFromDom(%s, %s)' % (xxxParent, node))
             raise
         treeObj = xxx.treeObject()
         # Append tree item
@@ -1001,7 +1004,7 @@ class XML_Tree(wx.TreeCtrl):
         g.testWin.Destroy()
         g.testWin = None
 
-    def OnCloseTestWin(self, evt):
+    def OnCloseTestWin(self, _evt):
         self.CloseTestWindow()
 
     def OnSizeTestWin(self, evt):
