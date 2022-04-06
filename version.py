@@ -7,15 +7,16 @@
 
 import sys
 if not hasattr(sys, 'frozen'):
-  import os, platform, wx
-
-if wx.VERSION < (4,1,1):
+  import wx
+  if wx.VERSION < (4,1,1):
     raise Exception("wx Version too old")  
 try:
-  from __version import *
+  from __version import *  # @UnusedWildImport
 except:
   version="3.x-nightly"
-  modDate=revDate=tagDate=None
+  modDate=None
+  revDate=None
+  tagDate=None
   revLocalChange=True
   revDirty=True
   revOriginChange=True
