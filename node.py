@@ -255,7 +255,7 @@ class Node(object):
   def RemoveFromTree(self, doRefresh=True):
     if self.parentNode:
       self.parentNode.removeChild(self)
-    for treename in self.treeitems.keys():
+    for treename in list(self.treeitems.keys()):
       tree=adm.trees[treename]
       tree.DeleteNode(self)
     if doRefresh and self.parentNode:
