@@ -69,6 +69,11 @@ class Sequence(SchemaObject):
     sql.AddWhere("relnamespace", parentNode.parentNode.GetOid())
     sql.AddOrder("CASE WHEN nspname='%s' THEN ' ' else nspname END" % "public")
     sql.AddOrder("relname")
+    if parentNode.GetServer().version >= 10:
+      sql.AddJoin("pg_sequence seq ON seqrelid=rel.oid")
+      sql.AddCol("seqincrement AS increment_by, seqstart AS start_value")
+      sql.AddCol("seqmin AS min_value, seqmax AS max_value, seqcache AS cache_value")
+      sql.AddCol("seqcycle AS is_cycled")
     return sql
   
   def GetProperties(self):
