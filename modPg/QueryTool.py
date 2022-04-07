@@ -247,7 +247,6 @@ class QueryFrame(SqlFrame):
     ah.Add(wx.ACCEL_NORMAL,wx.WXK_F5, self.OnExecuteQuery)
     ah.Add(wx.ACCEL_NORMAL,wx.WXK_F7, self.OnExplainQuery)
     ah.Add(wx.ACCEL_ALT,wx.WXK_PAUSE, self.OnCancelQuery)
-    ah.Realize()
 
     self.editor=SqlEditor(self)
     self.editor.SetAcceleratorTable(ah.GetTable())
@@ -381,10 +380,10 @@ class QueryFrame(SqlFrame):
       return
     canCut=canPaste=canUndo=canRedo=False
     if not ctl or ctl == self.editor:
-      canUndo=self.editor.CanUndo();
-      canRedo=self.editor.CanRedo();
-      canPaste=self.editor.CanPaste();
-      canCut = True;
+      canUndo=self.editor.CanUndo()
+      canRedo=self.editor.CanRedo()
+      canPaste=True # self.editor.CanPaste() crashes under wxGTK
+      canCut = True
     a,e=self.editor.GetSelection()
     canQuery = not self.worker and ( a!=e or self.editor.GetLineCount() >1 or self.getSql() )
 
