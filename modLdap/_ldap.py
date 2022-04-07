@@ -12,6 +12,7 @@ try:
   import ldap.schema
 except:
   ldap=None
+  print("python3-ldap not present")
 from . import AttrVal
 
 

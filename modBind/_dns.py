@@ -20,16 +20,12 @@ try:
   import dns.rcode as rcode # @UnusedImport
 except:
   dns=None
+  print("python3-pythondns not present")
 
 import requests
 import xml.etree.cElementTree as xmltree
 import logger
 
-DnsSupportedAlgorithms={}
-for n in dns.tsig.__dict__.keys():
-  v=getattr(dns.tsig, n)
-  if isinstance(v, Name) and (n.startswith("HMAC") or n.find('TSIG') > 0):
-    DnsSupportedAlgorithms[n]=n
 
 # https://en.wikipedia.org/wiki/List_of_DNS_record_types
 # https://www.ionos.de/digitalguide/hosting/hosting-technik/dns-records/
@@ -107,15 +103,22 @@ dnsPseudoTypes= [
   'AXFR', 'IXFR', 'OPT', 'ANY'
   ]
 
-DnsSupportedTypes={} #dnsKnownTypes
-for n in rdatatype.__dict__.keys():
-  v=getattr(rdatatype, n)
-  if isinstance(v, int) and v and n not in dnsObsoleteTypes + dnsPseudoTypes:
-    info=dnsKnownTypes.get(n)
-    if not info:
-      info="%s Record" % n
-#      print(n)
-    DnsSupportedTypes[n]=info
+DnsSupportedAlgorithms={}
+DnsSupportedTypes={}
+
+if dns:
+  for n in dns.tsig.__dict__.keys():
+    v=getattr(dns.tsig, n)
+    if isinstance(v, Name) and (n.startswith("HMAC") or n.find('TSIG') > 0):
+      DnsSupportedAlgorithms[n]=n
+  for n in rdatatype.__dict__.keys():
+    v=getattr(rdatatype, n)
+    if isinstance(v, int) and v and n not in dnsObsoleteTypes + dnsPseudoTypes:
+      info=dnsKnownTypes.get(n)
+      if not info:
+        info=n
+  #      print(n)
+      DnsSupportedTypes[n]=info
       
 def DnsName(*args):
   lst=[]

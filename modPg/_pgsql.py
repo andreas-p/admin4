@@ -6,7 +6,12 @@
 
 
 # http://initd.org/psycopg/docs/
-import psycopg2
+try:
+  import psycopg2
+except:
+  psycopg2=None
+  print("python3-psycopg2 missing")
+
 import select
 import logger
 import adm
