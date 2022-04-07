@@ -121,11 +121,11 @@ class ServerObject(Node):
           for right in rights:
             rightlist.append(rightString[right])
           rights=",".join(rightlist)
-        sql += "GRANT %s ON %s TO %s\n" % (rights, self.ObjectSql(), user)
+        sql += "GRANT %s ON %s TO %s;\n" % (rights, self.ObjectSql(), user)
       
     des=self.info.get('description')
     if des:
-      sql += "\nCOMMENT ON %s IS %s\n" % (self.ObjectSql(), quoteValue(des)) 
+      sql += "\nCOMMENT ON %s IS %s;\n" % (self.ObjectSql(), quoteValue(des)) 
     return sql
   
   def TablespaceSql(self):

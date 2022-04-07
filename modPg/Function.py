@@ -65,7 +65,7 @@ class Function(SchemaObject):
     definition=self.info.get('definition')
     if not definition:
       definition=self.GetCursor().ExecuteSingle("SELECT pg_get_functiondef(%d)" % self.GetOid())
-      self.info['definition']=definition
+      self.info['definition']=definition[:-1] + ";"
     return "%(def)s\n%(grant)s" % {
                'object': self.ObjectSql(),
                'def': definition, 'grant': self.GrantCommentSql() }
