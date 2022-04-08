@@ -26,7 +26,7 @@
 def GetPrerequisites(info=False):
   try:
     import ldap
-    if ldap.__version__ < "3.4":
+    if ldap.__version__ < "3.1.":
       if info:
         print ("ldap too old")
       return None
