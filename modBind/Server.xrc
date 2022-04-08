@@ -86,7 +86,7 @@
           </object>
           <object class="sizeritem">
             <object class="wxStaticText">
-              <label>Timout</label>
+              <label>Timeout</label>
             </object>
           </object>
           <object class="sizeritem">
