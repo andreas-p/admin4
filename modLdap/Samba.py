@@ -27,8 +27,8 @@ class _SambaRidObject:
         if sds:
           sds.AppendKey(info['sambasid'][0], info['sambadomainname'][0])
         else:
-          id=sdn.Append(info['sambadomainname'][0])
-          sdn.SetClientData(id, info['sambasid'][0])
+          sambaid=sdn.Append(info['sambadomainname'][0])
+          sdn.SetClientData(sambaid, info['sambasid'][0])
 
 
   def generateRid(self, posixAttr, ridOffs):
@@ -165,7 +165,7 @@ class SambaAccount(SpecificEntry, _SambaRidObject):
     self.updateFlags()
 
 
-  def OnRidGen(self, evt):
+  def OnRidGen(self, _evt):
     if self.generateRid("uidNumber", 0):
       self['ridGen'].Disable()
 
@@ -303,7 +303,7 @@ class SambaGroupMapping(SpecificEntry, _SambaRidObject):
     _SambaRidObject.__init__(self)
     self.Bind("sambaDomainSid", self.OnChangeDomain)
 
-  def OnRidGen(self, evt):
+  def OnRidGen(self, _evt):
     if self.generateRid("gidNumber", 1):
       self['RidGen'].Disable()
 
