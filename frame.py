@@ -13,7 +13,7 @@ from tree import NodeTreeCtrl, ServerTreeCtrl
 from notebook import Notebook
 from LoggingDialog import LoggingDialog
 from AdmDialogs import PreferencesDlg, AboutDlg
-from Update import UpdateDlg, CheckAutoUpdate
+from Update import CheckAutoUpdate
 
 
 class Frame(wx.Frame, adm.MenuOwner):
@@ -309,7 +309,6 @@ class DetailFrame(Frame):
     self.helpmenu=menu=Menu(self)
     menu.Add(self.OnHelp, xlt("Help"), xlt("Show help"), wx.ID_HELP)
     menu.Add(self.OnLogging, xlt("Logging"), xlt("Show logged problems"))
-    menu.Add(self.OnUpdate, xlt("Update"), xlt("Update program modules"))
     menu.Add(self.OnAbout, xlt("About"), xlt("About %s") % adm.appTitle, wx.ID_ABOUT, adm.app.SetMacAboutMenuItemId)
     menubar.Append(menu, xlt("&Help"))
 
@@ -407,10 +406,6 @@ class DetailFrame(Frame):
     dlg.Go()
     dlg.Show()
 
-  def OnUpdate(self, _evt=None):
-    dlg=UpdateDlg(self)
-    dlg.GoModal()
-    
   def GetNode(self):
     if self.currentNode:
       return self.currentNode
