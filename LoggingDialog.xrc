@@ -141,7 +141,7 @@
                     <size>40,-1d</size>
                     <label>Apply</label>
                   </object>
-                  <flag>wxALL|wxALIGN_RIGHT|wxALIGN_BOTTOM</flag>
+                  <flag>wxALL|wxALIGN_BOTTOM</flag>
                   <border>10</border>
                 </object>
               </object>
