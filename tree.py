@@ -18,6 +18,7 @@ def TreeItemData(data):
 class TreeCtrl(wx.TreeCtrl):
   def __init__(self, parentWin, name, size=wx.DefaultSize, style=wx.TR_HAS_BUTTONS | wx.TR_HIDE_ROOT | wx.TR_LINES_AT_ROOT):
     wx.TreeCtrl.__init__(self, parentWin, size=size, style=style)
+    parentWin.SetBackgroundColour(wx.WHITE)
     self.SetImageList(adm.images)
     self.AddRoot(name)
     if wx.Platform != "__WXMSW__":
@@ -99,7 +100,6 @@ class NodeTreeCtrl(TreeCtrl):
     self.Bind(wx.EVT_RIGHT_DOWN, self.OnTreeRightClick)
     self.Bind(wx.EVT_TREE_ITEM_EXPANDING, self.OnTreeExpand)
     self.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnTreeActivate)
-    parentWin.SetBackgroundColour(wx.WHITE)
 
 
   def OnTreeActivate(self, evt):
