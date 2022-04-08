@@ -11,8 +11,7 @@ if [ -z "$(xhost | grep LOCAL:)" ] ; then
   xhost local:root
 fi
 
-# defaults to local image
-image=${1-admin4}
+image=${1-adminfour/admin4:latest}
 IFS=":" read user _pwd uid gid _name home _shell  <<< $(grep ^$(whoami): /etc/passwd)
 
 docker run -ti --rm --name admin4 \
