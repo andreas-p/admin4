@@ -147,6 +147,8 @@ class QueryFrame(SqlFrame):
     if not dbName:
       if hasattr(node, "GetDatabase"):
         dbName=node.GetDatabase().name
+      elif node.parentNode and hasattr(node.parentNode, 'GetDatabase'):
+        dbName=node.parentNode.GetDatabase().name
       else:
         dbName=self.server.maintDb
     self.worker=None
