@@ -8,4 +8,6 @@
 
 LAST=$(git tag |tail -1)
 version=${1-$LAST}
-docker build -t admin4 --build-arg VERSION=$version .
+repo=adminfour/admin4
+
+docker build -t $repo:$version --build-arg VERSION=$version .
