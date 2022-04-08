@@ -38,7 +38,8 @@ class Sequence(SchemaObject):
       self.GetProperties()
     return """CREATE SEQUENCE %(name)s
      MINVALUE %(min)d MAXVALUE %(max)d INCREMENT %(inc)d
-     CACHE %(cache)d START %(start)d
+     CACHE %(cache)d START %(start)d;
+
 %(grant)s""" % {
                'name': self.NameSql(),
                'tablespace': self.TablespaceSql(),
