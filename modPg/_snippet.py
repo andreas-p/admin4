@@ -28,6 +28,7 @@ class Snippet:
 class SnippetTree(DragTreeCtrl):
   def __init__(self, parentWin, server, editor):
     DragTreeCtrl.__init__(self, parentWin, "Snippets", style=wx.TR_HAS_BUTTONS | wx.TR_HIDE_ROOT | wx.TR_LINES_AT_ROOT)
+    self.SetBackgroundColour(wx.WHITE)
     self.editor=editor
     self.server=server
     self.frame=parentWin
