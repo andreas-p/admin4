@@ -37,16 +37,20 @@ class ImapServer(imaplib.IMAP4_SSL):
     self.tls=False
     self.lastError=None
     self.security=security
-      
+    self.timeout=5
+
     super(ImapServer,self).__init__(host, port)
-    
-    
-  def _create_socket(self):
-    sock = imaplib.IMAP4._create_socket(self)
+
+
+  def _create_socket(self, _timeout=None):
+    try:
+      sock = imaplib.IMAP4._create_socket(self, self.timeout)
+    except TypeError:
+      sock = imaplib.IMAP4._create_socket(self)
     if self.security == 'SSL':
       sock=self.ssl_context.wrap_socket(sock, server_hostname=self.host)
     return sock
-  
+
   @staticmethod
   def Create(node):
     security=node.settings['security']
@@ -58,13 +62,13 @@ class ImapServer(imaplib.IMAP4_SSL):
       else:
         if security == 'TLS-req':
           raise adm.ConnectionException(node, "Connect", "STARTTLS not supported")
-    
+
     return server
 
 
   def ok(self):
     return self.lastError == None
-  
+
   def getresult(self, response):
     typ,dat=response
     if typ == "OK":
