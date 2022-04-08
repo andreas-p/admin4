@@ -25,7 +25,10 @@ RUN test -n "$VERSION" && echo "\n\nBuilding Docker image from Admin4-${VERSION}
     wget https://github.com/andreas-p/admin4/archive/refs/tags/${VERSION}.tar.gz && \
     tar xf ${VERSION}.tar.gz && rm ${VERSION}.tar.gz
 
-ENV PYTHONPATH=/usr/local/lib/python3.9/site-packages:/usr/lib/python3/dist-packages
 
 WORKDIR /admin4-${VERSION}
+
+RUN rm -r docker xrced
+
+ENV PYTHONPATH=/usr/local/lib/python3.9/site-packages:/usr/lib/python3/dist-packages
 CMD python3 admin4.py
