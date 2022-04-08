@@ -69,7 +69,7 @@ class View(SchemaObject):
     if not definition:
       definition=self.GetCursor().ExecuteSingle("SELECT pg_get_viewdef(%d, true)" % self.GetOid())
       self.info['definition']=definition
-    return "CREATE OR REPLACE %(object)s %(tablespace)s AS\n%(def)s\n%(grant)s" % {
+    return "CREATE OR REPLACE %(object)s %(tablespace)s AS\n%(def)s\n\n%(grant)s" % {
                'object': self.TypeSql(),
                'tablespace': self.TablespaceSql(), 
                'def': definition, 'grant': self.GrantCommentSql() }

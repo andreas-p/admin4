@@ -177,7 +177,8 @@ class Table(SchemaObject):
     if (self.info.get('relhasoids')):
       sql.append(") WITH OIDs;")
     else:                    
-      sql.append(");")          
+      sql.append(");")
+    sql.append("")          
     sql.append("ALTER TABLE " + self.NameSql() + " OWNER TO " + quoteIdent(self.info['owner']) + ";")
     sql.extend(constraints)
     sql.extend(self.getAclDef('relacl', "arwdDxt"))
