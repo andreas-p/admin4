@@ -310,6 +310,8 @@ class QueryFrame(SqlFrame):
           self.messages.AppendText("\n\nHINT:\n")
           self.messages.AppendText(hint)
         self.output.SetSelection(1)
+    elif hasattr(node, 'GetSql'):
+      self.editor.SetText(node.GetSql())
     self.Show()
     self.editor.SetFocus()
 
