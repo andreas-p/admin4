@@ -408,4 +408,4 @@ if __name__ == '__main__':
 
     print ("SHA1 Hash for %s: %s" % (distribPackage, digest))
 
-print ("\ndone.")
+  print ("\ndone.")
