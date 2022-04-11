@@ -2,20 +2,16 @@
 # The Admin4 Project
 # (c) 2013-2022 Andreas Pflug
 #
-# Licensed under the Apache License, 
+# Licensed under the Apache License,
 # see LICENSE.TXT for conditions of usage
 
 
-# pip3 install gitpython
-# pip3 install py2app
-
 filePatterns=['.png', '.ico', '.xrc', '.py', '.html']
-ignoredirs=['xrced', 'build', 'dist', '_update', 'release']
-ignoredfiles=['createBundle.py', 'Dockerfile', 'admin4-docker.sh']
+ignoredirs=['xrced', 'build', 'dist', '_update', 'release', 'docker']
+ignoredfiles=['createBundle.py']
 moreFiles=["LICENSE.TXT", 'CHANGELOG']
 
 requiredMods=['wx.lib.ogl', 'xml']
-# requiredMods=['wx.lib.ogl', 'xml', 'Crypto.Signature'] TODO
 appEntry='admin4.py'
 packages=['wx']
 includes=['ast']
@@ -24,37 +20,45 @@ excludes=['lib2to3', 'hotshot', 'distutils', 'ctypes', 'unittest']
 buildDir=".build"
 releaseDir="release/"
 versionTag=None
+gitTag=None
 requiredAdmVersion="3.0.0" # this is written to __version.py
 checkGit=True
 checkGitCommits=False
 recentlyChanged=[]
+createSha=True
+repo="adminfour/admin4"
 
 if __name__ == '__main__':
   import sys, os, platform, time
   import shutil, zipfile
   import hashlib
   import version
-  
+  import git
+  import subprocess
+
   appName=version.appName
   standardInstallDir="/usr/share/%s" % appName
 
   platform=platform.system()
   try:  os.mkdir(releaseDir)
   except: pass
-  
-  if len(sys.argv) > 1 and sys.argv[1] in ['srcUpdate', 'py2exe', 'py2app']:
+
+  if len(sys.argv) > 1 and sys.argv[1] in ['srcUpdate', 'py2exe', 'py2app', 'docker']:
     installer=sys.argv[1]
+    distDir=releaseDir + "admin4"
   else:
     if platform == "Windows":
       installer='py2exe'
       distDir=releaseDir + "Admin4-%s-Win"
+    elif platform == "Darwin":
+      installer='py2app'
+      distDir=releaseDir + "Admin4-%s-Mac"
+    elif platform == "Linux":
+      installer='zip'
+      distDir=releaseDir + "Admin4-%s-Linux"
     else:
-      if platform == "Darwin":
-        installer='py2app'
-        distDir=releaseDir + "Admin4-%s-Mac"
-      else:
-        print ("Platform %s not supported" % platform)
-        sys.exit(1)
+      print ("Platform %s not supported" % platform)
+      sys.exit(1)
     sys.argv.insert(1, installer)
 
   if installer == "srcUpdate":
@@ -127,11 +131,10 @@ if __name__ == '__main__':
 
   def writeVersion():
     # https://pythonhosted.org/GitPython/0.3.2/index.html
-    global versionTag
+    global versionTag, gitTag
     
     if checkGit:
       try: 
-        import git
         if git.__version__ < "0.3":
           print ("\nWARNING: GIT too old, must be >0.3\n\n")
           return False
@@ -158,7 +161,7 @@ if __name__ == '__main__':
         return None
       tag=findTag(lastCommit)
       if tag:
-        versionTag=tag.name
+        gitTag=versionTag=tag.name
         if checkGitCommits:
           for commit in repo.iter_commits("%s..HEAD" % versionTag):
             for change in commit.diff(tag.commit):
@@ -247,25 +250,26 @@ if __name__ == '__main__':
   for fn in addModules:
     fn=os.path.abspath(fn)
     checkAddItem(fn, len(os.path.dirname(fn))+1)
-  
+
   for file in moreFiles:
     appendChanged(admResources, file)
-    
+
   data_files.append( (".", admResources) )
-  
+
   data_files.reverse()
   requiredDirs = tuple(d.replace('.', '/') for d in requiredMods)
   packages.extend(requiredMods)
   packages=sorted(set(packages))
 
-  if distDir.find('%s') >=0:
-    distDir = distDir % versionTag
-  elif versionTag:
-    distDir += "-%s" % versionTag
-    
+  if not installer in ['docker']:
+    if distDir.find('%s') >=0:
+      distDir = distDir % versionTag
+    elif versionTag:
+      distDir += "-%s" % versionTag
+
   print ("Requirements detected:", ", ".join(packages))
-  
-  if installer == 'srcUpdate':
+
+  if installer == 'srcUpdate' or platform == 'Linux':
     if recentlyChanged:
       distDir = distDir[:-4] + "+%s-Upd" % time.strftime("%y%m%d", time.localtime(time.time()))
 
@@ -332,18 +336,42 @@ if __name__ == '__main__':
       if not '-A' in sys.argv:
         cleanWxDir(libdir)
         # not necessary any more shutil.rmtree('%s/%s.app/Contents/Resources/mpl-data' % (distDir, appName))
+ #   elif platform == "Linux":
+      
   if installer == 'py2app':
     print ("\nWriting dmg.")
     distribPackage=distDir+".dmg"
-    import subprocess
-    with subprocess.Popen( [
+    with subprocess.Popen([
           "hdiutil", "create",
           "-format", "UDBZ",
           "-volname", appName,
           "-noanyowners", "-nospotlight",
           "-srcfolder", distDir,
           distribPackage
-          ] )as proc:
+          ]) as proc:
+      proc.communicate()
+      if proc.returncode:
+        sys.exit(8)
+  elif installer == "docker":
+    createSha=False
+    dockerTag="%s:%s" % (repo, gitTag)
+    if gitTag != versionTag:
+      dockerTag += "-upd"
+    print("\nCreating docker container", dockerTag)
+#    sys.exit(8)
+    with subprocess.Popen([
+          "docker", "build",
+          "--file", "docker/Dockerfile",
+          "--tag", dockerTag,
+          "release"
+          ]) as proc:
+      proc.communicate()
+      if proc.returncode:
+        sys.exit(8)
+    with subprocess.Popen([
+          "docker", "tag",
+          dockerTag, "%s:latest" % repo
+         ]) as proc:
       proc.communicate()
       if proc.returncode:
         sys.exit(8)
@@ -361,18 +389,19 @@ if __name__ == '__main__':
     fzip=zipfile.ZipFile(distribPackage, 'w', zipfile.ZIP_DEFLATED)
     zipwrite(distDir, len(os.path.dirname(distDir))+1)
     fzip.close()
-  
-  with open(distribPackage, 'rb') as f:
-    data=f.read(102400)
-    m=hashlib.sha1()
-    while data != b"":
-      m.update(data)
+  if createSha:
+    with open(distribPackage, 'rb') as f:
       data=f.read(102400)
+      m=hashlib.sha1()
+      while data != b"":
+        m.update(data)
+        data=f.read(102400)
 
-  digest=m.hexdigest()
+    digest=m.hexdigest()
   
-  with open(distDir+".sha1", 'w') as f:
-    f.write(digest)
+    with open(distDir+".sha1", 'w') as f:
+      f.write(digest)
 
-  print ("SHA1 Hash for %s: %s" % (distribPackage, digest))
-  print ("\ndone.")
+    print ("SHA1 Hash for %s: %s" % (distribPackage, digest))
+
+print ("\ndone.")
