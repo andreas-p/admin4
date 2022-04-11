@@ -5,6 +5,8 @@
 # Licensed under the Apache License,
 # see LICENSE.TXT for conditions of usage
 
+# Ignoring GIT differences if True
+INSTALLER_DEBUG=False
 
 filePatterns=['.png', '.ico', '.xrc', '.py', '.html']
 ignoredirs=['xrced', 'build', 'dist', '_update', 'release', 'docker']
@@ -26,7 +28,8 @@ checkGit=True
 checkGitCommits=False
 recentlyChanged=[]
 createSha=True
-repo="adminfour/admin4"
+dockerRepo="adminfour/admin4"
+dockerSuffix=""
 
 if __name__ == '__main__':
   import sys, os, platform, time
@@ -176,25 +179,28 @@ if __name__ == '__main__':
           f.write("tagDate='%s'\n" % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(tag.commit.committed_date)))
           f.write("revDate='%s'\n" % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(lastOriginCommit.committed_date)))
           f.write("modDate='%s'\n" % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(lastCommit.committed_date)))
-          if repo.is_dirty() or str(lastCommit) != str(lastOriginCommit):
+          if not INSTALLER_DEBUG and (repo.is_dirty() or str(lastCommit) != str(lastOriginCommit)):
+            dockerSuffix="-Upd"
             f.write("revLocalChange=True\n")
           else:
             f.write("revLocalChange=False\n")
-          if str(lastOriginCommit) != str(tag.commit):
+          if not INSTALLER_DEBUG and str(lastOriginCommit) != str(tag.commit):
             f.write("revOriginChange=True\n")
           else:
             f.write("revOriginChange=False\n")
-          if repo.is_dirty():
+          if not INSTALLER_DEBUG and repo.is_dirty():
             versionTag="tmp"
+            print("RELEASE Version:", gitTag)
             f.write("revDirty=True\n")
           else:
+            print("PRERELEASE Version:", gitTag)
             f.write("revDirty=False\n")
           f.write("standardInstallDir='%s'" % standardInstallDir)
         
-        return repo.is_dirty()
+        return not INSTALLER_DEBUG and repo.is_dirty()
       else:
         print ("No tags found")
-        return True    
+        return True
 
     versionTag=readVersion()
     if versionTag != None:
@@ -354,9 +360,7 @@ if __name__ == '__main__':
         sys.exit(8)
   elif installer == "docker":
     createSha=False
-    dockerTag="%s:%s" % (repo, gitTag)
-    if gitTag != versionTag:
-      dockerTag += "-upd"
+    dockerTag="%s:%s%s" % (dockerRepo, gitTag, dockerSuffix)
     print("\nCreating docker container", dockerTag)
 #    sys.exit(8)
     with subprocess.Popen([
@@ -370,7 +374,7 @@ if __name__ == '__main__':
         sys.exit(8)
     with subprocess.Popen([
           "docker", "tag",
-          dockerTag, "%s:latest" % repo
+          dockerTag, "%s:latest" % dockerRepo
          ]) as proc:
       proc.communicate()
       if proc.returncode:

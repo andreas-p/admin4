@@ -12,7 +12,7 @@ if [ -z "$(xhost | grep LOCAL:)" ] ; then
 fi
 
 # defaults to local image
-image=${1-admin4}
+image=${1-adminfour/admin4:latest}
 shift
 
 IFS=":" read user _pwd uid gid _name home _shell  <<< $(grep ^$(whoami): /etc/passwd)
