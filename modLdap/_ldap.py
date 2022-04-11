@@ -39,7 +39,7 @@ class LdapServer:
       protocol="ldaps"
     else:
       protocol="ldap"
-    uri="%s://%s:%d" % (protocol, node.settings['host'], node.settings['port'])
+    uri="%s://%s:%d" % (protocol, node.address, node.settings['port'])
 
     try:
       spot="Connect"

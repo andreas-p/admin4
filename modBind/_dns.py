@@ -204,7 +204,7 @@ class BindConnection():
     if tsig:
       request.use_tsig(tsig)
 
-    response=self.queryProc(request, self.server.settings['host'], timeout=self.server.settings.get('timeout', 1.), port=self.server.settings['port'])
+    response=self.queryProc(request, self.server.address, timeout=self.server.settings.get('timeout', 1.), port=self.server.settings['port'])
     if response:
       answer=dns.resolver.Answer(name, rdtype, rdclass, response)
       return answer.rrset
@@ -253,7 +253,7 @@ class BindConnection():
     if not self.server.settings.get('statsport'):
       return None
     try:
-      response=requests.get("http://%s:%d" % (self.server.settings['host'], self.server.settings['statsport']), timeout=self.server.settings.get('timeout', 1.))
+      response=requests.get("http://%s:%d" % (self.server.address, self.server.settings['statsport']), timeout=self.server.settings.get('timeout', 1.))
       response.raise_for_status()
       txt=response.text
     except Exception as _e:
@@ -263,7 +263,7 @@ class BindConnection():
       root=xmltree.fromstring(txt)
     except Exception as _e:
       import adm, time
-      fname="%s/xml-%s_%s.xml" % (adm.loaddir, self.server.settings['host'], time.strftime("%Y%m%d%H%M%S", time.localtime(time.time())))
+      fname="%s/xml-%s_%s.xml" % (adm.loaddir, self.server.address, time.strftime("%Y%m%d%H%M%S", time.localtime(time.time())))
       logger.exception("Error parsing BIND response %s", fname)
       f=open(fname, "w")
       f.write(txt)
@@ -272,10 +272,10 @@ class BindConnection():
     return root
   
   def Send(self, updater):
-    return self.queryProc(updater, self.server.settings['host'], timeout=self.server.settings.get('timeout', 1.), port=self.server.settings['port'])
+    return self.queryProc(updater, self.server.address, timeout=self.server.settings.get('timeout', 1.), port=self.server.settings['port'])
 
   def GetZone(self, zone):
-    xfr = dns.query.xfr(self.server.settings['host'], zone, timeout=self.server.settings.get('timeout', 1.)*10., port=self.server.settings['port'], keyring=self.GetTsig())
+    xfr = dns.query.xfr(self.server.address, zone, timeout=self.server.settings.get('timeout', 1.)*10., port=self.server.settings['port'], keyring=self.GetTsig())
     zoneObj = dns.zone.from_xfr(xfr)
     return zoneObj
 

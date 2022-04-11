@@ -6,7 +6,7 @@
 
 
 import os, adm, wx
-import logger
+import logger, socket
 from wh import xlt, StringType, sizeToFloat, floatToSize
 
 
@@ -546,7 +546,7 @@ class ServerNode(Node):
     self.registrationChanged=False
     self.server=self
     self.settings=settings
-    self.address = self.settings.get('host')
+    self.address = socket.gethostbyname(self.settings.get('host'))
     self.user=self.settings.get('user')
     self.port=self.settings.get('port')
     self.needPassword=(self.settings.get('password') != None)
