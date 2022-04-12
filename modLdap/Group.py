@@ -301,7 +301,7 @@ class Group(SpecificEntry):
         cr=candidates[i].split()
         uid=cr[0]
         row=lv.AppendItem(-1, uid)
-        lv.SetStringItem(row, 1, " ".join(cr[1:]))
+        lv.SetItem(row, 1, " ".join(cr[1:]))
         lv.SetItemData(row, -1)
         uids.append(uid)
 

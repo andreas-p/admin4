@@ -342,7 +342,7 @@ class Mailbox(adm.Node):
         acl=dlg.GetAcl()
         if index >= 0:
           if acl:
-            lbAcl.SetStringItem(index, 1, acl)
+            lbAcl.SetItem(index, 1, acl)
           else:
             lbAcl.DeleteItem(index)
         elif acl:

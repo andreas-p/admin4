@@ -97,7 +97,9 @@ class ListView(wx.ListView):
     
     
   def GetToolTipText(self, tid):
-    return self.GetItemText(tid, self.getToolTipCol)
+    if self.getToolTipCol:
+      return self.GetItemText(tid, self.getToolTipCol)
+    return None
 
   def GetSelection(self):
     lst=[]
@@ -215,8 +217,7 @@ class ListView(wx.ListView):
     vals=[]
     for colInfo in self.colInfos:
       vals.append(colInfo.GetVal(values))
-    for col in range(1, self.GetColumnCount()):
-      self.SetStringItem(row, col, vals[col])
+    self.SetItemRow(row, vals)
     self.SetItemImage(row, icon)
       
   
@@ -287,12 +288,11 @@ class ListView(wx.ListView):
       l.append(self.GetItemTuple(i))
     return l
 
-  def SetItem(self, row, val, image=None):
+  def SetItemRow(self, row, val, image=None):
     if isinstance(val, tuple):
       val=list(val)
-
     for col in range(len(val)):
-      self.SetStringItem(row, col, str(val[col]))
+      self.SetItem(row, col, str(val[col]))
     if image != None:
       self.SetItemImage(row, image)
 
