@@ -419,7 +419,7 @@ class Entry(adm.Node):
 
       else:
         self.dn="%s,%s" % (self.rdn, self.parentNode.dn)
-        self.GetConnection().Add(self.dn, self.attribs.values())
+        self.GetConnection().Add(self.dn, list(self.attribs.values()))
 
         # check if objectClasses changed
 

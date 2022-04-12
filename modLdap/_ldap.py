@@ -131,7 +131,7 @@ class LdapServer:
     if code >= 0:
       mods.append( (code, attr.name, value) )
     else:
-      mods.append( (attr.name, attr.value) )
+      mods.append( (attr.name, value) )
       
   def Modify(self, dn, chgList, addList=None, delList=None):
     chgList=self._chkLst(chgList)
@@ -168,7 +168,7 @@ class LdapServer:
     addList=self._chkLst(addList)
     logger.querylog("Add %s: %s" % (dn, list(map(str, addList))))
     for attr in addList:
-      self._addMod(mods, attr.name, attr.value)
+      self._addMod(mods, attr)
 
     try:
       self.execute(self.ldap.add_s, dn, mods)
