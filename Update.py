@@ -26,6 +26,9 @@ class UpdateThread(threading.Thread):
     threading.Thread.__init__(self)
     
   def run(self):
+    # currently no update check
+    return 
+  
     update=OnlineUpdate()
     if update.IsValid():
       adm.updateInfo=update
