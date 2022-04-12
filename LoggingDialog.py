@@ -22,7 +22,7 @@ class LogPanel(adm.NotebookPanel, ControlledPage):
     
     self.control=self['Listview']
     if hasattr(self, 'GetToolTipText'):
-      self.control.RegisterToolTipProc(self.GetToolTipText)
+      self.control.RegisterToolTipProc(self.control.GetToolTipText)
     self.control.Bind(wx.EVT_LIST_COL_END_DRAG, self.OnListColResize)
     if hasattr(self, 'OnClear'):
       self.Bind("Clear", self.OnClear)
