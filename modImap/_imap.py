@@ -71,12 +71,47 @@ class ImapServer(imaplib.IMAP4_SSL):
 
   def getresult(self, response):
     typ,dat=response
+    result=[]
+    for d in dat:
+      if isinstance(d, list):
+        lst=[]
+        for x in d:
+          if x == None:
+            lst.append(None)
+          else:
+            lst.append(x.decode())
+        if typ == "OK":
+          result.append(lst)
+        else:
+          result.append(" ".join(lst)) # if error, flatten inner list
+      elif d == None:
+        result.append(None)
+      elif isinstance(d, bytes):
+        result.append(d.decode())
+      else:
+        result.append(d)
+    if typ == "OK":
+      self.lastError=None
+      return result
+    else:
+      self.lastError=result[0]
+      return None
+    
+    
+  def xxgetresult(self, response):
+    typ,dat=response
     if typ == "OK":
       self.lastError=None
       result=[]
       for d in dat:
         if isinstance(d, list):
-          result.append(list(map(lambda x: x.decode(), d)))
+          lst=[]
+          for x in d:
+            if x == None:
+              lst.append(None)
+            else:
+              lst.append(x.decode())
+          result.append(lst)
         elif d == None:
           result.append(None)
         elif isinstance(d, bytes):
@@ -85,6 +120,8 @@ class ImapServer(imaplib.IMAP4_SSL):
           result.append(d)
       return result
     else:
+      if isinstance(dat[0], list):
+        self.lastError=dat[0][0]
       self.lastError=dat[0].decode()
       return None
     

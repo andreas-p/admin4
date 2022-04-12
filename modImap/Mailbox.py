@@ -98,35 +98,35 @@ class Mailbox(adm.Node):
 
       if self.CanSelect():
         self.AddProperty(xlt("My rights"), self.myrights)
-      self.AddProperty(xlt("Comment"), self.annotations.Get('/comment'))
-
-      lu=self.annotations.Get('/lastupdate')
-      if lu:
-        self.AddProperty(xlt("Last update"), prettyDate(GetImapDate(lu)))
+      if self.annotations:
+        self.AddProperty(xlt("Comment"), self.annotations.Get('/comment'))
+        lu=self.annotations.Get('/lastupdate')
+        if lu:
+          self.AddProperty(xlt("Last update"), prettyDate(GetImapDate(lu)))
 # need that?
 #      chk=(self.annotations.Get('/check') ==  "true")
 #      self.AddYesNoProperty(xlt("Check"), chk)
 #      if chk:
 #        self.AddProperty(xlt("Check period"), self.annotations.Get('/checkperiod'))
 
-      sz=self.annotations.Get('/size')
-      if sz != None:
-        self.AddSizeProperty(xlt("Size"), sz)
-        
-      squat=self.annotations.Get(squatAnnotation)
-      if squat != None:
-        self.AddProperty(xlt("Squat"), squat)
-      if self.quota:
-        items=[]
-        for resource, quota in self.quota.items():
-          root, filled, total = quota
-          if root == self.mailboxPath:
-            items.append(xlt("%s: %s of %s") % (resource, floatToSize(filled, 1024), floatToSize(total, 1024)))
-          else:
-            items.append(xlt("%s: %s of %s  (root=%s)") % (resource, floatToSize(filled, 1024), floatToSize(total, 1024), root) )
-        self.AddChildrenProperty(items, xlt("Quota"), -1)
-      else:
-        self.AddProperty(xlt("Quota"), xlt("none"))
+        sz=self.annotations.Get('/size')
+        if sz != None:
+          self.AddSizeProperty(xlt("Size"), sz)
+          
+        squat=self.annotations.Get(squatAnnotation)
+        if squat != None:
+          self.AddProperty(xlt("Squat"), squat)
+        if self.quota:
+          items=[]
+          for resource, quota in self.quota.items():
+            root, filled, total = quota
+            if root == self.mailboxPath:
+              items.append(xlt("%s: %s of %s") % (resource, floatToSize(filled, 1024), floatToSize(total, 1024)))
+            else:
+              items.append(xlt("%s: %s of %s  (root=%s)") % (resource, floatToSize(filled, 1024), floatToSize(total, 1024), root) )
+          self.AddChildrenProperty(items, xlt("Quota"), -1)
+        else:
+          self.AddProperty(xlt("Quota"), xlt("none"))
 
       if self.acl:
         imageid=self.GetImageId("User")
@@ -270,8 +270,12 @@ class Mailbox(adm.Node):
         self.node.GetProperties()
         self.MailboxName = self.node.name
         self.FullPath=self.node.mailboxPath
-        self.comment = self.node.annotations.Get('/comment')
-        self.squat = self.node.annotations.Get(squatAnnotation, 'false' ) == 'true'
+        if self.node.annotations:
+          self.comment = self.node.annotations.Get('/comment')
+          self.squat = self.node.annotations.Get(squatAnnotation, 'false' ) == 'true'
+        else:
+          self.comment=""
+          self.squat=False
         
         if self.node.acl:
           for user, acl in self.node.acl.items():
