@@ -496,7 +496,7 @@ class EntryPassword:
         if salt:
           hl.update(salt)
         crypted=base64.b64encode(hl.digest() + salt)
-        return str("{%s}%s" % (hashAlg, crypted))
+        return "{%s}%s" % (hashAlg, crypted.decode())
 
 
       _must,may=node.GetServer().GetClassSchemaMustMayOids(node.objectClasses)
