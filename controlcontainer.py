@@ -249,7 +249,7 @@ class ControlContainer(wx.Object):
 
       names=name.split(':')
       ctl.name=names[-1]
-      ctl.flags=map(lambda x: x.lower(), names[:-1])
+      ctl.flags=list(map(lambda x: x.lower(), names[:-1]))
 
       self._ctlList.append(ctl.name)
       for flag in ctl.flags:
