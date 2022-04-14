@@ -213,4 +213,11 @@ class SchemaObject(DatabaseObject):
     oid=self.info.get('nspoid')
     return oid
 
+  @staticmethod
+  def GetParentSchemaOid(parentNode):
+    while parentNode:
+      if not isinstance(parentNode, Collection):
+        return parentNode.GetSchemaOid()
+      parentNode=parentNode.parentNode
+    
   

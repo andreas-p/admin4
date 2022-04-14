@@ -32,6 +32,9 @@ class Schema(DatabaseObject):
     if oid <= self.GetServer().GetLastSysOid() and oid != 2200:
       icons.append('pg')
     return self.GetImageId(icons)
+  
+  def GetSchemaOid(self):
+    return self.GetOid()
 
     
   def GetProperties(self):

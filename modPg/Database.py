@@ -74,9 +74,10 @@ class Database(ServerObject):
     
     if patterns[0] includes a dot, schemaOid is overridden
     """
-    # relkind: r = ordinary table, i = index, S = sequence, v = view, m = materialized view,
-    #          c = composite type, t = TOAST table, f = foreign table
-    # P=Proc
+    # relkind: r = ordinary table, i = index, S = sequence, t = TOAST table, v = view,
+    #          m = materialized view, c = composite type, f = foreign table,
+    #          p = partitioned table, I = partitioned index
+    #          P=Proc
     queries=[]
     if len(patterns) > 1:
 #      dtype=patterns[0]

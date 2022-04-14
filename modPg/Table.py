@@ -23,9 +23,10 @@ class Table(SchemaObject):
   allGrants="arwdDxt"
   favtype='t'
   relkind='r'
+  relispartition=False
 
-  @staticmethod
-  def FindQuery(schemaName, schemaOid, patterns):
+  @classmethod
+  def FindQuery(cls, schemaName, schemaOid, patterns):
     sql=pgQuery("pg_class c")
     sql.AddCol("relkind as kind")
     sql.AddCol("nspname")
@@ -33,13 +34,13 @@ class Table(SchemaObject):
     sql.AddCol("n.oid as nspoid")
     sql.AddCol("c.oid")
     sql.AddJoin("pg_namespace n ON n.oid=relnamespace")
-    sql.AddWhere("relkind='r'")
+    sql.AddWhere("relkind = '%s'" % cls.relkind)
     SchemaObject.AddFindRestrictions(sql, schemaName, schemaOid, 'relname', patterns)
     return sql
     
         
-  @staticmethod
-  def InstancesQuery(parentNode):
+  @classmethod
+  def InstancesQuery(cls, parentNode):
     sql=pgQuery("pg_class rel")
     sql.AddCol("rel.oid, relname as name, nspname, ns.oid as nspoid, spcname, pg_get_userbyid(relowner) AS owner, relacl as acl, rel.*")
     if parentNode.GetServer().version < 8.4:
@@ -48,22 +49,30 @@ class Table(SchemaObject):
       sql.AddCol("CASE WHEN relistemp THEN 't' ELSE 'p' END AS relpersistence")
     else:
       sql.AddCol("relpersistence")
+    if parentNode.GetServer().version >= 10:
+      sql.AddCol("pg_get_expr(relpartbound, rel.oid, true) AS relpartbound")
+      sql.AddLeft("pg_partitioned_table pt ON partrelid=rel.oid")
+      sql.AddCol("pg_get_expr(partexprs, partrelid, true) AS partexprs")
+      sql.AddCol('partstrat')
+      sql.AddCol("(SELECT array_to_string(array_agg(attname), ', ') FROM pg_attribute WHERE attnum=any(partattrs) AND attrelid=partrelid) AS partattrs")
+      if cls.relispartition:
+        sql.AddWhere("relispartition")
+      else:
+        sql.AddWhere("not relispartition")
 
     sql.AddCol("description")
     sql.AddJoin("pg_namespace ns ON ns.oid=rel.relnamespace")
     sql.AddLeft("pg_tablespace ta ON ta.oid=rel.reltablespace")
     sql.AddLeft("pg_description des ON (des.objoid=rel.oid AND des.objsubid=0)")
     sql.AddLeft("pg_constraint c ON c.conrelid=rel.oid AND c.contype='p'")
-    sql.AddWhere("relkind", 'r')
-    sql.AddWhere("relnamespace", parentNode.parentNode.GetOid())
+    sql.AddWhere("relkind ='%s'" % cls.relkind)
+    sql.AddWhere("relnamespace", cls.GetParentSchemaOid(parentNode))
     sql.AddOrder("CASE WHEN nspname='%s' THEN ' ' else nspname END" % "public")
     sql.AddOrder("relname")
     return sql
-  
 
   def GetIcon(self):
-    icons=[]
-    icons.append("Table")
+    icons=[self.__class__.__name__]
     if self.GetOid() in self.GetDatabase().favourites:
       icons.append('fav')
     return self.GetImageId(icons)
@@ -93,9 +102,18 @@ class Table(SchemaObject):
         (xlt("Persistence"),    "%s (%s)" % (self.info['relpersistence'], xlt(persistenceStr.get(self.info['relpersistence'], "unknown")))),
         (xlt("Rows (estimated)"), int(self.info['reltuples'])),
         (xlt("Rows (counted)"), self.rowcount),
-        (xlt("ACL"),            self.info['acl'])
       ]
+      if self.relkind == 'p':
+        if self.info['partstrat'] == 'r':
+          key="RANGE(%s)" % self.info['partattrs']
+        else:
+          key=self.info['partexprs']
+        self.AddProperty(xlt("Partition Key"), key)
+      elif self.relispartition:
+        self.AddProperty(xlt("Partition of Table"), self.GetPartitionMaster())
+        self.AddProperty(xlt("Partition"), self.info['relpartbound'])
 
+      self.AddProperty(xlt("ACL"), self.info['acl'])
       self.AddProperty(xlt("Description"), self.info['description'])
     return self.properties
 
@@ -134,6 +152,19 @@ class Table(SchemaObject):
               'cols': self.GetServer().ExpandColDefs(cols)} 
  
  
+  def _getRefTables(self, col, refcol):
+      rels=self.GetCursor().ExecuteDictList("""
+        SELECT relname AS name, nspname
+          FROM pg_depend
+          JOIN pg_class r ON r.oid=%s
+          JOIN pg_namespace n ON n.oid=relnamespace
+         WHERE classid=to_regclass('pg_class')
+           AND refclassid=to_regclass('pg_class')
+           AND deptype='a' AND relkind IN ('r', 'p')
+           AND %s=%s
+      """ % (refcol, col, self.info['oid']))
+      return rels
+    
   def GetSql(self):
     self.populateColumns()
     cols=[]
@@ -141,7 +172,6 @@ class Table(SchemaObject):
       cols.append(quoteIdent(col['attname']) + ' ' + self.colTypeName(col));
 
     constraints=[]
-
     self.populateConstraints()
 
     for constraint in self.constraints:
@@ -171,16 +201,26 @@ class Table(SchemaObject):
 
 
     sql=[]
-    sql.append("CREATE TABLE " + self.NameSql())
-    sql.append("(");
-    sql.append("  " + ",\n  ".join(cols))
-    if (self.info.get('relhasoids')):
-      sql.append(") WITH OIDs;")
-    else:                    
-      sql.append(");")
-    sql.append("")          
-    sql.append("ALTER TABLE " + self.NameSql() + " OWNER TO " + quoteIdent(self.info['owner']) + ";")
-    sql.extend(constraints)
+    if self.relispartition:
+      sql.append("CREATE TABLE " + self.NameSql() + " PARTITION OF " + self.GetPartitionMaster())
+      sql.append("  " + self.info['relpartbound']+";")
+    else:
+      pi=""
+      if (self.relkind == 'p'):
+        if self.info['partstrat'] == 'r':
+          pi=" PARTITION BY RANGE(%s)" % self.info['partattrs']
+        else:
+          pi=" PARTITION BY %s" % self.info['partexprs']
+      sql.append("CREATE TABLE " + self.NameSql())
+      sql.append("(");
+      sql.append("  " + ",\n  ".join(cols))
+      if (self.info.get('relhasoids')):
+        sql.append(") WITH OIDs%s;" % pi)
+      else:                    
+        sql.append(")%s;" % pi)
+      sql.append("")          
+      sql.append("ALTER TABLE " + self.NameSql() + " OWNER TO " + quoteIdent(self.info['owner']) + ";")
+      sql.extend(constraints)
     sql.extend(self.getAclDef('relacl', "arwdDxt"))
     sql.extend(self.getCommentDef())
     return "\n".join(sql); 
@@ -549,7 +589,47 @@ class ConstraintPage(adm.NotebookPage):
         values.append( (con, icon) )
       self.control.Fill(values, 'fullname')
    
-nodeinfo= [ { "class" : Table, "parents": ["Schema"], "sort": 10, "collection": "Tables", "pages": [ColumnsPage, ConstraintPage, "StatisticsPage" , "SqlPage"] } ]    
+class Partition(Table):
+  relkind='r'
+  typename=xlt("Partition")
+  shortname=xlt("Partition")
+  relispartition=True
+  
+  @classmethod
+  def CheckPresent(cls, parentNode):
+    return parentNode.GetServer().version >= 10
+  
+  def GetPartitionMaster(self):
+    if not hasattr(self, 'partitionMaster'):
+      rels=self._getRefTables('objid', 'refobjid')
+      self.partitionMaster= self.FullName(rels[0])
+    return self.partitionMaster
+
+
+class PartitionedTable(Table):
+  relkind='p'
+  typename=xlt("Partitioned Table")
+  shortname=xlt("Partitioned Table")
+
+  @classmethod
+  def CheckPresent(cls, parentNode):
+    return parentNode.GetServer().version >= 10
+
+  def GetProperties(self):
+    if not len(self.properties):
+      super(PartitionedTable, self).GetProperties()
+      rels=self._getRefTables('refobjid', 'objid')
+      partitions=list(map(self.FullName, rels))
+      self.AddProperty(xlt("Partitions"), partitions)
+    return self.properties
+
+
+
+nodeinfo= [ { "class" : Table, "parents": ["Schema"], "sort": 10, "collection": "Tables", "pages": [ColumnsPage, ConstraintPage, "StatisticsPage" , "SqlPage"] },
+#            { "class" : Partition, "parents": ["Schema"], "sort": 11, "collection": "Partitions", "pages": [ColumnsPage, ConstraintPage, "StatisticsPage" , "SqlPage"] },
+            { "class" : Partition, "parents": ["PartitionedTable"], "sort": 11, "pages": [ColumnsPage, ConstraintPage, "StatisticsPage" , "SqlPage"] },
+            { "class" : PartitionedTable, "parents": ["Schema"], "sort": 12, "collection": "Partitioned Tables", "pages": [ColumnsPage, ConstraintPage, "StatisticsPage" , "SqlPage"] },
+            ]    
 pageinfo=[ColumnsPage, ConstraintPage]
 
 
@@ -567,3 +647,5 @@ class RowCount:
 menuinfo = [ 
             { "class" : RowCount, "nodeclasses" : Table, 'sort': 80 },
              ]
+
+
