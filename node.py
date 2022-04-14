@@ -386,7 +386,7 @@ class Node(object):
 
   def GetLabelText(self):
     if self.name:
-      return xlt("%s \"%s\"") % (xlt(self.shortname), xlt(self.name))
+      return "%s \"%s\"" % (xlt(self.shortname), self.name)
     else:
       return xlt(self.typename)
 
