@@ -369,6 +369,8 @@ class Node(object):
       nodeinfo=self.moduleinfo()['nodes'][nodename]
       collText=nodeinfo.get('collection')
       cls=nodeinfo['class']
+      if hasattr(cls, 'CheckPresent') and not cls.CheckPresent(self):
+        continue
       if collText and not isinstance(self, Collection):
         child=Collection(self, collText, cls)
         self.appendChild(child)
