@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2013-2014 Andreas Pflug
+# (c) 2013-2022 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -183,14 +183,17 @@ class Preferences(adm.NotebookPanel):
     self.Proxy=adm.proxy
     self['UpdateCheckPeriod'].Append( [ (1, xlt("daily")), (7, xlt('weekly')), (30, xlt('monthly')), (0, xlt('never')) ] )
     self.UpdateCheckPeriod=adm.updateCheckPeriod
+    self.AllowPrereleases=adm.allowPrereleases
     
 
   def Save(self):
     adm.confirmDeletes=self.ConfirmDeletes
     adm.updateCheckPeriod=self.UpdateCheckPeriod
+    adm.allowPrereleases=self.AllowPrereleases
     adm.proxy=self.Proxy
     adm.config.Write("ConfirmDeletes", adm.confirmDeletes)
     adm.config.Write("UpdateCheckPeriod", adm.updateCheckPeriod)
+    adm.config.Write("AllowPrereleases", adm.allowPrereleases)
     adm.config.Write("Proxy", adm.proxy)
     return True
 
@@ -198,6 +201,7 @@ class Preferences(adm.NotebookPanel):
   def Init():
     adm.confirmDeletes=adm.config.Read("ConfirmDeletes", True)
     adm.updateCheckPeriod=adm.config.Read("UpdateCheckPeriod", 7)
+    adm.allowPrereleases=adm.config.Read("AllowPrereleases", False)
     adm.proxy=adm.config.Read("Proxy")
 
 

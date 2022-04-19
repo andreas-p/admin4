@@ -58,15 +58,19 @@ class Version:
   def __ne__(self, cmp):
     return self.fullver() != cmp.fullver()
   
-version=Version(version)
-
 
 
 requiredAdmVersion=Version(requiredAdmVersion)
 libVersion=Version("3.0.0")
 
 appName="Admin4"
-description="4th generation\nAdministration Tool\n\nHelp and manual: http://www.admin4.org/docs"
+RELEASE_CHECK_URL="https://api.github.com/repos/andreas-p/admin4/releases"
+RELEASE_URL="https://github.com/andreas-p/admin4/releases"
+
+description="""4th generation Administration Tool
+
+Help and manual: http://www.admin4.org/docs
+Releases: %s""" % RELEASE_URL
 vendor="PSE"
 vendorDisplay="PSE Consulting"
 copyright="(c) 2013-2022 PSE Consulting Andreas Pflug"

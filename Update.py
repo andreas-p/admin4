@@ -12,49 +12,100 @@ from wh import xlt, copytree
 from xmlhelp import Document as XmlDocument
 import time, threading, subprocess
 
-try:
-  import Crypto.PublicKey.RSA, Crypto.Hash.SHA, Crypto.Signature.PKCS1_v1_5
-except:
-  Crypto=None
+Crypto=None
 
 onlineTimeout=5
+FORCE_UPDATECHECK=False # used while developing
 
 class UpdateThread(threading.Thread):
   
   def __init__(self, frame):
     self.frame=frame
     threading.Thread.__init__(self)
+
+
+  def OnUpdate(self, _evt=None):
+    lines=[]
+    lines.append(xlt("New version: %s") % adm.updateInfo.release['tag_name'])
+    lines.append(adm.updateInfo.release['body'].replace('\r', ''))
+    lines.append(xlt("Please visit the releases website at"))
+    lines.append(admVersion.RELEASE_URL)
+    dlg=wx.MessageDialog(self.frame, "\n".join(lines), caption=xlt("Update available"))
+    dlg.ShowModal()
     
   def run(self):
-    # currently no update check
-    return 
-  
-    update=OnlineUpdate()
+    update=GithubUpdateCheck()
     if update.IsValid():
       adm.updateInfo=update
       if update.UpdateAvailable():
-        wx.CallAfter(self.frame.OnUpdate)
+        wx.CallAfter(self.OnUpdate)
     elif update.exception:
       wx.CallAfter(wx.MessageBox,
                    xlt("Connection error while trying to retrieve update information from the update server.\nCheck network connectivity and proxy settings!"), 
                    xlt("Communication error"), wx.ICON_EXCLAMATION)
        
-  
+    
+
 def CheckAutoUpdate(frame):
   if adm.updateCheckPeriod:
     if not admVersion.revDate:
       return
     lastUpdate=adm.config.Read('LastUpdateCheck', 0)
-    if not lastUpdate or lastUpdate+adm.updateCheckPeriod*24*60*60 < time.time():
+    if FORCE_UPDATECHECK or not lastUpdate or lastUpdate+adm.updateCheckPeriod*24*60*60 < time.time():
       thread=UpdateThread(frame)
       thread.start()
+
+class GithubUpdateCheck():
+  def __init__(self):
+    self.info=None
+    self.release=None
+    try:
+      response=requests.get(admVersion.RELEASE_CHECK_URL, timeout=onlineTimeout, proxies=adm.GetProxies())
+      self.info=response.json()
+    except Exception as ex:
+      self.exception = ex
+      self.message=xlt("Online update check failed.\n\nError reported:\n  %s") % str(ex)
+      return
+    adm.config.Write('LastUpdateCheck', time.time())
+
+  def IsValid(self):
+    return self.info != None
+  
+  def UpdateAvailable(self):
+    if self.info:
+      localVersion=admVersion.version
+      localMainVersion=localVersion[:localVersion.find('rc')]
+      localRC=(localVersion!=localMainVersion)
+      for release in self.info:
+        if not adm.allowPrereleases and release.get('prerelease'):
+          continue
+        if True:
+          upstreamVersion=release['tag_name']
+          upstreamMainVersion=upstreamVersion[:upstreamVersion.find(('rc'))]
+          upstreamRC=(upstreamVersion!=upstreamMainVersion)
+
+          if localMainVersion > upstreamMainVersion: # strange: local version is newer
+            return False
+          elif localMainVersion == upstreamMainVersion:
+            if not localRC: # already release
+              return False
+            if upstreamRC:
+              if localVersion >= upstreamVersion:
+                return False
+          self.release=release
+          return True
+            
+    return False
+        
+
+#################################################################
+# deprecated
 
 def HttpGet(url, timeout=onlineTimeout):
   # We're verifying all contents ourself using the admin4 public key
   response=requests.get(url, timeout=timeout, proxies=adm.GetProxies(), verify=False)
   response.raise_for_status()
   return response
-
 
 class OnlineUpdate:
   startupCwd=os.getcwd()

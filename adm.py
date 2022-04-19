@@ -36,6 +36,7 @@ updateInfo=None
 
 confirmDeletes=True
 updateCheckPeriod=7
+allowPrereleases=False
 proxy=None
 
 config=None
