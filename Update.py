@@ -15,7 +15,7 @@ import time, threading, subprocess
 Crypto=None
 
 onlineTimeout=5
-FORCE_UPDATECHECK=False # used while developing
+FORCE_UPDATECHECK=hasattr(admVersion, 'FORCE_UPDATECHECK') and admVersion.FORCE_UPDATECHECK # used while developing
 
 class UpdateThread(threading.Thread):
   
@@ -74,14 +74,20 @@ class GithubUpdateCheck():
   def UpdateAvailable(self):
     if self.info:
       localVersion=admVersion.version
-      localMainVersion=localVersion[:localVersion.find('rc')]
+      try:
+        localMainVersion=localVersion[:localVersion.index('rc')]
+      except:
+        localMainVersion=localVersion
       localRC=(localVersion!=localMainVersion)
       for release in self.info:
         if not adm.allowPrereleases and release.get('prerelease'):
           continue
         if True:
           upstreamVersion=release['tag_name']
-          upstreamMainVersion=upstreamVersion[:upstreamVersion.find(('rc'))]
+          try:
+            upstreamMainVersion=upstreamVersion[:upstreamVersion.index('rc')]
+          except:
+            upstreamMainVersion=upstreamVersion
           upstreamRC=(upstreamVersion!=upstreamMainVersion)
 
           if localMainVersion > upstreamMainVersion: # strange: local version is newer
