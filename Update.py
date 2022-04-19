@@ -26,11 +26,11 @@ class UpdateThread(threading.Thread):
 
   def OnUpdate(self, _evt=None):
     lines=[]
-    lines.append(xlt("New version: %s") % adm.updateInfo.release['tag_name'])
+    lines.append(adm.updateInfo.release['name'])
     lines.append(adm.updateInfo.release['body'].replace('\r', ''))
     lines.append(xlt("Please visit the releases website at"))
     lines.append(admVersion.RELEASE_URL)
-    dlg=wx.MessageDialog(self.frame, "\n".join(lines), caption=xlt("Update available"))
+    dlg=wx.MessageDialog(self.frame, "\n".join(lines), caption=xlt("Update available: New version %s") % adm.updateInfo.release['tag_name'])
     dlg.ShowModal()
     
   def run(self):
