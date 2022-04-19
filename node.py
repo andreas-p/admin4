@@ -548,7 +548,11 @@ class ServerNode(Node):
     self.registrationChanged=False
     self.server=self
     self.settings=settings
-    self.address = socket.gethostbyname(self.settings.get('host'))
+    try:
+      self.address = socket.gethostbyname(self.settings.get('host'))
+    except:
+      self.address = self.settings.get('host')
+
     self.user=self.settings.get('user')
     self.port=self.settings.get('port')
     self.needPassword=(self.settings.get('password') != None)
