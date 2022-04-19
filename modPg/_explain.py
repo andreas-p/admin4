@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2013-2014 Andreas Pflug
+# (c) 2013-2022 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -66,7 +66,7 @@ class ExplainShape(wxOgl.BitmapShape):
     
   def OnDraw(self, dc):
     bmp=self.GetBitmap()
-    if not bmp.Ok():
+    if not bmp.IsOk():
       return
     x=int(self.GetX() - bmp.GetWidth()/2)
     y=int(self.GetY() - bmp.GetHeight()/2)
@@ -97,7 +97,7 @@ class ExplainShape(wxOgl.BitmapShape):
   
   @staticmethod
   def Create(level, last, desc):
-    costPos=str.find("(cost=");
+    costPos=desc.find("(cost=");
     if costPos>0:
       descr=desc[0:costPos]
     else:
@@ -160,12 +160,12 @@ class ExplainShape(wxOgl.BitmapShape):
     s.level = level
 
     if costPos > 0:
-      actPos = str.find("(actual")
+      actPos = desc.find("(actual")
       if actPos > 0:
-        s.actual = str[actPos:]
-        s.cost = str[costPos:actPos-costPos]
+        s.actual = desc[actPos:]
+        s.cost = desc[costPos:actPos-costPos]
       else:
-        s.cost = str[costPos:]
+        s.cost = desc[costPos:]
         
     w=50
     h=20
@@ -185,7 +185,7 @@ class ExplainShape(wxOgl.BitmapShape):
       s.kidNo = 0
 
     if costPos > 0:
-      cl=str[costPos+6:-1].split(' ')
+      cl=desc[costPos+6:-1].split(' ')
       costs=cl[0].split('..')
       s.costLow=float(costs[0])
       s.costHigh=float(costs[1])
@@ -215,8 +215,8 @@ class ExplainLine(wxOgl.LineShape):
 
   def OnDraw(self, dc):
     if self._lineControlPoints:
-      dc.SetPen(wx.ThePenList.FindOrCreatePen(wx.BLACK, 1, wx.SOLID))
-      dc.SetBrush(wx.TheBrushList.FindOrCreateBrush(wx.LIGHT_GREY, wx.SOLID))
+      dc.SetPen(wx.BLACK_PEN)
+      dc.SetBrush(wx.LIGHT_GREY_BRUSH)
       p0x,p0y=self.startPoint
       p3x,p3y=self.endPoint
       
@@ -271,21 +271,23 @@ class ExplainCanvas(wxOgl.ShapeCanvas):
     maxLevel=0
     
     while rowset.HasMore():
-      tmp=rowset.Next()[0]
-      self.result.append(tmp)
-      line=tmp.strip()
+      row1=rowset.Next()[0]
+      self.result.append(row1)
+      line=row1.strip()
       
       while True:
         if line.count('(') > line.count(')') and rowset.HasMore():
-          line = "%s %s" % (line, rowset.Next()[0])
+          row=rowset.Next()[0]
+          self.result.append(row)
+          line = "%s %s" % (line, row)
         else:
           break
       
-      level = (len(tmp) - len(line) +4) / 6
+      level = int((len(row1) - len(line) +4) / 6)
 
       if last:
         if level:
-          if line[:4] == "->  ":
+          if line.startswith("->  "):
             line=line[4:]
           else:
             last.condition=line
@@ -341,6 +343,7 @@ class ExplainCanvas(wxOgl.ShapeCanvas):
     h=(self.rootShape.totalShapes * yoffs + y0*2 + PIXPERUNIT - 1) / PIXPERUNIT
 
     self.SetScrollbars(PIXPERUNIT, PIXPERUNIT, w, h)
+    self.SendSizeEvent()
 
 
   def OnMouseMove(self, evt):
