@@ -53,9 +53,9 @@ def getModule(instance):
 
 
 def IsPackaged():
-  if hasattr(sys, 'frozen'):
-    return True
   import version
+  if hasattr(sys, 'frozen') or hasattr(version, 'frozen'):
+    return True
   if hasattr(version, 'standardInstallDir'):
     return version.standardInstallDir == loaddir 
   return False
