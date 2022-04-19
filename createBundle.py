@@ -195,8 +195,10 @@ if __name__ == '__main__':
           else:
             print("PRERELEASE Version:", gitTag)
             f.write("revDirty=False\n")
-          f.write("standardInstallDir='%s'" % standardInstallDir)
-        
+          f.write("standardInstallDir='%s'\n" % standardInstallDir)
+          if installer in ['docker']:
+            f.write("frozen=True\n")
+ 
         return not INSTALLER_DEBUG and repo.is_dirty()
       else:
         print ("No tags found")
