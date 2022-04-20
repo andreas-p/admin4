@@ -1,5 +1,7 @@
-# Admin4
 
+![](Admin4.ico)
+
+# Admin4
 
 Admin4 is a tool for server maintenance via several plugin modules, running on Windows,
 Mac OSX, Linux and many more platforms. Currently, plugins for BIND DNS, LDAP, IMAP 
@@ -29,9 +31,7 @@ The **PostgreSQL** plugin features a nice query tool, a data modification tool
 and an object browser. It's aimed to replace pgAdmin3/pgAdmin4 with a modified feature
 set targeted at professionals. It supports gui editing only for common tasks
 and objects to keep the GUI lean, and emphasizes on features that increase productivity
-like object favorites, sql snippets and filter presets. The PostgreSQL module is still
-work-in-progress: object browsing is currently restricted to displaying
-the most important objects.
+like object favorites, sql snippets and filter presets. 
 
 ## Implementation
 
@@ -40,6 +40,6 @@ wxPython 4.1+
 
 ## Website
 
-http://admin4.org
+https://admin4.org
 
 
