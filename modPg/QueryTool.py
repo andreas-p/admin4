@@ -34,7 +34,7 @@ class SqlResultGrid(Grid):
     self.Bind(wx.grid.EVT_GRID_COL_SIZE, self.OnChangeColSize)
     self.AutoSize()
 
-  def OnChangeColSize(self, evt):
+  def OnChangeColSize(self, _evt):
     adm.config.storeGridPositions(self)
 
     
@@ -446,7 +446,7 @@ class QueryFrame(SqlFrame):
         if errlines[i].startswith("LINE "):
           lineinfo=errlines[i].split(':')[0][5:]
           colinfo=errlines[i+1].find('^')
-          dummy=colinfo
+          _dummy=colinfo
           self.editor.MarkerSet(int(lineinfo)-1 + self.editor.GetSelectOffset())
           break
 

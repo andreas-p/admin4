@@ -763,7 +763,7 @@ class MultiValRecords(SingleValRecords):
 
 
 class HostRecord(adm.CheckedDialog):
-  def __init__(self, wnd, node, name="", unused=None):
+  def __init__(self, wnd, node, name="", _unused=None):
     adm.CheckedDialog.__init__(self, wnd, node)
     self.Hostname=name
     self.Bind("Hostname IpAddress TTL TTL6 CreatePtr")
@@ -1135,7 +1135,7 @@ class CNAMEsPage(zonePage):
 
   def GetDnsType(self):
     return "CNAME"
-  def GetDataType(self, unused):
+  def GetDataType(self, _unused):
     return rdatatype.CNAME
 
   def GetRdata(self, name, _rdtype):
@@ -1180,7 +1180,7 @@ class PTRsPage(zonePage):
 
   def GetDnsType(self):
     return "PTR"
-  def GetDataType(self, unused):
+  def GetDataType(self, _unused):
     return rdatatype.PTR
   
   def GetName(self, idx):

@@ -432,7 +432,7 @@ class ServerConfig(adm.PropertyDialog):
 
 
   @staticmethod
-  def CheckEnabled(unused_node):
+  def CheckEnabled(_unused_node):
     return True # TODO check if available
 
 

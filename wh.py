@@ -612,7 +612,7 @@ class ParamDict(dict):
   def getString(self):
     return " ".join(self.getList())
 
-def restoreSize(unused_name, unused_defSize=None, unused_defPos=None):
+def restoreSize(_unused_name, _unused_defSize=None, _unused_defPos=None):
   size=(600,400)
   pos=(50,50)
   return size,pos

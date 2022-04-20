@@ -80,7 +80,7 @@ class ListView(wx.ListView):
   dlgConstant=None
 
   def __init__(self, parentWin, defaultImageName="", cid=-1, pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.LC_REPORT):
-    unused=style
+    _unused=style
     style=wx.LC_REPORT
     wx.ListView.__init__(self, parentWin, cid, pos, size, style)
     if adm:
@@ -319,7 +319,7 @@ class ListView(wx.ListView):
       
   def OnMouseMove(self, ev):
     if self.getToolTipTextProc:
-      cid, unused_flags=self.HitTest(ev.GetPosition())
+      cid, _unused_flags=self.HitTest(ev.GetPosition())
 
       if cid < 0:
         self.SetToolTip("")

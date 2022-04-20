@@ -13,7 +13,7 @@ class Validator():
   def Get(name):
     return Validator.validators.get(name.lower())
 
-  def __init__(self, ctl, unused_params=None):
+  def __init__(self, ctl, _unused_params=None):
     self.chars=[]
     self.ctl=ctl
 
@@ -83,7 +83,7 @@ class IntValidator(UIntValidator):
 
 
 class MacValidator(Validator):
-  def __init__(self, ctl, unused_params):
+  def __init__(self, ctl, _unused_params):
     Validator.__init__(self, ctl)
     self.len=17
     self.chars="0123456789abcdef"
@@ -119,7 +119,7 @@ class MacValidator(Validator):
 
 
 class TimestampValidator(Validator):
-  def __init__(self, ctl, unused_params):
+  def __init__(self, ctl, _unused_params):
     Validator.__init__(self, ctl)
 
   def getFormat(self):
