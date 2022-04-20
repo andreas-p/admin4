@@ -1,3 +1,9 @@
+Development has moved to https://github.com/andreas-p/admin4, as are the release files.
+
+The following information is deprecated, please visit https://github.com/andreas-p/admin4/releases for the current
+V3 version.
+
+----------------------------------------------------------------------------------------------------------
 For complete packages suitable for your platform, see the Vn.n.n directories. 
 - Windows users: unzip the zip file and move the directory where you like and execute admin4.exe
 - Mac users: mount the dmg and move the app where you like.
