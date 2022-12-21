@@ -104,9 +104,6 @@ class Server(adm.ServerNode):
         UNION  
         SELECT 'version', version()
         UNION
-        SELECT 'lastsysoid', datlastsysoid::text FROM pg_database
-         WHERE datname='%(datname)s'
-        UNION
         SELECT proname, proname FROM pg_proc
          WHERE proname IN ( %(adminprocs)s ) AND pronamespace=11 
         UNION
@@ -129,7 +126,7 @@ class Server(adm.ServerNode):
             parts.append(iq)
       query="\nUNION\n".join(parts)
       self.info=self.connection.GetCursor().ExecuteDict(query)
-
+      #self.info['lastsysoid'] = 15000 # TODO MAGIC! no pg_database.datlastsysoid since V15
       self.adminspace=self.info.get('adminspace')
       fav_table=self.info.get('fav_table')
       if fav_table:
@@ -145,9 +142,6 @@ class Server(adm.ServerNode):
   
   def GetValue(self, name):
     return self.info.get(name)
-  
-  def GetLastSysOid(self):
-    return int(self.info.get('lastsysoid', 0))
   
   def GetLastError(self):
     if self.connection:

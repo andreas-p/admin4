@@ -15,12 +15,14 @@ class Schema(DatabaseObject):
   shortname=xlt("Schema")
   refreshOid="nsp.oid"
   
+  sysNamespaces=['pg_toast', 'pg_catalog', 'information_schema']
+  
   @staticmethod
   def InstancesQuery(parentNode):
     sql=pgQuery("pg_namespace nsp")
     sql.AddCol("nsp.oid, nspacl, nspname as name, pg_get_userbyid(nspowner) AS owner, description")
     sql.AddLeft("pg_description des ON des.objoid=nsp.oid")
-    sql.AddWhere("(nsp.oid=2200 OR nsp.oid > %d)" % parentNode.GetServer().GetLastSysOid())
+    sql.AddWhere("nspname not in (%s)" % ",".join(map(lambda x: "'%s'" % x, Schema.sysNamespaces)))
     sql.AddOrder("nspname")
     return sql
 
@@ -28,8 +30,7 @@ class Schema(DatabaseObject):
   def GetIcon(self):
     icons=[]
     icons.append("Schema")
-    oid=self.GetOid()
-    if oid <= self.GetServer().GetLastSysOid() and oid != 2200:
+    if self.name in self.sysNamespaces:
       icons.append('pg')
     return self.GetImageId(icons)
   
