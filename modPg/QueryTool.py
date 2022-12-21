@@ -76,7 +76,10 @@ class SqlResultGrid(Grid):
         if val == None:
           val=NULLSTRING
         else:
-          val=str(val)
+          if isinstance(val, memoryview):
+            val=val.tobytes().decode(errors='replace')
+          else:
+            val=str(val)
         self.SetCellValue(y, x, val)
         self.SetReadOnly(y,x) 
       y = y+1
