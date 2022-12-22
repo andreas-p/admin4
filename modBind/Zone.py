@@ -282,14 +282,16 @@ class IncrementSerial:
   @staticmethod
   def OnExecute(_parentWin, node):
     now=time.localtime(time.time())
-    new=((now.tm_year*100 + now.tm_mon)*100 + now.tm_mday) *100
-    if node.soa[0].serial < new:
-      node.soa[0].serial = new
-    else:
-      node.soa[0].serial += 1
-
+    serial=((now.tm_year*100 + now.tm_mon)*100 + now.tm_mday) *100
+    s0= node.soa[0]
+    if serial < s0.serial:
+      serial=s0.serial+1
+    
+    soa=Rdataset(node.soa.ttl, s0.rdclass, s0.rdtype, s0.mname, s0.rname, serial,
+               s0.refresh, s0.retry, s0.expire, s0.minimum )
+    
     updater=node.Updater()
-    updater.replace("@", node.soa)
+    updater.replace("@", soa)
 
     msg=node.GetServer().Send(updater)
     if msg.rcode() == rcode.NOERROR:
@@ -605,7 +607,8 @@ class SingleValRecords(Record):
       if self.dataclass in (list, tuple):
         value=removeSmartQuote(value)
         data=shlexSplit(value, ' ')
-#      else:
+      else:
+        logger.error("Save: dataclass not handled: %s", type(self.dataclass))
 #        data=self.dataclass(value)
       if not rds:
         rds=Rdataset(ttl, rdataclass.IN, self.rdtype, data)
