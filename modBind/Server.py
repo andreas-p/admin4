@@ -92,7 +92,6 @@ class Server(adm.ServerNode):
         self.viewzones={}
         self.knownZones=[]
         if self.stats.tag == 'statistics': # 9.10
-          print("STATS", self.stats.attrib['version'])
           statVersion=float('.'.join(self.stats.attrib['version'].split('.')[:2]))
         else: # <9.9
           st=self.stats.find('statistics')
