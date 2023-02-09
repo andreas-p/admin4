@@ -33,6 +33,7 @@ dockerSuffix=""
 
 if __name__ == '__main__':
   import sys, os, platform, time
+  sys.frozen=True
   import shutil, zipfile
   import hashlib
   import version

@@ -6,9 +6,5 @@
 # Licensed under the Apache License,
 # see LICENSE.TXT for conditions of usage
 
-LASTTAG=$(git tag |tail -1)
-tag=${1-latest}
-version=${2-$LASTTAG}
-repo=adminfour/admin4
-
-docker build -t $repo:$tag --build-arg VERSION=$version .
+cd ..
+python3 createBundle.py docker
