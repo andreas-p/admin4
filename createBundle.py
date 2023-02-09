@@ -190,10 +190,10 @@ if __name__ == '__main__':
             f.write("revOriginChange=False\n")
           if not INSTALLER_DEBUG and repo.is_dirty():
             versionTag="tmp"
-            print("RELEASE Version:", gitTag)
+            print("PRERELEASE Version:", gitTag)
             f.write("revDirty=True\n")
           else:
-            print("PRERELEASE Version:", gitTag)
+            print("ERELEASE Version:", gitTag)
             f.write("revDirty=False\n")
           f.write("standardInstallDir='%s'\n" % standardInstallDir)
           if installer in ['docker']:
@@ -344,7 +344,7 @@ if __name__ == '__main__':
       if not '-A' in sys.argv:
         cleanWxDir(libdir)
         # not necessary any more shutil.rmtree('%s/%s.app/Contents/Resources/mpl-data' % (distDir, appName))
- #   elif platform == "Linux":
+  #   elif platform == "Linux":
       
   if installer == 'py2app':
     print ("\nWriting dmg.")
