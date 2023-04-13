@@ -609,7 +609,7 @@ class SingleValRecords(Record):
         data=shlexSplit(value, ' ')
       else:
         logger.error("Save: dataclass not handled: %s", type(self.dataclass))
-#        data=self.dataclass(value)
+        data=self.dataclass(value)
       if not rds:
         rds=Rdataset(ttl, rdataclass.IN, self.rdtype, data)
       else:

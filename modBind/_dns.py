@@ -20,7 +20,7 @@ try:
   import dns.rcode as rcode # @UnusedImport
 except:
   dns=None
-  print("python3-pythondns not present")
+  print("python3-pythondns (dnspython) not present")
 
 import requests
 import xml.etree.cElementTree as xmltree
