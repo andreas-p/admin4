@@ -73,6 +73,6 @@ Help and manual: http://www.admin4.org/docs
 Releases: %s""" % RELEASE_URL
 vendor="PSE"
 vendorDisplay="PSE Consulting"
-copyright="(c) 2013-2022 PSE Consulting Andreas Pflug"
+copyright="(c) 2013-2023 PSE Consulting Andreas Pflug"
 license="Apache License V2.0"
 author="PSE Consulting Andreas Pflug"
