@@ -13,7 +13,7 @@ ignoredirs=['xrced', 'build', 'dist', '_update', 'release', 'docker']
 ignoredfiles=['createBundle.py']
 moreFiles=["LICENSE.TXT", 'CHANGELOG']
 
-requiredMods=['wx.lib.ogl', 'xml']
+requiredMods=['wx.lib.ogl', 'xml', 'chardet']
 appEntry='admin4.py'
 packages=['wx']
 includes=['ast']
