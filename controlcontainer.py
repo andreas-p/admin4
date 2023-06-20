@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2013-2022 Andreas Pflug
+# (c) 2013-2023 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -27,8 +27,8 @@ class MenuOwner(wx.Object):
     super(MenuOwner, self).__init__()
     
   def GetCallArgs(self, proc):
-    args,_1,_2,_3 = inspect.getargspec(proc)
-    return args
+    fargs=inspect.getfullargspec(proc)
+    return fargs.args
 
   def GetMenuProc(self, nid):
     if not hasattr(self, '_menuProcs'):

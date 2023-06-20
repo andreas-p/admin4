@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2013-2022 Andreas Pflug
+# (c) 2013-2023 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -22,7 +22,7 @@ class TreeCtrl(wx.TreeCtrl):
     self.SetImageList(adm.images)
     self.AddRoot(name)
     if wx.Platform != "__WXMSW__":
-      pt=parentWin.GetFont().GetPointSize() * 0.95  # a little smaller
+      pt=int(parentWin.GetFont().GetPointSize() * 0.95 +.5)  # a little smaller
       font=wx.Font(pt, wx.FONTFAMILY_DEFAULT, wx.NORMAL, wx.NORMAL)
 
       self.SetFont(font)
