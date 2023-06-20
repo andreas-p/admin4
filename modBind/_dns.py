@@ -18,6 +18,8 @@ try:
   import dns.rdatatype as rdatatype  # @UnusedImport
   import dns.rdataclass as rdataclass # @UnusedImport
   import dns.rcode as rcode # @UnusedImport
+  if dns.__version__ < '2.3':
+    raise Exception("dnspython too old; minimum 2.3")
 except:
   dns=None
   print("python3-pythondns (dnspython) not present")
