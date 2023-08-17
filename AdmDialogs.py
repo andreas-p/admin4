@@ -26,7 +26,7 @@ class AboutDlg(adm.Dialog):
     pt=stdFont.GetPointSize()
     family=stdFont.GetFamily()
     bigFont=wx.Font(pt*2 , family, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD)
-    mediumFont=wx.Font(pt*1.4, family, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD)
+    mediumFont=wx.Font(int(pt*1.4+.5), family, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD)
     self['Admin'].SetFont(bigFont)
     self['Version'].SetFont(mediumFont)
 
