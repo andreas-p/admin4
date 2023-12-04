@@ -9,11 +9,11 @@ moduleinfo={ 'name': "LDAP Server",
             'modulename': "LDAP",
             'description': "LDAP server",
             'version': "3",
-            'revision': "0.98.0",
+            'revision': "0.98.1",
             'requiredAdmVersion': "3.0.0",
             'testedAdmVersion': "3.0.0",
             'pages': [],
-            'copyright': "(c) 2013-2022 PSE Consulting Andreas Pflug",
+            'copyright': "(c) 2013-2023 PSE Consulting Andreas Pflug",
             'credits': "python-ldap from http://www.python-ldap.org using OpenLdap 2.4 (http://www.openldap.org)",
              }
 

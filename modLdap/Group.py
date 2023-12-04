@@ -112,7 +112,7 @@ class Groups(SpecificEntry):
 
 
   def OnAddGroup(self, evt):
-    groupdns=self.allGroups.keys()
+    groupdns=list(self.allGroups.keys())
     memberList=self['MemberList']
     for row in range(0, memberList.GetItemCount()):
       dn=memberList.GetItemText(row, 1)
