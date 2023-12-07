@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2013-2022 Andreas Pflug
+# (c) 2013-2023 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -18,7 +18,7 @@ class Groups(SpecificEntry):
   name=xlt("Groups")
 
   def __init__(self, dlg, notebook, resname=None):
-    SpecificEntry.__init__(self, dlg, notebook, resname)
+    super().__init__(dlg, notebook, resname)
     self.Bind("AddGroup", self.OnAddGroup)
     self.Bind("DelGroup", self.OnDelGroup)
     self['MemberList'].Bind(wx.EVT_LIST_COL_END_DRAG, self.OnListColResize)
@@ -26,6 +26,7 @@ class Groups(SpecificEntry):
   class GroupInfo:
     def __init__(self, dn, info):
       self.dn=dn
+      self.info=info
       displayname=info.get('displayName')
       if displayname:
         self.name=displayname[0]
