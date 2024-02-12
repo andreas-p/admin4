@@ -127,6 +127,8 @@ def DnsName(*args):
   for arg in args:
     if isinstance(arg, list):
       lst.extend(arg)
+    elif arg == ".":
+      lst.append("")
     else:
       lst.extend(arg.split('.'))
       
