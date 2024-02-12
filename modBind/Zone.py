@@ -1291,7 +1291,7 @@ class OTHERsPage(zonePage):
 pageinfo=[HostsPage, CNAMEsPage, PTRsPage, OTHERsPage]
 nodeinfo= [ 
            { "class": Zone, "parents": ["Server", "Zone"], "sort": 10, "pages": "HostsPage CNAMEsPage OTHERsPage" },
-           { "class": RevZone, "parents": ["Server", "RevZone"], "sort": 20, "pages": "PTRsPage" },
+           { "class": RevZone, "parents": ["Server", "RevZone"], "sort": 20, "pages": "PTRsPage OTHERsPage" },
            ]
 
 menuinfo=[ { 'class': IncrementSerial, 'nodeclasses': [Zone, RevZone], 'sort': 10 },
