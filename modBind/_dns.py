@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2013-2022 Andreas Pflug
+# (c) 2013-2024 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -109,11 +109,11 @@ DnsSupportedAlgorithms={}
 DnsSupportedTypes={}
 
 if dns:
-  for n in dns.tsig.__dict__.keys():
+  for n in dns.tsig.__dict__.keys(): # @noqa
     v=getattr(dns.tsig, n)
     if isinstance(v, Name) and (n.startswith("HMAC") or n.find('TSIG') > 0):
       DnsSupportedAlgorithms[n]=n
-  for n in rdatatype.__dict__.keys():
+  for n in rdatatype.__dict__.keys(): # @noqa
     v=getattr(rdatatype, n)
     if isinstance(v, int) and v and n not in dnsObsoleteTypes + dnsPseudoTypes:
       info=dnsKnownTypes.get(n)

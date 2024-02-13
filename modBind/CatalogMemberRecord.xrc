@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource>
+  <object class="wxDialog" name="CatalogMemberRecord">
+    <title>DNS Record</title>
+    <object class="wxBoxSizer">
+      <orient>wxVERTICAL</orient>
+      <object class="sizeritem">
+        <object class="wxFlexGridSizer">
+          <cols>2</cols>
+          <object class="sizeritem">
+            <object class="wxStaticText" name="RecordNameStatic">
+              <label>Host name</label>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxTextCtrl" name="RecordName">
+              <size>80,-1d</size>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText" name="ValueStatic">
+              <label>Value</label>
+              <pos>5,7d</pos>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxTextCtrl" name="Value">
+              <pos>50,5d</pos>
+              <size>80,-1d</size>
+            </object>
+            <flag>wxGROW</flag>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText">
+              <label>TTL</label>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxTextCtrl" name="TTL">
+              <size>40,-1d</size>
+            </object>
+          </object>
+          <vgap>10</vgap>
+          <hgap>10</hgap>
+          <growablecols>1</growablecols>
+        </object>
+        <flag>wxALL|wxEXPAND|wxGROW</flag>
+        <border>10</border>
+      </object>
+      <object class="sizeritem">
+        <object class="wxBoxSizer">
+          <orient>wxHORIZONTAL</orient>
+          <object class="spacer">
+            <option>1</option>
+            <flag>wxEXPAND</flag>
+          </object>
+          <object class="sizeritem">
+            <object class="wxButton" name="Cancel">
+              <label>Cancel</label>
+              <pos>40,130d</pos>
+              <size>45,-1d</size>
+            </object>
+            <flag>wxRIGHT</flag>
+            <border>10</border>
+          </object>
+          <object class="sizeritem">
+            <object class="wxButton" name="OK">
+              <label>OK</label>
+              <pos>95,130d</pos>
+              <size>45,-1d</size>
+            </object>
+          </object>
+        </object>
+        <option>1</option>
+        <flag>wxTOP|wxBOTTOM|wxRIGHT|wxEXPAND</flag>
+        <border>10</border>
+      </object>
+    </object>
+    <style>wxCAPTION|wxRESIZE_BORDER|wxCLOSE_BOX</style>
+  </object>
+</resource>

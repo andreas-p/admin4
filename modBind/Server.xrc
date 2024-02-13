@@ -56,6 +56,16 @@
           </object>
           <object class="sizeritem">
             <object class="wxStaticText">
+              <label>Catalog Zones</label>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxTextCtrl" name="CatalogZones">
+              <size>80,-1d</size>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText">
               <label>Key name</label>
             </object>
           </object>

@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2013-2022 Andreas Pflug
+# (c) 2013-2024 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -68,6 +68,7 @@ class Server(adm.ServerNode):
          ( xlt("Address"), self.address),
          ( xlt("Port"), self.settings["port"]),
          ( xlt("Stats Port"), self.settings.get("statsport")),
+         ( xlt("Catalog Zones"), self.settings.get("catalogzones")),
          ( xlt("Key name"), self.settings.get("keyname")),
          ( xlt("Autoconnect"), YesNo(self.settings.get('autoconnect'))),
          ]
@@ -166,7 +167,12 @@ class Server(adm.ServerNode):
       self.RefreshVolatile(True)
     return True
   
-  
+  def IsCatalogZone(self, zoneName):
+    for name in self.settings.get("catalogzones", "").split(','):
+      if zoneName == name.strip():
+        return True
+    return False
+
   def GetZone(self, zone):
     frame=adm.StartWaiting()
     try:
@@ -213,12 +219,12 @@ class Server(adm.ServerNode):
     
       
   class Dlg(adm.ServerPropertyDialog):
-    adm.ServerPropertyDialog.keyvals.extend( [ 'algorithm', 'statsport', 'keyname', 'timeout' ] )
+    adm.ServerPropertyDialog.keyvals.extend( [ 'algorithm', 'catalogzones', 'statsport', 'keyname', 'timeout' ] )
 
     def __init__(self, parentWin, node):
       adm.PropertyDialog.__init__(self, parentWin, node, None)
       self['Algorithm'].Append( DnsSupportedAlgorithms )
-      self.Bind("HostName HostAddress Port Password Algorithm Autoconnect StatsPort Keyname Timeout")
+      self.Bind("HostName HostAddress Port Password Algorithm Autoconnect StatsPort CatalogZones Keyname Timeout")
 
 
     def Go(self):

@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2013-2022 Andreas Pflug
+# (c) 2013-2024 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -40,7 +40,8 @@ class Zone(adm.Node):
         instances.append(Zone(parentNode, zone))
     else:
       for zone in parentNode.GetServer().GetSubzones(parentNode):
-        instances.append(Zone(parentNode, zone))
+        if not parentNode.GetServer().IsCatalogZone(zone):
+          instances.append(Zone(parentNode, zone))
     return instances
   
   def MayHaveChildren(self):
@@ -116,6 +117,8 @@ class Zone(adm.Node):
           self.AddChildrenProperty(map(lambda x: "%(mx)s  (priority %(prio)d)" % {'prio': x.preference, 'mx': str(x.exchange) }, self.mx), "MX Records", -1)
         if isinstance(self, RevZone):
           self.AddProperty(xlt("PTR record count"), len(self.ptrs), -1)
+        elif isinstance(self, CatalogZone):
+          self.AddProperty(xlt("Member zone record count"), len(self.ptrs), -1)
         else:
           self.AddProperty(xlt("Host record count"), len(self.hosts4)+len(self.hosts6), -1)
           self.AddProperty(xlt("CNAME record count"), len(self.cnames), -1)
@@ -133,7 +136,28 @@ class Zone(adm.Node):
     return adm.config.Write("Zones/%s" % self.GetServer().name, val, self, self.name)
 
 
-       
+
+class CatalogZone(Zone):
+  typename=xlt("Catalog DNS Zone")
+  shortname=xlt("Catalog Zone")
+
+  def __init__(self, parentNode, name):
+    super().__init__(parentNode, name)
+    self.partialZonename=self.zonename
+
+  @staticmethod 
+  def GetInstances(parentNode):
+    instances=[]
+      
+    if parentNode.zones:
+      for zone in parentNode.zones:
+        instances.append(Zone(parentNode, zone))
+    else:
+      for zone in parentNode.GetServer().GetSubzones(parentNode):
+        if parentNode.GetServer().IsCatalogZone(zone):
+          instances.append(CatalogZone(parentNode, zone))
+    return instances
+
 
 class RevZone(Zone):
   typename=xlt("Reverse DNS Zone")
@@ -1170,10 +1194,9 @@ class CNAMEsPage(zonePage):
 
       self.restoreLastItem()
 
-       
-      
-class PTRsPage(zonePage):
-  name=xlt("PTR")
+
+  
+class _PTRsPage(zonePage):
   order=1
   menus=[PageNewRecord, PageEditRecord, PageDeleteRecord]
 
@@ -1186,17 +1209,21 @@ class PTRsPage(zonePage):
   def GetDataType(self, _unused):
     return rdatatype.PTR
   
-  def GetName(self, idx):
-    name=self.control.GetItemText(idx, 0)
-    addr=(DnsRevName(name).to_text())[:-len(self.lastNode.partialZonename)-2]
-    return addr
   
   def GetRdata(self, name, _rdtype):
     return self.lastNode.ptrs.get(name)
   
   def SetRdata(self, name, _rdtype, data):
     self.lastNode.ptrs[name] = data
+
   
+class PTRsRevPage(_PTRsPage):
+  name=xlt("PTR")
+  def GetName(self, idx):
+    name=self.control.GetItemText(idx, 0)
+    addr=(DnsRevName(name).to_text())[:-len(self.lastNode.partialZonename)-2]
+    return addr
+
   def Delete(self, parentWin, names, _types):
     ptrs=[]
     for n in names:
@@ -1288,10 +1315,85 @@ class OTHERsPage(zonePage):
             dnstype=""
       self.restoreLastItem()
 
-pageinfo=[HostsPage, CNAMEsPage, PTRsPage, OTHERsPage]
+
+
+class CatalogMemberRecord(SingleValRecord):
+  def wurst__init__(self, wnd, node, name="", rdtype=None):
+    adm.CheckedDialog.__init__(self, wnd, node)
+    self.rdtype=rdatatype.PTR
+    self.RecordName=name
+    self.Bind("Recordname Value TTL")
+    
+  def Go(self):
+    super().Go()
+    self.RecordNameStatic = xlt("Unique Label")
+    self.ValueStatic=xlt("Member Zone")
+
+  def Save(self):
+    ttl=int(timeToFloat(self.TTL))
+    data=self.dataclass(self.Value.strip())
+    rds=Rdataset(ttl, rdataclass.IN, self.rdtype, data)
+
+    if not self.RecordName.endswith(".zones"):
+      self.RecordName =f"{self.RecordName.lower()}.zones"
+    return self._save(rds)
+
+
+class CatalogMemberPage(_PTRsPage):
+  name=xlt("Member Zones")
+  menus=[PageNewRecord, PageDeleteRecord]
+ 
+  def Display(self, node, _detached):
+    if not node or node != self.lastNode:
+      self.storeLastItem()
+      
+      if not self.prepare(node):
+        return
+      node=self.lastNode
+      self.control.AddColumn(xlt("Unique Label"), 10)
+      self.control.AddColumn(xlt("Member Zone"), 30)
+      self.control.AddColumn(xlt("TTL"), 5)
+      self.RestoreListcols()
+
+      icon=node.GetImageId('ptr')
+      
+      for ptr in node.ptrs.keys():
+        rds=node.ptrs[ptr]
+        self.control.AppendItem(icon, [ptr, rds[0].target, floatToTime(rds.ttl, -1)])
+      
+      self.restoreLastItem()
+
+  def Delete(self, parentWin, names, _types):
+    return zonePage.Delete(self, parentWin, names, rdatatype.PTR)
+
+  @staticmethod
+  def EditDialog(_rdtype):
+    return CatalogMemberRecord
+
+
+
+class CatalogHostRecord(HostRecord):
+  def __init__(self, wnd, node, name="", _unused=None):
+    adm.CheckedDialog.__init__(self, wnd, node)
+    self.Hostname=name
+    self.Bind("Hostname IpAddress TTL TTL6")
+    self.CreatePtr=False
+
+class CatalogHostPage(HostsPage):       
+  name=xlt("Primaries")
+  menus=[PageNewRecord, PageEditRecord, PageDeleteRecord]
+
+  @staticmethod
+  def EditDialog(_rdtype):
+    return CatalogHostRecord
+    
+
+
+pageinfo=[HostsPage, CNAMEsPage, PTRsRevPage, CatalogMemberPage, CatalogHostPage, OTHERsPage]
 nodeinfo= [ 
+           { "class": CatalogZone, "parents": ["Server", "Zone", "CatalogZone"], "sort": 5, "pages": "CatalogMemberPage CatalogHostPage OTHERsPage" },
            { "class": Zone, "parents": ["Server", "Zone"], "sort": 10, "pages": "HostsPage CNAMEsPage OTHERsPage" },
-           { "class": RevZone, "parents": ["Server", "RevZone"], "sort": 20, "pages": "PTRsPage OTHERsPage" },
+           { "class": RevZone, "parents": ["Server", "RevZone"], "sort": 20, "pages": "PTRsRevPage OTHERsPage" },
            ]
 
 menuinfo=[ { 'class': IncrementSerial, 'nodeclasses': [Zone, RevZone], 'sort': 10 },
