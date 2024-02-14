@@ -10,9 +10,10 @@ import time
 from Validator import Validator
 from wh import xlt, floatToTime, timeToFloat, Menu, shlexSplit, removeSmartQuote,\
   quoteIfNeeded
-from ._dns import Rdataset, Rdata, RdataClass, rdatatype, rdataclass, rcode
+from ._dns import Rdataset, Rdata, RdataClass, rdatatype, rdataclass, rcode, DnsEnum
 from ._dns import Name, DnsName, DnsAbsName, DnsRevName, DnsRevAddress, DnsSupportedTypes, checkIpAddress
 from .Server import Server
+from base64 import standard_b64decode, standard_b64encode
 
 prioTypes=['MX', 'NS', 'SRV', 'TXT']
 individualTypes=['A', 'AAAA', 'CNAME', 'PTR']
@@ -704,9 +705,10 @@ class MultiValRecords(SingleValRecords):
     self.RecordNameStatic = typestr
 
     self.slots=rds[0].__slots__
-    self.slotvals=[]
+    self.slotValSamples=[]
     for slot in self.slots:
-      self.slotvals.append(eval("rds[0].%s" % slot))
+      self.slotValSamples.append(eval("rds[0].%s" % slot))
+
       
     self.grid.CreateGrid(1, len(self.slots))
     self.grid.SetRowLabelSize(0)
@@ -714,7 +716,7 @@ class MultiValRecords(SingleValRecords):
       self.grid.SetColLabelValue(col, self.slots[col].capitalize())
       self.grid.AutoSizeColLabelSize(col)
       colsize=self.grid.GetColSize(col)
-      if isinstance(self.slotvals[col], int):
+      if isinstance(self.slotValSamples[col], int):
         minwidth, _h=self.grid.GetTextExtent("99999")
         self.grid.SetColFormatNumber(col)
       else:
@@ -731,6 +733,11 @@ class MultiValRecords(SingleValRecords):
           val=eval("_rd.%s" % self.slots[col])
           if isinstance(val, list):
             val=" ".join(val)
+          elif isinstance(val, DnsEnum.IntEnum):
+            val=int(val)
+          elif isinstance(val, bytes):
+            val=standard_b64encode(val).decode()
+
           self.grid.SetCellValue(row, col, str(val))
         self.grid.AppendRows(1)
         row += 1
@@ -760,7 +767,7 @@ class MultiValRecords(SingleValRecords):
         val=self.grid.GetCellValue(row, col).strip()
         if val:
           vals.append(val)
-      ok=self.CheckValid(ok, len(vals) == len(self.slotvals), xlt("Enter all values in row %d" % (row+1)))
+      ok=self.CheckValid(ok, len(vals) == len(self.slotValSamples), xlt("Enter all values in row %d" % (row+1)))
     return ok
   
   
@@ -773,12 +780,18 @@ class MultiValRecords(SingleValRecords):
       vals=[]
       for col in range(self.grid.GetNumberCols()):
         val=self.grid.GetCellValue(row, col).strip()
-        coltype=type(self.slotvals[col])
-        if coltype == Name:
+        sv=self.slotValSamples[col]
+
+        if isinstance(sv, Name):
           vals.append(DnsName(val))
-        elif coltype == list:
+        elif isinstance(sv, list):
           vals.append(val.split(' '))
+        elif isinstance(sv, DnsEnum.IntEnum):
+          vals.append(int(val))
+        elif isinstance(sv, bytes):
+          vals.append(standard_b64decode(val))
         else:
+          coltype=type(sv)
           vals.append(coltype(val))
         
       if not rds:
@@ -1303,12 +1316,19 @@ class OTHERsPage(zonePage):
             values=[]
             for slot in rd.__slots__:
               value=eval("rd.%s" % slot)
-              if isinstance(value, (list, tuple)):
-                if len(value) > 1:
-                  logger.debug("Value list dimensions > 1: %s", str(value))
-                value=" ".join(map(lambda x: x.decode(), value))
-                
-              values.append("%s=%s" % (slot, value))
+              if not isinstance(value, (list, tuple)):
+                value=[value]
+              if len(value) > 1:
+                logger.debug("Value list dimensions > 1: %s", str(value))
+              vl=[]
+              for v in value:
+                if isinstance(v, bytes):
+                  v=standard_b64encode(v)
+                if hasattr(v, 'decode'):
+                  vl.append(v.decode())
+                else:
+                  vl.append(str(v))
+              values.append(f"{slot}={' '.join(vl)}")
             self.control.AppendItem(icon, [name, dnstype, ", ".join(values), floatToTime(rds.ttl, -1)])
             icon=0
             name=""

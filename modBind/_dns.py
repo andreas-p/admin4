@@ -11,6 +11,7 @@
 try:
   import dns.query, dns.update, dns.message, dns.resolver, dns.tokenizer
   import dns.zone, dns.reversename, dns.tsig
+  import dns.enum
   from dns.name import Name
   import dns.ipv4, dns.ipv6
   import dns.rdata, dns.rdataset
@@ -29,6 +30,7 @@ import xml.etree.cElementTree as xmltree
 import logger
 
 
+DnsEnum=dns.enum
 # https://en.wikipedia.org/wiki/List_of_DNS_record_types
 # https://www.ionos.de/digitalguide/hosting/hosting-technik/dns-records/
 dnsKnownTypes= {
