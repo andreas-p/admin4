@@ -18,6 +18,8 @@ from base64 import standard_b64decode, standard_b64encode
 prioTypes=['MX', 'NS', 'SRV', 'TXT']
 individualTypes=['A', 'AAAA', 'CNAME', 'PTR']
 
+def admSetError(location, msg):
+  adm.SetStatus(xlt("DNS %s failed: %s") % (location, rcode.to_text(msg.rcode())))
     
 class Zone(adm.Node):
   typename=xlt("DNS Zone")
@@ -44,7 +46,7 @@ class Zone(adm.Node):
         if not parentNode.GetServer().IsCatalogZone(zone):
           instances.append(Zone(parentNode, zone))
     return instances
-  
+
   def MayHaveChildren(self):
     if self.zones:
       return True
@@ -322,7 +324,7 @@ class IncrementSerial:
     if msg.rcode() == rcode.NOERROR:
       wx.MessageBox(xlt("Incremented SOA serial number to %d") % node.soa[0].serial, xlt("New SOA serial number"))
     else:
-      adm.SetStatus(xlt("DNS update failed: %s") % rcode.to_text(msg.rcode()))
+      admSetError("update", msg)
       
     return True
   
@@ -530,6 +532,9 @@ class Record(adm.CheckedDialog):
         
     ok=self.CheckValid(ok, timeToFloat(self.TTL), xlt("Please enter valid TTL value"))
     return ok
+
+  def SetError(self, msg):
+    self.node.GetServer().lastError=xlt("DNS update failed: %s") % rcode.to_text(msg.rcode())
   
   
 class SingleValRecords(Record):
@@ -584,7 +589,7 @@ class SingleValRecords(Record):
       self.page.Display(None, False)
       return True
     else:
-      self.SetStatus(xlt("DNS update failed: %s") % rcode.to_text(msg.rcode()))
+      self.SetError(msg)
       return False
 
   def Check(self):
@@ -885,7 +890,7 @@ class HostRecord(adm.CheckedDialog):
       updater.add(name, h6)
     msg=self.node.GetServer().Send(updater)
     if msg.rcode() != rcode.NOERROR:
-      self.SetStatus(xlt("DNS update failed: %s") % rcode.to_text(msg.rcode()))
+      self.SetError(msg)
       return False
     self.node.hosts4[name] = h4
     self.node.hosts6[name] = h6
@@ -1014,7 +1019,8 @@ class zonePage(adm.NotebookPage):
 
     msg=node.GetServer().Send(updater)
     if msg.rcode() != rcode.NOERROR:
-      self.SetStatus(xlt("DNS delete failed: %s") % rcode.to_text(msg.rcode()))
+      admSetError("delete", msg)
+
       return False
     for i in range(len(names)):
       name=names[i]
@@ -1063,7 +1069,7 @@ class HostsPage(zonePage):
         updater.delete(name, "AAAA")
     msg=node.GetServer().Send(updater)
     if msg.rcode() != rcode.NOERROR:
-      adm.SetStatus(xlt("DNS delete failed: %s") % rcode.to_text(msg.rcode()))
+      admSetError("delete", msg)
       return False
     for name in names:
       if name in node.hosts4:
