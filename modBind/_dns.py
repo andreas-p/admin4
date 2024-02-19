@@ -107,6 +107,15 @@ dnsPseudoTypes= [
   'AXFR', 'IXFR', 'OPT', 'ANY'
   ]
 
+dnsEmptyPreset={'APL': "1:127.0.0.1/32", 
+             'CDNSKEY': "TODO",
+             'CDS': "TODO",
+             'CERT': "TODO",
+             'CSYNC': "TODO",
+             'DHCID': "TODO"
+             # and probably more... 
+             }
+
 DnsSupportedAlgorithms={}
 DnsSupportedTypes={}
 
@@ -156,8 +165,13 @@ def Rdata(dset, *args):
   cls=RdataClass(dset.rdclass, dset.rdtype)
   return cls(dset.rdclass, dset.rdtype, *args)
 
+
 def RdataEmpty(dset):
   cls=RdataClass(dset.rdclass, dset.rdtype)
+  preset=dnsEmptyPreset.get(dset.rdtype.name)
+  if preset:
+    return cls.from_text(dset.rdclass, dset.rdtype, dns.tokenizer.Tokenizer(preset))
+    
   zero=[]
   for _slot in cls.__slots__:
     zero.append("0")
