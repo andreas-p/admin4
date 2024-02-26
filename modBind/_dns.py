@@ -108,12 +108,7 @@ dnsPseudoTypes= [
   ]
 
 dnsEmptyPreset={'APL': "1:127.0.0.1/32", 
-             'CDNSKEY': "TODO",
-             'CDS': "TODO",
-             'CERT': "TODO",
-             'CSYNC': "TODO",
-             'DHCID': "TODO"
-             # and probably more... 
+             # many more...
              }
 
 DnsSupportedAlgorithms={}

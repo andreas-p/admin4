@@ -13,10 +13,11 @@ from wh import xlt, floatToTime, timeToFloat, Menu, shlexSplit, removeSmartQuote
 from ._dns import Rdataset, Rdata, RdataClass, rdatatype, rdataclass, rcode, DnsEnum
 from ._dns import Name, DnsName, DnsAbsName, DnsRevName, DnsRevAddress, DnsSupportedTypes, checkIpAddress
 from .Server import Server
-from base64 import standard_b64decode, standard_b64encode
 
-prioTypes=['MX', 'NS', 'SRV', 'TXT']
+
 individualTypes=['A', 'AAAA', 'CNAME', 'PTR']
+otherTypes=['MX', 'NS', 'SRV', 'TXT', 'SOA', 'SPF']
+noDeleteTypes=['SOA']
 
 def admSetError(location, msg):
   adm.SetStatus(xlt("DNS %s failed: %s") % (location, rcode.to_text(msg.rcode())))
@@ -322,7 +323,7 @@ class IncrementSerial:
 
     msg=node.GetServer().Send(updater)
     if msg.rcode() == rcode.NOERROR:
-      wx.MessageBox(xlt("Incremented SOA serial number to %d") % node.soa[0].serial, xlt("New SOA serial number"))
+      wx.MessageBox(xlt("Incremented SOA serial number to %d") % serial, xlt("New SOA serial number"))
     else:
       admSetError("update", msg)
       
@@ -389,7 +390,14 @@ class PageEditRecord:
   def CheckEnabled(page):
     ids=page.control.GetSelection()
     return len(ids) == 1
-    
+
+  @staticmethod
+  def CheckAvailableOn(page):
+    idx=page.control.GetSelection()[0]
+    rdtype=page.GetDataType(idx)
+    typestr=rdatatype.to_text(rdtype)
+    return typestr in otherTypes
+   
   @staticmethod
   def OnExecute(parentWin, page):
     idx=page.control.GetSelection()[0]
@@ -399,6 +407,9 @@ class PageEditRecord:
         break
       idx -= 1
     rdtype=page.GetDataType(idx)
+    typestr=rdatatype.to_text(rdtype)
+    if typestr not in otherTypes and typestr not in individualTypes:
+      return
     dlg=page.EditDialog(rdtype)(parentWin, page.lastNode, name, rdtype)
     dlg.page=page
     if dlg.GoModal():
@@ -422,15 +433,17 @@ class PageNewAskRecord:
   name=xlt("New")
   help=xlt("New Record")
   
+  
+  
   @staticmethod
   def OnExecute(parentWin, page):
     rdtype=None
     rtypes=[]
-    for ptype in prioTypes:
+    for ptype in otherTypes:
       rtypes.append("%s - %s" % (ptype, DnsSupportedTypes[ptype]))
-    for ptype in sorted(DnsSupportedTypes.keys()):
-      if ptype not in prioTypes and ptype not in individualTypes:
-        rtypes.append("%s - %s" % (ptype, DnsSupportedTypes[ptype]))
+#    for ptype in sorted(DnsSupportedTypes.keys()):
+#      if ptype not in prioTypes and ptype not in individualTypes:
+#        rtypes.append("%s - %s" % (ptype, DnsSupportedTypes[ptype]))
       
     dlg=wx.SingleChoiceDialog(parentWin, xlt("record type"), "Select record type", rtypes)
     if dlg.ShowModal() == wx.ID_OK:
@@ -449,6 +462,13 @@ class PageDeleteRecord:
     ids=page.control.GetSelection()
     return len(ids) >0
     
+  @staticmethod
+  def CheckAvailableOn(page):
+    idx=page.control.GetSelection()[0]
+    rdtype=page.GetDataType(idx)
+    typestr=rdatatype.to_text(rdtype)
+    return typestr not in noDeleteTypes
+  
   @staticmethod
   def OnExecute(parentWin, page):
     ids=page.control.GetSelection()
@@ -741,8 +761,11 @@ class MultiValRecords(SingleValRecords):
           elif isinstance(val, DnsEnum.IntEnum):
             val=int(val)
           elif isinstance(val, bytes):
-            val=standard_b64encode(val).decode()
-
+            try:
+              val=val.decode()
+            except:
+              val=xlt("binary data")
+              
           self.grid.SetCellValue(row, col, str(val))
         self.grid.AppendRows(1)
         row += 1
@@ -794,7 +817,11 @@ class MultiValRecords(SingleValRecords):
         elif isinstance(sv, DnsEnum.IntEnum):
           vals.append(int(val))
         elif isinstance(sv, bytes):
-          vals.append(standard_b64decode(val))
+          try:
+            val=val.encode()
+          except:
+            val=xlt("binary data")
+          vals.append(val)
         else:
           coltype=type(sv)
           vals.append(coltype(val))
@@ -1328,12 +1355,12 @@ class OTHERsPage(zonePage):
                 logger.debug("Value list dimensions > 1: %s", str(value))
               vl=[]
               for v in value:
-                if isinstance(v, bytes):
-                  v=standard_b64encode(v)
-                if hasattr(v, 'decode'):
-                  vl.append(v.decode())
-                else:
-                  vl.append(str(v))
+                try:
+                  v=v.decode()
+                except: 
+                  if isinstance(v, bytes):
+                    v=standard_b64encode(v).decode()
+                vl.append(str(v))
               values.append(f"{slot}={' '.join(vl)}")
             self.control.AppendItem(icon, [name, dnstype, ", ".join(values), floatToTime(rds.ttl, -1)])
             icon=0
