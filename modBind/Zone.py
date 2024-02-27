@@ -16,7 +16,7 @@ from .Server import Server
 
 
 individualTypes=['A', 'AAAA', 'CNAME', 'PTR']
-otherTypes=['MX', 'NS', 'SRV', 'TXT', 'SOA', 'SPF']
+otherTypes=['MX', 'NS', 'SRV', 'TXT', 'SOA', 'SPF', 'CAA']
 noDeleteTypes=['SOA']
 
 def admSetError(location, msg):
