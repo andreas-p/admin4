@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2013-2022 Andreas Pflug
+# (c) 2013-2025 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -12,11 +12,11 @@ class Database(ServerObject):
   typename=xlt("Database")
   shortname=xlt("Database")
 
-  sysDatabases="'template0'"
+  sysDatabases="'template0','template1'"
   @staticmethod
   def GetInstances(parentNode):
     instances=[]
-    params={'sysrestr': " WHERE (d.oid > 100 and datname not in (%s) )" % Database.sysDatabases }
+    params={'sysrestr': " WHERE datname not in (%s)" % Database.sysDatabases }
     rowset=parentNode.GetCursor().ExecuteSet("""
       SELECT d.*, pg_encoding_to_char(encoding) AS pgencoding, pg_get_userbyid(datdba) AS dbowner, spcname, d.oid, description
         FROM pg_database d
