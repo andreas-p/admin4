@@ -136,6 +136,8 @@ class Server(adm.ServerNode):
 
   
   def GetConnectableDbs(self):
+    return self.GetCursor().ExecuteList("SELECT datname FROM pg_database WHERE datallowconn ORDER BY oid")
+    # do not cache this any more
     if not self.connectableDbs:
       self.connectableDbs=self.GetCursor().ExecuteList("SELECT datname FROM pg_database WHERE datallowconn ORDER BY oid")
     return self.connectableDbs
