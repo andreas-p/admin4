@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2013-2022 Andreas Pflug
+# (c) 2013-2025 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -95,7 +95,6 @@ class View(SchemaObject):
   def IsMaterialized(self):
     return self.info['relkind'] == 'm'
 
-    
 nodeinfo= [ { "class" : View, "parents": ["Schema"], "sort": 30, "collection": "Views", "pages": ["SqlPage"] } ]    
 
 
