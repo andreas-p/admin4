@@ -194,7 +194,7 @@ if __name__ == '__main__':
             print("PRERELEASE Version:", gitTag)
             f.write("revDirty=True\n")
           else:
-            print("ERELEASE Version:", gitTag)
+            print("RELEASE Version:", gitTag)
             f.write("revDirty=False\n")
           f.write("standardInstallDir='%s'\n" % standardInstallDir)
           if installer in ['docker']:
