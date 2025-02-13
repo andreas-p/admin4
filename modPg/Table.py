@@ -191,9 +191,8 @@ class Table(SchemaObject):
           info.append("(%s)" % ",".join(c))
           constraints.append(" ".join(info) + ";")
         elif constraint['type'] == 'foreignkey':
-          info=["ALTER TABLE " + self.NameSql() + "\n  ADD CONSTRAINT "]
-          info.append(constraint['fullname'])
-          info.append("REFERENCES " + quoteIdent(constraint['reftable']))
+          info=[f"ALTER TABLE {self.NameSql()} ADD CONSTRAINT {constraint['fullname']}"]
+          info.append(f"\n  FOREIGN KEY ({','.join(constraint['colnames'])}) REFERENCES {quoteIdent(constraint['reftable'])}")
           info.append("(%s)" % ",".join(map(quoteIdent, constraint['refcolnames'])))
           constraints.append(" ".join(info) +";")
         elif constraint['type'] == 'check':
@@ -642,7 +641,6 @@ class RowCount:
   def OnExecute(_parentWin, node):
     node.rowcount=node.ExecuteSingle("SELECT COUNT(1) FROM ONLY %s" % node.NameSql())
     return True
-
 
 menuinfo = [ 
             { "class" : RowCount, "nodeclasses" : Table, 'sort': 80 },
