@@ -268,8 +268,6 @@ def main(argv):
     adm.appname=an
 
   sys.excepthook=LoggerExceptionHook
-  if wx.VERSION < (2,9):
-    logger.debug("Using old wxPython version %s", wx.version())
   modules=[]
 
   if sys.platform == "darwin":    macOpt="p"
