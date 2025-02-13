@@ -1,12 +1,12 @@
 # The Admin4 Project
-# (c) 2013-2022 Andreas Pflug
+# (c) 2013-2025 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
 
 
 import wx.xrc as xrc
-import os, imp
+import os, importlib
 
 xmlControlList={}
 
@@ -16,13 +16,15 @@ def init(loaddir):
   for name in names:
     path="%s/%s" % (loaddir, name)
     if os.path.isdir(path):
-      init(path)
+      pass
+      # do not scan for CTL sources everywhere
+      # If necessary, restrict to modXXX 
+      #init(path)
     elif name.startswith("ctl_") and name.endswith( (".py", ".pyc")):
       name=name[:name.rfind('.')]
       if name not in found:
         found.append(name)
-        f, pn, description=imp.find_module(name, [loaddir])
-        mod=imp.load_module(name, f, pn, description)
+        mod=importlib.import_module(name, loaddir)
         xmlControlList.update(mod.xmlControlList)
     
 
