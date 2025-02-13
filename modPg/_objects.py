@@ -10,17 +10,21 @@ from ._pgsql import quoteIdent, quoteValue
 from wh import shlexSplit
 
 rightString={'r': "SELECT",
-             'w': "UPDATE",
              'a': "INSERT",
+             'w': "UPDATE",
              'd': "DELETE",
              'D': "TRUNCATE",
              'x': "REFERENCES",
              't': "TRIGGER",
-             'X': "EXECUTE",
-             'U': "USAGE",
              'C': "CREATE",
              'c': "CONNECT",
-             'T': "TEMPORARY" }
+             'T': "TEMPORARY",
+             'X': "EXECUTE",
+             'U': "USAGE",
+             's': "SET",
+             'A': "ALTER SYSTEM",
+             'm': "MAINTAIN"
+              }
 
 class ServerObject(Node):
   def __init__(self, parentNode, name):
