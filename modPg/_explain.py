@@ -73,8 +73,8 @@ class ExplainShape(wxOgl.BitmapShape):
     dc.DrawBitmap(bmp, x, y, True)
     dc.SetFont(self.GetCanvas().GetFont())
     w,_h=dc.GetTextExtent(self.label)
-    x=self.GetX() - w/2
-    y += bmp.GetHeight() + BMP_BORDER
+    x=int(self.GetX() - w/2 + .5)
+    y=int(y + bmp.GetHeight() + BMP_BORDER + .5)
     dc.DrawText(self.label, x, y)
       
   def GetStartPoint(self):
@@ -93,7 +93,9 @@ class ExplainShape(wxOgl.BitmapShape):
                         
   
   def OnLeftClick(self, _x, _y, _keys, _attachment):
-    self.GetCanvas().ShowPopup(self)
+    # not implemented?
+    # self.GetCanvas().ShowPopup(self)
+    pass
   
   @staticmethod
   def Create(level, last, desc):
@@ -339,8 +341,8 @@ class ExplainCanvas(wxOgl.ShapeCanvas):
         s.SetY(y0)
 
     PIXPERUNIT=20
-    w=(maxLevel * xoffs + x0*2 + PIXPERUNIT - 1) / PIXPERUNIT
-    h=(self.rootShape.totalShapes * yoffs + y0*2 + PIXPERUNIT - 1) / PIXPERUNIT
+    w=int((maxLevel * xoffs + x0*2 + PIXPERUNIT - 1) / PIXPERUNIT +.5)
+    h=int((self.rootShape.totalShapes * yoffs + y0*2 + PIXPERUNIT - 1) / PIXPERUNIT +.5)
 
     self.SetScrollbars(PIXPERUNIT, PIXPERUNIT, w, h)
     self.SendSizeEvent()

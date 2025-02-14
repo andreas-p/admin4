@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2013-2022 Andreas Pflug
+# (c) 2013-2025 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -29,7 +29,7 @@ class SqlResultGrid(Grid):
     pt=parent.GetFont().GetPointSize()
     if wx.Platform != "__WXMSW__":
       pt *= 0.95  # a little smaller
-    font=wx.Font(pt, wx.FONTFAMILY_TELETYPE, wx.NORMAL, wx.NORMAL)
+    font=wx.Font(int(pt+.5), wx.FONTFAMILY_TELETYPE, wx.NORMAL, wx.NORMAL)
     self.SetDefaultCellFont(font)
     self.Bind(wx.grid.EVT_GRID_COL_SIZE, self.OnChangeColSize)
     self.AutoSize()
