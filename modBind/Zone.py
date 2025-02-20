@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2013-2024 Andreas Pflug
+# (c) 2013-2025 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -393,8 +393,9 @@ class PageEditRecord:
 
   @staticmethod
   def CheckAvailableOn(page):
-    idx=page.control.GetSelection()[0]
-    rdtype=page.GetDataType(idx)
+    sel=page.control.GetSelection()
+    if not sel: return False
+    rdtype=page.GetDataType(sel[0])
     typestr=rdatatype.to_text(rdtype)
     return typestr in otherTypes
    
@@ -464,8 +465,9 @@ class PageDeleteRecord:
     
   @staticmethod
   def CheckAvailableOn(page):
-    idx=page.control.GetSelection()[0]
-    rdtype=page.GetDataType(idx)
+    sel=page.control.GetSelection()
+    if not sel: return False
+    rdtype=page.GetDataType(sel[0])
     typestr=rdatatype.to_text(rdtype)
     return typestr not in noDeleteTypes
   
