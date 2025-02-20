@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2013-2022 Andreas Pflug
+# (c) 2013-2025 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -75,7 +75,9 @@ class Frame(wx.Frame, adm.MenuOwner):
     elif isinstance(icon, StringType):
       icon=GetIcon(icon, mod)
     if isinstance(icon, wx.Bitmap):
-      icon=wx.Icon.FromBitmap(icon)
+      ic=wx.Icon()
+      ic.CopyFromBitmap(icon)
+      icon=ic
     if icon:      
       wx.Frame.SetIcon(self, icon)
       return True
