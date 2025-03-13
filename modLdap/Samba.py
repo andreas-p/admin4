@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2013-2022 Andreas Pflug
+# (c) 2013-2025 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -128,7 +128,7 @@ SpecificEntry.AddClass(SambaComputer)
 Entry.addNewEntryClass(SambaComputer)
 
 class SambaAccount(SpecificEntry, _SambaRidObject):
-  name=xlt("Samba")
+  name=xlt("Samba Account")
 
   def __init__(self, dlg, notebook, resname=None):
     SpecificEntry.__init__(self, dlg, notebook, resname)
@@ -295,7 +295,7 @@ smbGroupTypes={
   }
 
 class SambaGroupMapping(SpecificEntry, _SambaRidObject):
-  name=xlt("Samba")
+  name=xlt("Samba Group")
   canClasses="sambaGroupMapping"
 
   def __init__(self, dlg, notebook, resname=None):

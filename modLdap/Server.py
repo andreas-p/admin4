@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2013-2022 Andreas Pflug
+# (c) 2013-2025 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -29,6 +29,7 @@ class Server(adm.ServerNode):
 
   panelClassDefault={
     'UserAccount': "UserAccount SambaAccount ShadowAccount Personal Contact Groups",
+    'SambaGroupMapping': "Group SambaGroupMapping",
     'Group': "Group SambaGroupMapping",
     'SambaDomain': "SambaDomain",
     }    

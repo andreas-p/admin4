@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2013-2023 Andreas Pflug
+# (c) 2013-2025 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -9,11 +9,11 @@ moduleinfo={ 'name': "LDAP Server",
             'modulename': "LDAP",
             'description': "LDAP server",
             'version': "3",
-            'revision': "0.98.1",
+            'revision': "0.98.2",
             'requiredAdmVersion': "3.0.0",
             'testedAdmVersion': "3.0.0",
             'pages': [],
-            'copyright': "(c) 2013-2023 PSE Consulting Andreas Pflug",
+            'copyright': "(c) 2013-2025 PSE Consulting Andreas Pflug",
             'credits': "python-ldap from http://www.python-ldap.org using OpenLdap 2.4 (http://www.openldap.org)",
              }
 
