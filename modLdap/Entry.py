@@ -1,5 +1,5 @@
 # The Admin4 Project
-# (c) 2013-2022 Andreas Pflug
+# (c) 2013-2025 Andreas Pflug
 #
 # Licensed under the Apache License, 
 # see LICENSE.TXT for conditions of usage
@@ -12,8 +12,7 @@ from wh import xlt
 from . import AttrVal, ldapSyntax
 import os, base64, hashlib
 from controlcontainer import PagedPropertyDialog
-
-
+from md4hash import MD4Hash
 
 class Entry(adm.Node):
   typename=xlt("LDAP Entry")
@@ -515,8 +514,9 @@ class EntryPassword:
   
       ntPasswordSchema=node.GetServer().GetAttributeSchema("sambaNTpassword")
       if ntPasswordSchema.oid in may:
-        md4hash=hashlib.new('md4', passwd.encode('utf-16le')).hexdigest().upper()
-        ntPassword=AttrVal(None, md4hash, ntPasswordSchema)
+        nthash=MD4Hash(passwd.encode('utf-16le')).hexdigest().upper()
+        # hashlib.new('md4', passwd.encode('utf-16le')).hexdigest().upper()
+        ntPassword=AttrVal(None, nthash, ntPasswordSchema)
 
         if ntPasswordSchema.oid in node.attribs:
           chgList.append(ntPassword)
